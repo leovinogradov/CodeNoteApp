@@ -124,10 +124,13 @@ export class Editor {
 	private async _setContentsFromFile(filename) {
 		const path = await join("notes", filename);
 		let content = await readTextFile(path, { baseDir: BaseDirectory.AppData });
-		console.log('setting from content:', content)
+		// console.log('setting from content:', content)
+		
 		if (!content) {
+			console.log('setting from empty content')
 			this.quill.setContents('', 'silent')
 		} else {
+			console.log('setting from content')
 			const delta = JSON.parse(content)
 			this.quill.setContents(delta, 'silent')
 		}

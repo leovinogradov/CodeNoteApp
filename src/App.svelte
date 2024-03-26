@@ -23,7 +23,9 @@
   interface NoteMeta {
     title: string,
     subtitle: string,
-    modifiedTime: string
+    modifiedTime: string,
+    search_title_as_tokens?: any[],
+    search_subtitle_as_tokens?: any[]
   }
 
   interface Note {
@@ -45,7 +47,7 @@
   let matchingNotes: Note[] = []
   // let openNoteIndex: number = 0;
   let searchString: string = '';
-  let _searchTimeoutId;
+  let _searchTimeoutId;  // for timeout between searchString changed and actual search
 
   // DOM elements
   let editorElement;
@@ -130,6 +132,29 @@
     return lines
   }
 
+  function _searchResultAsTokensV1(str, idx, strLength) {
+    if (idx == -1) {
+      return [{ highlight: false, text: str }]
+    }
+    return [
+      { highlight: false, text: str.substring(0, idx) },
+      { highlight: true, text: str.substring(idx, idx + strLength) },
+      { highlight: false, text: str.substring(idx + strLength) },
+    ]
+  }
+
+  function _searchResultAsTokensV2(line: str, searchStr: str) {
+    let idx = line.indexOf(searchStr)
+    if (idx == -1) {
+      return [{ highlight: false, text: line }]
+    }
+    return [
+      { highlight: false, text: line.substring(0, idx) },
+      { highlight: true, text: line.substring(idx, idx + searchStr.length) },
+      { highlight: false, text: line.substring(idx + searchStr.length) },
+    ]
+  }
+
   function _getNoteMeta(note) {
     let title = ''
     let subtitle = ''
@@ -197,10 +222,10 @@
         if (first2Lines[0] == matchingNotes[matchingNoteIdx].note_meta.title) return;  // no change
         matchingNotes[matchingNoteIdx].note_meta.title = first2Lines[0]
         let idxOfSearchStr = first2Lines[0].toLowerCase().indexOf(searchString.toLowerCase())
-        matchingNotes[matchingNoteIdx].note_meta.title_as_tokens = searchResultAsTokens(first2Lines[0], idxOfSearchStr, searchString.length)
+        matchingNotes[matchingNoteIdx].note_meta.search_title_as_tokens = _searchResultAsTokensV1(first2Lines[0], idxOfSearchStr, searchString.length)
       } else {
         matchingNotes[matchingNoteIdx].note_meta.title = 'Untitled'
-        matchingNotes[matchingNoteIdx].note_meta.title_as_tokens = [{ highlight: false, text: 'Untitled'}]
+        matchingNotes[matchingNoteIdx].note_meta.search_title_as_tokens = [{ highlight: false, text: 'Untitled'}]
       }
       // Todo: update subtitle under certain conditions
     }
@@ -218,6 +243,40 @@
 
   function onSearchInput() {
     console.log(searchString)
+    clearTimeout(_searchTimeoutId)
+    _searchTimeoutId = setTimeout(_doSearch, 400)
+    
+  }
+
+  function _doSearch() {
+    console.log('running search', searchString)
+    if (!searchString) {
+      console.log('searchString emtpy, ignoring')
+      return
+    }
+    const searchStringLocked = searchString
+    invoke("search_handler", { searchString: searchStringLocked }).then(data => {
+      console.log("SEARCH RESULT", data)
+      if (data && data.data) {
+        let matches = data.data.filter(x => x.first_line_found)
+        let matches_as_obj = {}
+        for (let match of matches) {
+          matches_as_obj[match.filename] = match
+        }
+        const newMatchingNotes = []
+        for (let note of notes) {
+          let match = matches_as_obj[note.filename]
+          if (match) {
+            // let matchingNote = note
+            note.note_meta.search_title_as_tokens = _searchResultAsTokensV2(match.first_line_found, searchStringLocked)
+            note.note_meta.search_subtitle_as_tokens = []
+            newMatchingNotes.push(note)
+          }
+        }
+        matchingNotes = newMatchingNotes
+        console.log("Matching notes", matchingNotes)
+      }
+    })
   }
 
   function clearSearch() {
@@ -245,7 +304,7 @@
           {#each matchingNotes as note, i }
             <div class="note-summary" on:click={() => onNoteClick(note)}> 
               <h4>
-                {#each note.note_meta.title_as_tokens as token}
+                {#each note.note_meta.search_title_as_tokens as token}
                   {#if token.highlight}
                     <span class="search-highlight">{token.text}</span>
                   {:else}
@@ -255,7 +314,7 @@
               </h4>
               <p>
                 <b>{note.note_meta.modifiedTime}</b>
-                {#each note.note_meta.subtitle_as_tokens as token}
+                {#each note.note_meta.search_subtitle_as_tokens as token}
                   {#if token.highlight}
                     <span class="search-highlight">{token.text}</span>
                   {:else}

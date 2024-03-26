@@ -1,5 +1,9 @@
 use serde::{Deserialize, Serialize};
 use serde_json::Result;
+use regex::Regex;
+
+use crate::read_notes::read_file;
+// use read_notes::read_file;
 
 #[derive(Serialize, Deserialize)]
 struct Person {
@@ -16,6 +20,45 @@ struct QuillDelta {
 #[derive(Serialize, Deserialize)]
 struct QuillFile {
     ops: Vec<QuillDelta>,
+}
+
+pub fn search(path: &str, needle: String) -> Result<String> {
+    let res = read_file(path);
+    let json_content = res.unwrap();
+
+    let d: QuillFile = serde_json::from_str(&json_content)?;
+    let mut content = String::new();
+    for op in d.ops.iter() {
+        content += &op.insert;
+    }
+
+    // TODO: return first line regardless of match
+
+    // let filepaths_in_dir = fs::read_dir(dir_path).unwrap();
+    // for path in filepaths_in_dir {
+    // let path_buf: PathBuf = path.unwrap().path();
+    // Goal: use regex to match line with searchString inside, go from there
+
+    // let re = Regex::new(r"^.*\bMYWORD\b.*$").unwrap();
+    // let re = Regex::new(r".*MYWORD.*\n?").unwrap();
+    
+    let content = content.to_lowercase();
+    let needle = needle.to_lowercase();
+    
+    // If needed, use "{{...}}" to escape "{...}" in format!
+    let formatted = format!(r".*{}.*\n?", needle);
+    let re = Regex::new(formatted.as_str()).unwrap();
+    // let content = "";
+    // let m = re.find(&content)
+    match re.find(&content) {
+        Some(m) => {
+            Ok(String::from(m.as_str()))
+        }
+        None => {
+            Ok(String::new())
+        }
+    }
+    // indexes will be m.start and m.end
 }
 
 pub fn typed_example() -> Result<()> {

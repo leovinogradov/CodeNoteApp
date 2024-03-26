@@ -38,7 +38,7 @@ fn file_modified_time_in_seconds(path: &str) -> u64 {
 //     return Ok(ret);
 // }
 
-fn read_file(filepath: &str) -> Result<String, Box<dyn std::error::Error>> {
+pub fn read_file(filepath: &str) -> Result<String, Box<dyn std::error::Error>> {
     let mut ret = String::from("");
 
     if let Ok(lines) = read_lines(filepath) {
