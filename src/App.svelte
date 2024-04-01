@@ -246,18 +246,19 @@
   }
 
   function onSearchInput() {
-    console.log(searchString)
-
+    if (!searchString) {
+      matchingNotes = []
+      return
+    }
     clearTimeout(_searchTimeoutId)
-    _searchTimeoutId = setTimeout(_doSearch, 300)
-    
+    _searchTimeoutId = setTimeout(_doSearch, 250)
   }
 
   function _doSearch() {
     console.log('running search', searchString)
     searchResultsLoaded = false; // todo: think of better approach. Probably if string for loaded search results is in current searchstring
     if (!searchString) {
-      console.log('searchString emtpy, ignoring')
+      console.log('searchString empty, ignoring')
       return
     }
     const searchStringLocked = searchString
@@ -275,9 +276,11 @@
         for (let note of notes) {
           let match = matches_as_obj[note.filename]
           if (match) {
-            // let matchingNote = note
             note.note_meta.search_title_as_tokens = _searchResultAsTokensV2(match.first_line, searchStrLowercase, match.first_line_matches)
-            note.note_meta.search_subtitle_as_tokens = []
+            
+            const second_line = isWhitespace(match.second_line) ? "" : "..."+match.second_line;
+            note.note_meta.search_subtitle_as_tokens = _searchResultAsTokensV2(second_line, searchStrLowercase, match.second_line_matches)
+            
             newMatchingNotes.push(note)
           }
         }

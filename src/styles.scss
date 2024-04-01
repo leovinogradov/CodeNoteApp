@@ -246,10 +246,10 @@ button {
   // box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
 }
 
-input[type=search]::-webkit-search-cancel-button {
-  // -webkit-appearance: searchfield-cancel-button;
-  -webkit-appearance: none;
-}
+// input[type=search]::-webkit-search-cancel-button {
+//   // -webkit-appearance: searchfield-cancel-button;
+//   -webkit-appearance: none;
+// }
 
 button.toggle-on {
   font-weight: bold;
@@ -259,10 +259,10 @@ button {
   cursor: pointer;
 }
 
-button:active {
+// button:active {
   // border-color: #396cd8;
   // background-color: #e8e8e8;
-}
+// }
 
 input,
 button {
