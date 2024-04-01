@@ -47,6 +47,7 @@
   let matchingNotes: Note[] = []
   // let openNoteIndex: number = 0;
   let searchString: string = '';
+  let searchResultsLoaded: boolean = false;
   let _searchTimeoutId;  // for timeout between searchString changed and actual search
 
   // DOM elements
@@ -143,15 +144,18 @@
     ]
   }
 
-  function _searchResultAsTokensV2(line: str, searchStr: str) {
-    let idx = line.indexOf(searchStr)
+  function _searchResultAsTokensV2(line: str, searchStrLowercase: str, searchStrInLine: bool = true) {
+    if (!searchStrInLine) {
+      return [{ highlight: false, text: line }] 
+    }
+    let idx = line.toLowerCase().indexOf(searchStrLowercase)
     if (idx == -1) {
       return [{ highlight: false, text: line }]
     }
     return [
       { highlight: false, text: line.substring(0, idx) },
-      { highlight: true, text: line.substring(idx, idx + searchStr.length) },
-      { highlight: false, text: line.substring(idx + searchStr.length) },
+      { highlight: true, text: line.substring(idx, idx + searchStrLowercase.length) },
+      { highlight: false, text: line.substring(idx + searchStrLowercase.length) },
     ]
   }
 
@@ -243,32 +247,36 @@
 
   function onSearchInput() {
     console.log(searchString)
+
     clearTimeout(_searchTimeoutId)
-    _searchTimeoutId = setTimeout(_doSearch, 400)
+    _searchTimeoutId = setTimeout(_doSearch, 300)
     
   }
 
   function _doSearch() {
     console.log('running search', searchString)
+    searchResultsLoaded = false; // todo: think of better approach. Probably if string for loaded search results is in current searchstring
     if (!searchString) {
       console.log('searchString emtpy, ignoring')
       return
     }
     const searchStringLocked = searchString
     invoke("search_handler", { searchString: searchStringLocked }).then(data => {
+      searchResultsLoaded = true;
       console.log("SEARCH RESULT", data)
       if (data && data.data) {
-        let matches = data.data.filter(x => x.first_line_found)
+        let matches = data.data;
         let matches_as_obj = {}
         for (let match of matches) {
           matches_as_obj[match.filename] = match
         }
         const newMatchingNotes = []
+        const searchStrLowercase = searchStringLocked.toLowerCase()
         for (let note of notes) {
           let match = matches_as_obj[note.filename]
           if (match) {
             // let matchingNote = note
-            note.note_meta.search_title_as_tokens = _searchResultAsTokensV2(match.first_line_found, searchStringLocked)
+            note.note_meta.search_title_as_tokens = _searchResultAsTokensV2(match.first_line, searchStrLowercase, match.first_line_matches)
             note.note_meta.search_subtitle_as_tokens = []
             newMatchingNotes.push(note)
           }
@@ -299,7 +307,7 @@
         </button>
       </div>
       <div class="notes-list">
-        {#if searchString}
+        {#if searchString && (matchingNotes || searchResultsLoaded)}
           <!-- list when searching -->
           {#each matchingNotes as note, i }
             <div class="note-summary" on:click={() => onNoteClick(note)}> 

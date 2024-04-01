@@ -6,21 +6,17 @@ use tauri::path::BaseDirectory;
 use std::fs;
 use std::ffi::OsStr;
 use std::path::PathBuf;
+use regex::RegexBuilder;
 
 mod read_notes;
 use read_notes::FileSummaryResponse;
 
 mod search;
+use search::SearchResult;
 
 #[derive(serde::Serialize)]
 struct NotesResponse {
     data: Vec<FileSummaryResponse>,
-}
-
-#[derive(serde::Serialize)]
-struct SearchResult {
-    filename: String,
-    first_line_found: String
 }
 
 #[derive(serde::Serialize)]
@@ -68,6 +64,12 @@ async fn search_handler(
 
     let mut result_list: Vec<SearchResult> = Vec::new();
 
+    let needle = search_string.to_lowercase();
+    let simple_search_re = RegexBuilder::new(needle.as_str()).case_insensitive(true).build().unwrap();
+    // If needed, use "{{...}}" to escape "{...}" in format!
+    let search_for_line_regex_string = format!(r".*{}.*\n?", needle);
+    let search_for_line_re = RegexBuilder::new(search_for_line_regex_string.as_str()).case_insensitive(true).build().unwrap();
+
     let filepaths_in_dir = fs::read_dir(dir_path).unwrap();
     for path in filepaths_in_dir {
         let path_buf: PathBuf = path.unwrap().path();
@@ -75,18 +77,19 @@ async fn search_handler(
         if full_path_as_str.ends_with(".json") {
             // let modified_time = file_modified_time_in_seconds(path_str);
             // let content: String = read_file(path_str);
-            let res = search::search(full_path_as_str, search_string.clone());
-            let res = res.unwrap();
-
+            // let res = search::search(full_path_as_str, search_string.clone());
             let filename: &OsStr = path_buf.file_name().unwrap();
             let filename: &str = filename.to_str().unwrap();
 
-            println!("FILENAME {} RES {}", filename, res);
+            let res = search::search(full_path_as_str, filename, &simple_search_re, &search_for_line_re);
+            let res = res.unwrap();
 
-            result_list.push(SearchResult {
-                filename: String::from(filename),
-                first_line_found: res,
-            })
+
+            println!("FILENAME {} RES first: {} second: {}", res.filename, res.first_line_matches, res.second_line_matches);
+
+            if res.first_line_matches || res.second_line_matches {
+                result_list.push(res);
+            }
         }
     }
 
