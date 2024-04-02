@@ -68,6 +68,7 @@
     editor = new Editor(editorElement, null, onActiveNoteModified)
     if (notes.length > 0) {
       const exitResult = await editor.open(notes[0].filename)
+      editor.searcher.clear()
     } else {
       const { exitResult, newNote } = await editor.openNew()
       console.log('Opened new note on init:', exitResult, newNote)
@@ -248,6 +249,7 @@
   function onSearchInput() {
     if (!searchString) {
       matchingNotes = []
+      editor.searcher.clear()
       return
     }
     clearTimeout(_searchTimeoutId)
@@ -273,6 +275,8 @@
         }
         const newMatchingNotes = []
         const searchStrLowercase = searchStringLocked.toLowerCase()
+        const activeFilename = editor.getFilename()
+        let matchInActiveFile = false
         for (let note of notes) {
           let match = matches_as_obj[note.filename]
           if (match) {
@@ -282,16 +286,27 @@
             note.note_meta.search_subtitle_as_tokens = _searchResultAsTokensV2(second_line, searchStrLowercase, match.second_line_matches)
             
             newMatchingNotes.push(note)
+
+            if (note.filename == activeFilename) {
+              matchInActiveFile = true
+            }
           }
         }
         matchingNotes = newMatchingNotes
         console.log("Matching notes", matchingNotes)
+        if (matchInActiveFile) {
+          editor.searcher.search(searchStringLocked)
+        } else {
+          editor.searcher.clear()
+        }
       }
     })
   }
 
   function clearSearch() {
     searchString = ""
+    matchingNotes = []
+    editor.searcher.clear()
   }
 
   init()
@@ -301,12 +316,12 @@
 <!-- svelte-ignore a11y-missing-attribute -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <main class="dark">
-  <Split initialPrimarySize='300px' minPrimarySize='150px' minSecondarySize='65%' splitterSize='9px' >
+  <Split initialPrimarySize='300px' minPrimarySize='150px' minSecondarySize='50%' splitterSize='9px' >
     <div slot="primary">
       <div class="header" data-tauri-drag-region style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;">
-        <input type="text" placeholder="Search" bind:value={searchString} on:input={onSearchInput} />
+        <input class="search" type="text" placeholder="Search" bind:value={searchString} on:input={onSearchInput} />
         <button hidden={!searchString} class="clear-search" on:click={clearSearch}>
-          <!-- <XIcon size="14" strokeWidth="2" color="#444" /> -->
+          <XIcon size="14" strokeWidth="2" color="#444" />
         </button>
       </div>
       <div class="notes-list">
@@ -355,29 +370,14 @@
     <div slot="secondary">
       <div class="header" data-tauri-drag-region style="padding: 6px 10px 8px 12px; margin: 2px 2px 0 0;">
         <div style="margin-left: -6px;">
-          <button on:click={onNewNoteClick}>New Note</button>
-          
+          <button on:click={onNewNoteClick} style="padding: 9px 5px"><Svg src="/img/Edit.svg" height="18px"></Svg></button>
         </div>
+
         <div class="center-items" data-tauri-drag-region>
-          <!-- <Dropdown>
-            <div slot="button"><Svg src="/img/Font.svg" height="24px"></Svg></div>
-            <div slot="content">
-              {#each [['h1', 'Title'], ['h2', 'Heading'], ['h3', 'Subheading'], ['div', 'Paragraph']] as item, j }
-                <button class="dropdown-item" on:click={() => { editor.quill.format('header', 0) }}>
-                  {item[1]} {j}
-                </button>
-              {/each}
-              <button class="dropdown-item" on:click={editor.insertList('ol')}>Numbered List</button>
-              <button class="dropdown-item" on:click={editor.insertList('ul')}>Bulleted List</button>
-            </div>
-          </Dropdown> -->
-
-          
-
           <div id="toolbar">
             <span class="ql-formats">
               <Dropdown>
-                <div slot="button"><Svg src="/img/Font.svg" height="22px"></Svg></div>
+                <div slot="button"><Svg src="/img/Font.svg" height="18px"></Svg></div>
                 <div slot="content">
                   <span class="ql-formats">
                     <!-- formats with easy keyboard shortcut go here -->
@@ -398,8 +398,6 @@
               </Dropdown> 
             </span>
 
-        
-
             <span class="ql-formats">
               <button class="ql-code-block"></button>
               <button class="ql-list" value="ordered" />
@@ -409,40 +407,16 @@
             <span class="ql-formats">
               <button class="ql-clean"></button>
             </span>
-            
-          </div>
-          <!-- <div id="toolbar2">
-            
-            <button class="ql-bold"></button>
-          </div> -->
-          <!-- <button on:click={() => editor.toggleBold()} class:toggle-on="{$stateBold}">
-            <Svg src="/img/Bold.svg" height="18px"></Svg>
-          </button>
-          <button on:click={() => editor.toggleItalic()} class:toggle-on="{$stateItalic}">
-            <Svg src="/img/Italic.svg" height="18px"></Svg>
-          </button>
-          <button on:click={() => editor.toggleCodeBlock()} class:toggle-on="{$textType == 'pre'}">
-            Code
-          </button> -->
-
-          <button class="icon-button" on:click={() => editor.removeFormatting() }>
-            <RemoveFormatting size="18" color="#444" />
-          </button>
-
-          <!-- <button on:click={editor.insertList('ol')} class:toggle-on="{$textType == 'ol'}">
-            O List
-          </button>
-          <button on:click={editor.insertList('ul')} class:toggle-on="{$textType == 'ul'}">
-            U List
-          </button> -->
-
-          <div style="margin-left: 48px;">
-            <button on:click={onDeleteNoteClick}><Svg src="/img/Trash.svg" height="20px"></Svg></button>
           </div>
         </div>
 
-        <div class="window-buttons-placeholder">
+        <!-- not part of quill toolbar: delete note -->
+        <div>
+          <button on:click={onDeleteNoteClick}><Svg src="/img/Trash.svg" height="20px"></Svg></button>
         </div>
+
+        <!-- <div class="window-buttons-placeholder">
+        </div> -->
 
         <!-- <div class="window-buttons">
           <div class="titlebar-button" id="titlebar-minimize" on:click={() => appWindow.minimize()}>

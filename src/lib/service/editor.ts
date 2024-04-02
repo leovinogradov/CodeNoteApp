@@ -2,7 +2,7 @@
 import Quill from "quill";
 import Toolbar from "quill/modules/toolbar"
 // import Parchment from "parchment";
-// import hljs from 'highlight.js';
+import * as hljs from '../../highlight-11.8.0.min.js'; // ../../../public/highlight-11.8.0.min.js';
 // import { onMount, tick, createEventDispatcher, onDestroy } from "svelte";
 
 import { readTextFile } from "@tauri-apps/plugin-fs";
@@ -69,7 +69,7 @@ export class Editor {
 
         this.quill = new Quill(editorEl, {
             modules: {
-                // syntax: true,
+                syntax: true,
                 toolbar: '#toolbar',
 				keyboard: {
 					bindings: bindings
@@ -78,7 +78,7 @@ export class Editor {
             placeholder: "Type something...",
             theme: "snow", // or 'bubble'
             // ...options
-            // highlight: hljs
+            highlight: hljs
         });
 		this.searcher = new Searcher(this.quill)
 		this._clean = Toolbar.DEFAULTS.handlers.clean.bind(this)

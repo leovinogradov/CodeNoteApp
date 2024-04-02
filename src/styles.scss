@@ -166,25 +166,7 @@ body {
     padding: 0 6px;
     height: 36px;
     min-width: 28px;
-    // width: 36px;
   }
-  .dropdown {
-    .dropdown-content {
-      .ql-formats {
-        margin-bottom: 8px;
-        padding-bottom: 4px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-      }
-      .ql-formats button {
-        margin: 0;
-        min-width: 16px;
-      }
-    }
-    
-  }
-  // .icon-button, .dropdown-button {
-  //   padding: 0 6px;
-  // }
   button:hover {
     .custom-svg svg path {
       fill: #396cd8;
@@ -270,8 +252,12 @@ button {
 }
 
 .text-editor-outer {
-  // TEMP
-  height: 90vh;
+  // 100% - height of header
+  height: calc(100vh - 53px);
+}
+
+input.search {
+  width: 100%;
 }
 
 .note-summary {

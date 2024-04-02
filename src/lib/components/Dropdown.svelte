@@ -42,6 +42,7 @@
 :global {
   .dropdown .dropdown-button {
     height: 28px;
+    width: 30px !important;
   }
   .dropdown .dropdown-item {
     text-align: left;
@@ -53,6 +54,19 @@
     padding: 6px 8px;
     height: 28px;
     line-height: 1;
+  }
+  .dropdown {
+    .dropdown-content {
+      .ql-formats {
+        margin-bottom: 8px;
+        padding-bottom: 4px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+      }
+      .ql-formats button {
+        margin: 0;
+        min-width: 16px;
+      }
+    }
   }
 }
 .dropdown {
