@@ -84,7 +84,7 @@
   border: 1px solid #ddd;
   z-index: 1;
   top: 28px;
-  left: calc(-50% - 32px);
+  left: calc(-50% - 38px);
 }
 
 /* Show the dropdown menu */	

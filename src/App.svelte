@@ -65,7 +65,7 @@
 
     notes = await loadNotes()
 
-    editor = new Editor(editorElement, null, onActiveNoteModified)
+    editor = new Editor(editorElement, onActiveNoteModified)
     if (notes.length > 0) {
       const exitResult = await editor.open(notes[0].filename)
       editor.searcher.clear()
@@ -375,11 +375,11 @@
 
         <div class="center-items" data-tauri-drag-region>
           <div id="toolbar">
-            <span class="ql-formats">
+            <span class="ql-formats" style="margin-right: 0">
               <Dropdown>
                 <div slot="button"><Svg src="/img/Font.svg" height="18px"></Svg></div>
                 <div slot="content">
-                  <span class="ql-formats">
+                  <span class="ql-formats" style="margin-right: 0">
                     <!-- formats with easy keyboard shortcut go here -->
                     <button class="ql-bold" />
                     <button class="ql-italic" />

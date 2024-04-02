@@ -2,7 +2,6 @@
 import Quill from "quill";
 import Toolbar from "quill/modules/toolbar"
 // import Parchment from "parchment";
-import * as hljs from '../../highlight-11.8.0.min.js'; // ../../../public/highlight-11.8.0.min.js';
 // import { onMount, tick, createEventDispatcher, onDestroy } from "svelte";
 
 import { readTextFile } from "@tauri-apps/plugin-fs";
@@ -14,31 +13,13 @@ import { isWhitespace, sleep } from "./utils";
 import SearchedStringBlot from './quill-find-and-replace/SearchBlot'
 import Searcher from "./quill-find-and-replace/Searcher";
 
+import { languages } from "./constants";
+
+// @ts-ignore
 Quill.register("modules/Searcher", Searcher);
+// @ts-ignore
 Quill.register(SearchedStringBlot);
 
-
-/*
-const exampleToolbarOptions = [
-    ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
-    ['blockquote', 'code-block'],
-
-    [{ 'header': 1 }, { 'header': 2 }],               // custom button values
-    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-    [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
-    [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
-    [{ 'direction': 'rtl' }],                         // text direction
-
-    [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
-    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-
-    [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
-    [{ 'font': [] }],
-    [{ 'align': [] }],
-
-    ['clean']                                         // remove formatting button
-];
-*/
 
 export interface ExitResult {
 	deleted: boolean,
@@ -55,10 +36,10 @@ export class Editor {
 	onModified: Function|null;
 	private _clean: Function
 
-    constructor(editorEl, initialFilename, onModified: Function|null = null) {
+    constructor(editorEl, onModified: Function|null = null) {
 		const bindings = {
 			customDebug: {
-				key: 'D',
+				key: 'd',
 				ctrlKey: true,
 				handler: function(range, context) {
 					// @ts-ignore
@@ -67,9 +48,13 @@ export class Editor {
 			}
 		}
 
+		
+
         this.quill = new Quill(editorEl, {
             modules: {
-                syntax: true,
+                syntax: {
+					languages: languages
+				},
                 toolbar: '#toolbar',
 				keyboard: {
 					bindings: bindings
@@ -78,10 +63,16 @@ export class Editor {
             placeholder: "Type something...",
             theme: "snow", // or 'bubble'
             // ...options
-            highlight: hljs
         });
 		this.searcher = new Searcher(this.quill)
-		this._clean = Toolbar.DEFAULTS.handlers.clean.bind(this)
+		
+		// Note: used for external format remove functionality; might not be needed
+		if (Toolbar.DEFAULTS.handlers) {
+			this._clean = Toolbar.DEFAULTS.handlers.clean.bind(this)
+		} else {
+			this._clean = function() {}
+			console.error('Could not bing quill clean function')
+		}
 		
 		// if (initialFilename) {
 		// 	this._setContentsFromFile(initialFilename)
@@ -93,6 +84,19 @@ export class Editor {
         this.quill.on("text-change", this._quillOnChange.bind(this))
 		this.onModified = onModified
     }
+
+	// private _getLanguages() {
+	// 	try {
+	// 		// @ts-ignore
+	// 		let languages = window.hljs.listLanguages()
+	// 		return languages.map(x => {
+	// 			return { 'key': x, 'label': x}
+	// 		})
+	// 	} catch(err) {
+	// 		console.error(err)
+	// 	}
+	// 	return []
+	// }
 
 	private _quillOnChange(delta, oldDelta, source) {
 		// TODO
