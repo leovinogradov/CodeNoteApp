@@ -316,7 +316,7 @@
 <!-- svelte-ignore a11y-missing-attribute -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <main class="dark">
-  <Split initialPrimarySize='300px' minPrimarySize='150px' minSecondarySize='50%' splitterSize='9px' >
+  <Split initialPrimarySize='300px' minPrimarySize='180px' minSecondarySize='50%' splitterSize='9px' >
     <div slot="primary">
       <div class="header" data-tauri-drag-region style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;">
         <input class="search" type="text" placeholder="Search" bind:value={searchString} on:input={onSearchInput} />
@@ -339,7 +339,7 @@
                 {/each}
               </h4>
               <p>
-                <b>{note.note_meta.modifiedTime}</b>
+                <span class="modified-time">{note.note_meta.modifiedTime}</span>
                 {#each note.note_meta.search_subtitle_as_tokens as token}
                   {#if token.highlight}
                     <span class="search-highlight">{token.text}</span>
@@ -355,8 +355,8 @@
           {#each notes as note, i }
             <div class="note-summary" on:click={() => onNoteClick(note)}> 
               <h4>{note.note_meta.title}</h4>
-              <p><b>{note.note_meta.modifiedTime}</b> {note.note_meta.subtitle}</p>
-              <small style="font-size: 11px">{note.filename}</small> <!-- for debugging only-->
+              <p><span class="modified-time">{note.note_meta.modifiedTime}</span>{note.note_meta.subtitle}</p>
+              <!-- <small style="font-size: 11px">{note.filename}</small> for debugging only -->
             </div>
           {/each}
         {/if}
@@ -402,9 +402,6 @@
               <button class="ql-code-block"></button>
               <button class="ql-list" value="ordered" />
               <button class="ql-list" value="bullet" />
-            </span>
-            
-            <span class="ql-formats">
               <button class="ql-clean"></button>
             </span>
           </div>

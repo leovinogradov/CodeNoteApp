@@ -29,3 +29,19 @@
     color: var(--note-search-color);
     display: inline-block;
 }
+
+.ql-code-block-container select.ql-ui {
+    visibility: hidden;
+    opacity: 0;
+    background-color: #fafafa;
+    border-radius: 3px;
+    // border-color: light-dark(rgb(118, 118, 118), rgb(133, 133, 133));
+    option {
+        background-color: #fafafa;
+    }
+}
+.ql-code-block-container:hover select.ql-ui {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity linear 0.25s;
+}

@@ -10,8 +10,10 @@ import { BaseDirectory, join } from "@tauri-apps/api/path";
 import { SaveManager, createNewNote } from "./save-manager";
 import { isWhitespace, sleep } from "./utils";
 
-import SearchedStringBlot from './quill-find-and-replace/SearchBlot'
-import Searcher from "./quill-find-and-replace/Searcher";
+import SearchedStringBlot from './search-highlight/SearchBlot'
+import Searcher from "./search-highlight/Searcher";
+
+import CodeSyntax from "./syntax-highlight/code-syntax";
 
 import { languages } from "./constants";
 
@@ -49,7 +51,7 @@ export class Editor {
 		}
 
 		
-
+		Quill.register({ "modules/syntax": CodeSyntax }, true)
         this.quill = new Quill(editorEl, {
             modules: {
                 syntax: {

@@ -7,6 +7,10 @@
 // TODO: create support for auto highlight
 export const languages = [
 {
+    key: 'auto',
+    label: 'Auto'
+}, 
+{
     key: 'plain',
     label: 'Plain'
 }, 
@@ -54,10 +58,10 @@ export const languages = [
     key: 'javascript',
     label: 'JavaScript'
 }, 
-{
-    key: 'markdown',
-    label: 'Markdown'
-}, 
+// {
+//     key: 'markdown',
+//     label: 'Markdown'
+// }, 
 // {
 //     key: 'php',
 //     label: 'PHP'
