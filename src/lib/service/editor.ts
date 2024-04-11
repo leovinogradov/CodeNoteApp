@@ -21,6 +21,7 @@ import { languages } from "./constants";
 Quill.register("modules/Searcher", Searcher);
 // @ts-ignore
 Quill.register(SearchedStringBlot);
+Quill.register({ "modules/syntax": CodeSyntax }, true)
 
 
 export interface ExitResult {
@@ -49,9 +50,7 @@ export class Editor {
 				}
 			}
 		}
-
 		
-		Quill.register({ "modules/syntax": CodeSyntax }, true)
         this.quill = new Quill(editorEl, {
             modules: {
                 syntax: {

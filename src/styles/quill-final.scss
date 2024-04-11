@@ -30,9 +30,10 @@
     display: inline-block;
 }
 
-.ql-code-block-container select.ql-ui {
-    visibility: hidden;
+select.ql-ui {
+    // visibility: hidden;
     opacity: 0;
+    transition: opacity ease-in-out 0.2s;
     background-color: #fafafa;
     border-radius: 3px;
     // border-color: light-dark(rgb(118, 118, 118), rgb(133, 133, 133));
@@ -40,8 +41,8 @@
         background-color: #fafafa;
     }
 }
-.ql-code-block-container:hover select.ql-ui {
+
+select.ql-ui:hover {
     opacity: 1;
-    visibility: visible;
-    transition: opacity linear 0.25s;
+    // visibility: visible;
 }
