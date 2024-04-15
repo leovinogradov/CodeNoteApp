@@ -104,10 +104,10 @@ async fn search_handler(
     })
 }
 
+// .plugin(tauri_plugin_shell::init())
 
 fn main() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_fs::init())
         .setup(|_app| {
             Ok(())

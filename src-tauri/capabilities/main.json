@@ -1,5 +1,5 @@
 {
-  "$schema": "./schemas/desktop-schema.json",
+  "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main-capability",
   "description": "Capability for the main window",
   "windows": [
@@ -13,8 +13,6 @@
     "resources:default",
     "menu:default",
     "tray:default",
-    "shell:deny-open",
-    "shell:deny-execute",
     "fs:read-all",
     "fs:allow-mkdir",
     "fs:write-all",
