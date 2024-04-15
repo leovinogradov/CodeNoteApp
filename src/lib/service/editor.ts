@@ -235,10 +235,6 @@ export class Editor {
 		return lines
 	}
 
-
-	
-
-
 	removeFormatting() {
 		this._clean()
 

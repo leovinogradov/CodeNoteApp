@@ -112,7 +112,7 @@ export class SaveManager {
 
   async delete() {
     if (this.isDeleted) {
-      console.warn(`${this.filename} is deleted`)
+      console.warn(`${this.filename} is already deleted`)
       return
     }
     this.isDeleted = true;
@@ -124,7 +124,11 @@ export class SaveManager {
     if (!this._filepath) {
       this._filepath = await join('notes', this.filename);
     }
-    await remove(this._filepath, { baseDir: BaseDirectory.AppConfig });
+    try {
+      await remove(this._filepath, { baseDir: BaseDirectory.AppConfig });
+    } catch(err) {
+      console.log('failed to delete note:', err)
+    }
   }
 }
 

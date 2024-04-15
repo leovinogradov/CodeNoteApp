@@ -258,12 +258,21 @@ input.search {
   width: 100%;
 }
 
+.notes-list {
+  position: relative;
+}
 .note-summary {
   // cursor: pointer; // doesn't work properly? wtf?
   text-align: left;
   padding: 8px 12px;
   margin-right: 4px;
   border-bottom: 1px solid rgba(0,0,0,0.1);
+  position: relative;
+  background-color: #fff;
+  
+  &.selected {
+    z-index: 99 !important;  // for flip animation
+  }
 
   h4, h5 {
     margin: 0;

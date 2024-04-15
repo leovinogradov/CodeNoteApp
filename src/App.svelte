@@ -6,6 +6,7 @@
   import { Square, XIcon, MinusIcon, RemoveFormatting } from 'lucide-svelte'
 
   import { onMount } from 'svelte';
+  import { myflip } from './lib/service/my-flip/my-flip';
   import { exists, mkdir, BaseDirectory } from "@tauri-apps/plugin-fs";
   import { invoke } from "@tauri-apps/api/core"
   // import { appWindow } from '@tauri-apps/api/window';
@@ -19,6 +20,7 @@
   import { searchNote, type SearchResult } from './lib/service/search.ts';
   import { Editor } from './lib/service/editor';
   import { createNewNote, SaveManager } from './lib/service/save-manager';
+
 
   interface NoteMeta {
     title: string,
@@ -35,6 +37,7 @@
     note_meta: NoteMeta
   }
 
+
   const ONE_DAY = 24 * 60 * 60 * 1000;
 
   // let _loadedNotesData = null;
@@ -42,6 +45,7 @@
   let _loadNotesCalled = false;
 
   let editor: Editor;
+  let currentFilename: string;
   
   let notes: Note[] = []
   let matchingNotes: Note[] = []
@@ -67,13 +71,18 @@
 
     editor = new Editor(editorElement, onActiveNoteModified)
     if (notes.length > 0) {
-      const exitResult = await editor.open(notes[0].filename)
-      editor.searcher.clear()
+      // const exitResult = await editor.open(notes[0].filename)
+      console.log('notes found; opening first note')
+      await onNoteClick(notes[0])
+    
     } else {
-      const { exitResult, newNote } = await editor.openNew()
-      console.log('Opened new note on init:', exitResult, newNote)
-      notes.push(newNote)
+      console.log('no notes found; opening new note')
+      await onNewNoteClick()
+      // const { exitResult, newNote } = await editor.openNew()
+      // console.log('Opened new note on init:', exitResult, newNote)
+      // notes.push(newNote)
     }
+    editor.searcher.clear()
   }
 
   async function loadNotes(): Promise<Note[]> {
@@ -178,12 +187,14 @@
   async function onNoteClick(note: Note) {
     console.log('onNoteClick', note)
     const exitResult = await editor.open(note.filename)
+    currentFilename = editor.getFilename()
     console.log('exitResult:', exitResult)
 
     if (exitResult && exitResult.deleted && exitResult.filename) {
       notes = notes.filter((note) => note.filename != exitResult.filename)
     }
 
+    
     editorElement.firstElementChild.focus()
 
     if (searchString) {
@@ -195,6 +206,7 @@
 
   async function onNewNoteClick() {
     const { exitResult, newNote } = await editor.openNew()
+    currentFilename = editor.getFilename()
 
     console.log('Opened new note:', exitResult, newNote)
 
@@ -209,8 +221,20 @@
     editorElement.firstElementChild.focus()
   }
 
-  function onDeleteNoteClick() {
-
+  async function onDeleteNoteClick() {
+    const filename = await editor.deleteNote()
+    const index = notes.findIndex(x => x.filename == filename)  // should be first note, most of the time
+    if (index > -1) {
+      notes = notes.splice(index, 1);
+    }
+    if (notes.length > 0) {
+      // Other notes exist; open top one
+      onNoteClick(notes[0])
+    }
+    else {
+      // All notes have been deleted; open new one
+      await onNewNoteClick()
+    }
   }
 
   function onActiveNoteModified(filename, content) {
@@ -327,8 +351,8 @@
       <div class="notes-list">
         {#if searchString && (matchingNotes || searchResultsLoaded)}
           <!-- list when searching -->
-          {#each matchingNotes as note, i }
-            <div class="note-summary" on:click={() => onNoteClick(note)}> 
+          {#each matchingNotes as note, i (note.filename) }
+            <div animate:myflip class="note-summary" on:click={() => onNoteClick(note)}> 
               <h4>
                 {#each note.note_meta.search_title_as_tokens as token}
                   {#if token.highlight}
@@ -352,8 +376,11 @@
           {/each}
         {:else}
           <!-- normal list -->
-          {#each notes as note, i }
-            <div class="note-summary" on:click={() => onNoteClick(note)}> 
+          {#each notes as note, i (note.filename) }
+            <div animate:myflip
+                class="note-summary"
+                class:selected={currentFilename == note.filename}
+                on:click={() => onNoteClick(note)}> 
               <h4>{note.note_meta.title}</h4>
               <p><span class="modified-time">{note.note_meta.modifiedTime}</span>{note.note_meta.subtitle}</p>
               <!-- <small style="font-size: 11px">{note.filename}</small> for debugging only -->
