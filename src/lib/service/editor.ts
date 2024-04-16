@@ -13,7 +13,8 @@ import { isWhitespace, sleep } from "./utils";
 import SearchedStringBlot from './search-highlight/SearchBlot'
 import Searcher from "./search-highlight/Searcher";
 
-import CodeSyntax from "./syntax-highlight/code-syntax";
+// import CodeSyntax from "./syntax-highlight/code-syntax";
+import Syntax from "./syntax-highlight/syntax";
 
 import { languages } from "./constants";
 
@@ -21,8 +22,8 @@ import { languages } from "./constants";
 Quill.register("modules/Searcher", Searcher);
 // @ts-ignore
 Quill.register(SearchedStringBlot);
-Quill.register({ "modules/syntax": CodeSyntax }, true)
-
+// Quill.register({ "modules/syntax": CodeSyntax }, true)
+Quill.register({ "modules/syntax": Syntax }, true)
 
 export interface ExitResult {
 	deleted: boolean,
