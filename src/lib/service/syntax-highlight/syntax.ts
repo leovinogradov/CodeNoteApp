@@ -192,13 +192,18 @@ interface SyntaxOptions {
 }
 
 const highlight = (lib: any, language: string, text: string) => {
-  if (typeof lib.versionString === 'string') {
-    const majorVersion = lib.versionString.split('.')[0];
-    if (parseInt(majorVersion, 10) >= 11) {
-      return lib.highlight(text, { language }).value;
-    }
+  // Assume hljs >= 11
+  if (language == 'auto') {
+    return lib.highlightAuto(text);
   }
-  return lib.highlight(language, text).value;
+  return lib.highlight(text, { language }).value;
+  // if (typeof lib.versionString === 'string') {
+  //   const majorVersion = lib.versionString.split('.')[0];
+  //   if (parseInt(majorVersion, 10) >= 11) {
+  //     return lib.highlight(text, { language }).value;
+  //   }
+  // }
+  // return lib.highlight(language, text).value;
 };
 
 class Syntax extends Module<SyntaxOptions> {
