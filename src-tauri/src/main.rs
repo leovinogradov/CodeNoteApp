@@ -96,22 +96,19 @@ async fn search_handler(
     // let full_path = dir_path + "/" + filepath;
     // let full_path = format!("{}/{}", dir_path, filename);
     // let full_path = full_path.as_str();
-    
-    
-    
+
     Ok(SearchResponse {
         data: result_list,
     })
 }
 
-use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder, SubmenuBuilder};
-
+// Menu testing that didn't work
+// use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 // app.on_menu_event(move |app, event| {
 //     println!("event triggered!");
 // });
 
 fn main() {
-    // here `"quit".to_string()` defines the menu item id, and the second parameter is the menu item label.
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .setup(|app| {
@@ -119,15 +116,11 @@ fn main() {
             //     .text("test1", "Test1")
             //     .build()?;
             // let menu = MenuBuilder::new(app).item(&submenu).build()?;
-            
-            let menu = Menu::default(app.app_handle())?;
-
+            // let menu = Menu::default(app.app_handle())?;
             // app.set_menu(menu)?;
-            app.app_handle().set_menu(menu)?;
-
+            // app.app_handle().set_menu(menu)?;
             // let window = app.get_webview_window("main").unwrap();
             // window.set_menu(menu)?;
-
             Ok(())
         })
         // .menu(menu)

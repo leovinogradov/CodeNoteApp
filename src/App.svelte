@@ -3,6 +3,7 @@
   import CustomSplitterBar from './lib/components/CustomSplitterBar.svelte';
   import Dropdown from './lib/components/Dropdown.svelte';
   import Svg from './lib/components/Svg.svelte';
+  import Searchbar from './lib/components/Searchbar.svelte';
   import { Square, XIcon, MinusIcon, RemoveFormatting } from 'lucide-svelte'
 
   import { onMount } from 'svelte';
@@ -343,10 +344,11 @@
   <Split initialPrimarySize='300px' minPrimarySize='180px' minSecondarySize='50%' splitterSize='9px' >
     <div slot="primary">
       <div class="header" data-tauri-drag-region style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;">
-        <input class="search" type="text" placeholder="Search" bind:value={searchString} on:input={onSearchInput} />
-        <button hidden={!searchString} class="clear-search" on:click={clearSearch}>
+        <Searchbar bind:value={searchString} on:input={onSearchInput} on:clear={clearSearch}></Searchbar>
+        <!-- <input class="search" type="text" placeholder="Search" bind:value={searchString} on:input={onSearchInput} /> -->
+        <!-- <button hidden={!searchString} class="clear-search" on:click={clearSearch}>
           <XIcon size="14" strokeWidth="2" color="#444" />
-        </button>
+        </button> -->
       </div>
       <div class="notes-list">
         {#if searchString && (matchingNotes || searchResultsLoaded)}
