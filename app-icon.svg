@@ -8,8 +8,8 @@
    version="1.1"
    id="svg1"
    inkscape:version="1.3 (0e150ed6c4, 2023-07-21)"
-   sodipodi:docname="cna1.svg"
-   inkscape:export-filename="cna1.png"
+   sodipodi:docname="cna2.svg"
+   inkscape:export-filename="cna2.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -26,9 +26,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
-     inkscape:zoom="1.4324566"
-     inkscape:cx="303.32506"
-     inkscape:cy="220.9491"
+     inkscape:zoom="0.50644989"
+     inkscape:cx="234.96895"
+     inkscape:cy="352.45343"
      inkscape:window-width="2030"
      inkscape:window-height="1243"
      inkscape:window-x="73"
@@ -43,16 +43,16 @@
      id="layer1">
     <text
        xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:601.827px;font-family:Lato;-inkscape-font-specification:'Lato, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#24c9db;fill-opacity:1;stroke-width:1.3374"
-       x="-18.656637"
-       y="476.32422"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:574.472px;font-family:Lato;-inkscape-font-specification:'Lato, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#24c9db;fill-opacity:1;stroke-width:1.27661"
+       x="-1.9795289"
+       y="466.43567"
        id="text1"
        transform="scale(1.0107964,0.98931891)"><tspan
          sodipodi:role="line"
          id="tspan1"
-         x="-18.656637"
-         y="476.32422"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:601.827px;font-family:Lato;-inkscape-font-specification:'Lato, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#24c9db;fill-opacity:1;stroke-width:1.3374">C</tspan></text>
+         x="-1.9795289"
+         y="466.43567"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:574.472px;font-family:Lato;-inkscape-font-specification:'Lato, Bold';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#24c9db;fill-opacity:1;stroke-width:1.27661">C</tspan></text>
     <g
        id="g1"
        transform="matrix(0.72264437,-0.72264437,0.72264437,0.72264437,449.38274,-129.31248)">
@@ -64,9 +64,9 @@
     </g>
     <g
        id="g2"
-       transform="matrix(0.65652031,-0.76397875,0.65652031,0.76397875,-225.461,-222.40587)">
+       transform="matrix(0.64010735,-0.72925245,0.64010735,0.72925245,-219.88444,-202.76203)">
       <path
-         d="m 380.24721,743.04018 c 6.7899,-6.7899 7.17484,-17.7215 0.835,-23.71314 l -37.96798,-37.96799 c -5.99167,-6.33985 -16.92325,-5.95492 -23.71319,0.835 l -32.02856,31.86631 60.84615,60.84615 M 76.356782,925.23828 74.136015,988.30525 137.20293,986.08447 326.27976,796.84536 265.43362,735.99922 Z"
+         d="m 376.35331,742.02852 c 6.7899,-6.7899 7.17484,-17.7215 0.835,-23.71314 l -37.96798,-37.96799 c -5.99167,-6.33985 -16.92325,-5.95492 -23.71319,0.835 l -35.45662,35.29437 60.84615,60.84615 M 72.46289,924.22662 70.242123,987.29359 133.30903,985.07281 322.38586,795.8337 261.53972,734.98756 Z"
          fill=""
          id="path1-6"
          style="overflow:hidden;fill:#ffc233;fill-opacity:1;stroke-width:0.393924"

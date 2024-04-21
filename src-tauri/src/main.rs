@@ -111,7 +111,7 @@ async fn search_handler(
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
-        .setup(|app| {
+        .setup(|_app| {
             // let submenu = SubmenuBuilder::new(app, "Submenu")
             //     .text("test1", "Test1")
             //     .build()?;
