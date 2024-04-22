@@ -15,7 +15,6 @@
     "@tauri-apps/api": "^2.0.0-beta.7",
     "@tauri-apps/plugin-fs": "^2.0.0-beta.2",
     "@tauri-apps/plugin-os": "2.0.0-beta.2",
-    "@tauri-apps/plugin-shell": "^2.0.0-beta.2",
     "lucide-svelte": "^0.330.0",
     "parchment": "^2.0.1",
     "quill": "^2.0.0-rc.5",
@@ -31,6 +30,6 @@
     "svelte-check": "^3.4.6",
     "tslib": "^2.6.0",
     "typescript": "^5.3.3",
-    "vite": "^5.0.0"
+    "vite": "^5.2.10"
   }
 }
