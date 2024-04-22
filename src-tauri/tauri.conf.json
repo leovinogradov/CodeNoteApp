@@ -1,6 +1,6 @@
 {
   "productName": "CodeNoteApp",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "identifier": "CodeNoteApp",
   "build": {
     "beforeDevCommand": "pnpm dev",
@@ -13,9 +13,10 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "codenoteapp",
-        "width": 800,
-        "height": 600
+        "title": "CodeNoteApp",
+        "width": 1000,
+        "height": 750,
+        "theme": "Dark"
       }
     ],
     "security": {

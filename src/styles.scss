@@ -13,6 +13,10 @@
   font-size: 15px; // Reference font size
   line-height: 1.67;
 
+  h1 { font-size: 2em; }
+  h2 { font-size: 1.5em; }
+  h3 { font-size: 1.17em; }
+
   .ql-container {  // override
     font-family: "Lato", Avenir, Helvetica, Arial, sans-serif;
     font-size: 15px;
@@ -38,8 +42,6 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
-
- 
 }
 
 html[data-theme='light'] {
@@ -102,6 +104,16 @@ body {
 @import url('./styles/quill-final.scss');
 @import url('./styles/highlight/default.css');
 
+.dropdown-formats {
+  margin-right: 0;
+  width: 100%;
+  display: flex !important;
+  button {
+    margin-right: auto !important;
+    margin-left: auto !important;
+  }
+
+}
 
 // @use "sass:meta";
 
@@ -249,13 +261,21 @@ button {
   outline: none;
 }
 
-.text-editor-outer {
-  // 100% - height of header
-  height: calc(100vh - 53px);
+.text-editor-outer, .notes-list {
+  height: calc(100vh - 53px); // 100% - height of header
 }
 
-input.search {
-  width: 100%;
+.notes-list {
+  position: relative;
+  overflow-y: scroll;
+  // Code to remove scrollbar:
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+  &::-webkit-scrollbar { 
+    display: none;  /* Safari and Chrome */
+    // width: 0;  /* Remove scrollbar space */
+    // background: transparent;  /* Optional: just make scrollbar invisible */
+  }
 }
 
 .note-summary {
@@ -264,6 +284,12 @@ input.search {
   padding: 8px 12px;
   margin-right: 4px;
   border-bottom: 1px solid rgba(0,0,0,0.1);
+  position: relative;
+  background-color: #fff;
+  
+  &.selected {
+    z-index: 10 !important;  // for flip animation
+  }
 
   h4, h5 {
     margin: 0;

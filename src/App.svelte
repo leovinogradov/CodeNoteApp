@@ -1,14 +1,16 @@
 <script lang="ts">
-  import Greet from './lib/Greet.svelte'
   import CustomSplitterBar from './lib/components/CustomSplitterBar.svelte';
   import Dropdown from './lib/components/Dropdown.svelte';
   import Svg from './lib/components/Svg.svelte';
+  import Searchbar from './lib/components/Searchbar.svelte';
+  import SettingsOverlay from './lib/components/SettingsOverlay.svelte';
   import { Square, XIcon, MinusIcon, RemoveFormatting } from 'lucide-svelte'
 
   import { onMount } from 'svelte';
+  import { myflip } from './lib/service/my-flip/my-flip';
   import { exists, mkdir, BaseDirectory } from "@tauri-apps/plugin-fs";
   import { invoke } from "@tauri-apps/api/core"
-  // import { appWindow } from '@tauri-apps/api/window';
+  import { platform } from '@tauri-apps/plugin-os';
 
   // @ts-ignore because no index.d.ts in dist?
   import { Split } from '@geoffcox/svelte-splitter';
@@ -19,6 +21,7 @@
   import { searchNote, type SearchResult } from './lib/service/search.ts';
   import { Editor } from './lib/service/editor';
   import { createNewNote, SaveManager } from './lib/service/save-manager';
+
 
   interface NoteMeta {
     title: string,
@@ -35,6 +38,7 @@
     note_meta: NoteMeta
   }
 
+
   const ONE_DAY = 24 * 60 * 60 * 1000;
 
   // let _loadedNotesData = null;
@@ -42,18 +46,29 @@
   let _loadNotesCalled = false;
 
   let editor: Editor;
+  let currentFilename: string;
+  let currentPlatform: string = '';
   
   let notes: Note[] = []
   let matchingNotes: Note[] = []
   // let openNoteIndex: number = 0;
   let searchString: string = '';
-  let searchResultsLoaded: boolean = false;
+  let lastSearchString: string = '';  // string for which results are shown
   let _searchTimeoutId;  // for timeout between searchString changed and actual search
 
   // DOM elements
   let editorElement;
 
   async function init() {
+    // run this async function separately from the ones below
+    platform().then(data => {
+      // Todo: use this for platform-specific styling
+      if (data && typeof data == 'string') {
+        currentPlatform = data;
+        console.log('current platform is', currentPlatform);
+      }
+    })
+
     try {
       const notesDirExists = await exists('notes', { baseDir: BaseDirectory.AppData });
       if (!notesDirExists) {
@@ -63,17 +78,23 @@
       console.error(err)
     }
 
-    notes = await loadNotes()
-
+    try {
+      notes = await loadNotes()
+    } catch (err) {
+      console.error('Failed to load notes:', err)
+      notes = []
+    }
+    
     editor = new Editor(editorElement, onActiveNoteModified)
     if (notes.length > 0) {
-      const exitResult = await editor.open(notes[0].filename)
-      editor.searcher.clear()
+      console.log('notes found; opening first note')
+      await onNoteClick(notes[0])
+    
     } else {
-      const { exitResult, newNote } = await editor.openNew()
-      console.log('Opened new note on init:', exitResult, newNote)
-      notes.push(newNote)
+      console.log('no notes found; opening new note')
+      await onNewNoteClick()
     }
+    editor.searcher.clear()
   }
 
   async function loadNotes(): Promise<Note[]> {
@@ -95,7 +116,6 @@
         console.error(e)
         meta = {}
       }
-      console.log('meta is', meta)
       notesFormatted.push({
         filename: x.filename,
         modified: x.modified,
@@ -176,9 +196,9 @@
   }
 
   async function onNoteClick(note: Note) {
-    console.log('onNoteClick', note)
     const exitResult = await editor.open(note.filename)
-    console.log('exitResult:', exitResult)
+    currentFilename = editor.getFilename()
+    console.log('onNoteClick(): exitResult:', exitResult)
 
     if (exitResult && exitResult.deleted && exitResult.filename) {
       notes = notes.filter((note) => note.filename != exitResult.filename)
@@ -195,6 +215,7 @@
 
   async function onNewNoteClick() {
     const { exitResult, newNote } = await editor.openNew()
+    currentFilename = editor.getFilename()
 
     console.log('Opened new note:', exitResult, newNote)
 
@@ -206,11 +227,29 @@
     notes.unshift(newNote);  // push to front
     notes = notes;  // trigger change
 
-    editorElement.firstElementChild.focus()
+    try {
+      editorElement.firstElementChild.focus()
+      editor.quill.format('header', 1)
+    } catch(err) {
+      console.error('onNewNoteClick(): failed to set first line to title', err)
+    }
   }
 
-  function onDeleteNoteClick() {
-
+  async function onDeleteNoteClick() {
+    const filename = await editor.deleteNote()
+    const index = notes.findIndex(x => x.filename == filename)  // should be first note, most of the time
+    if (index > -1) {
+      notes.splice(index, 1);
+      notes = notes;
+    }
+    if (notes.length > 0) {
+      // Other notes exist; open top one
+      onNoteClick(notes[0])
+    }
+    else {
+      // All notes have been deleted; open new one
+      await onNewNoteClick()
+    }
   }
 
   function onActiveNoteModified(filename, content) {
@@ -243,6 +282,8 @@
       }
       notes[0].note_meta.title = first2Lines[0] || 'Untitled'
       notes[0].note_meta.subtitle = first2Lines[1]
+      notes[0].modified = Date.now()
+      notes[0].note_meta.modifiedTime = _getModifiedAtStr(notes[0].modified)
     }
   }
 
@@ -258,15 +299,14 @@
 
   function _doSearch() {
     console.log('running search', searchString)
-    searchResultsLoaded = false; // todo: think of better approach. Probably if string for loaded search results is in current searchstring
     if (!searchString) {
-      console.log('searchString empty, ignoring')
+      lastSearchString = ""
       return
     }
     const searchStringLocked = searchString
     invoke("search_handler", { searchString: searchStringLocked }).then(data => {
-      searchResultsLoaded = true;
-      console.log("SEARCH RESULT", data)
+      lastSearchString = searchStringLocked;
+      console.log("SEARCH RESULT for", searchStringLocked, data)
       if (data && data.data) {
         let matches = data.data;
         let matches_as_obj = {}
@@ -305,6 +345,7 @@
 
   function clearSearch() {
     searchString = ""
+    lastSearchString = ""
     matchingNotes = []
     editor.searcher.clear()
   }
@@ -319,16 +360,17 @@
   <Split initialPrimarySize='300px' minPrimarySize='180px' minSecondarySize='50%' splitterSize='9px' >
     <div slot="primary">
       <div class="header" data-tauri-drag-region style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;">
-        <input class="search" type="text" placeholder="Search" bind:value={searchString} on:input={onSearchInput} />
-        <button hidden={!searchString} class="clear-search" on:click={clearSearch}>
+        <Searchbar bind:value={searchString} on:input={onSearchInput} on:clear={clearSearch}></Searchbar>
+        <!-- <input class="search" type="text" placeholder="Search" bind:value={searchString} on:input={onSearchInput} /> -->
+        <!-- <button hidden={!searchString} class="clear-search" on:click={clearSearch}>
           <XIcon size="14" strokeWidth="2" color="#444" />
-        </button>
+        </button> -->
       </div>
       <div class="notes-list">
-        {#if searchString && (matchingNotes || searchResultsLoaded)}
+        {#if searchString && (lastSearchString || matchingNotes.length > 0)}
           <!-- list when searching -->
-          {#each matchingNotes as note, i }
-            <div class="note-summary" on:click={() => onNoteClick(note)}> 
+          {#each matchingNotes as note, i (note.filename) }
+            <div animate:myflip class="note-summary" on:click={() => onNoteClick(note)}> 
               <h4>
                 {#each note.note_meta.search_title_as_tokens as token}
                   {#if token.highlight}
@@ -350,10 +392,18 @@
               </p>
             </div>
           {/each}
+          {#if matchingNotes.length == 0}
+            <div class="note-summary">
+              <p>No results found</p>
+            </div>
+          {/if}
         {:else}
           <!-- normal list -->
-          {#each notes as note, i }
-            <div class="note-summary" on:click={() => onNoteClick(note)}> 
+          {#each notes as note, i (note.filename) }
+            <div animate:myflip
+                class="note-summary"
+                class:selected={currentFilename == note.filename}
+                on:click={() => onNoteClick(note)}> 
               <h4>{note.note_meta.title}</h4>
               <p><span class="modified-time">{note.note_meta.modifiedTime}</span>{note.note_meta.subtitle}</p>
               <!-- <small style="font-size: 11px">{note.filename}</small> for debugging only -->
@@ -379,7 +429,7 @@
               <Dropdown>
                 <div slot="button"><Svg src="/img/Font.svg" height="18px"></Svg></div>
                 <div slot="content">
-                  <span class="ql-formats" style="margin-right: 0">
+                  <span class="ql-formats dropdown-formats">
                     <!-- formats with easy keyboard shortcut go here -->
                     <button class="ql-bold" />
                     <button class="ql-italic" />
@@ -387,11 +437,23 @@
                     <button class="ql-strike" />
                   </span>
 
-                  {#each [['Title', 1], ['Heading', 2], ['Subheading', 3], ['Paragraph', 0]] as item, j }
+                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 1) }}>
+                    <h1>Title</h1>
+                  </button>
+                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 2) }}>
+                    <h2>Heading</h2>
+                  </button>
+                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 3) }}>
+                    <h3>Subheading</h3>
+                  </button>
+                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 0) }}>
+                    <p>Paragraph</p>
+                  </button>
+                  <!-- {#each [['Title', 1], ['Heading', 2], ['Subheading', 3], ['Paragraph', 0]] as item, j }
                     <button class="dropdown-item" on:click={() => { editor.quill.format('header', item[1]) }}>
                       {item[0]}
                     </button>
-                  {/each}
+                  {/each} -->
                   <!-- <button class="dropdown-item" on:click={editor.insertList('ol')}>Numbered List</button>
                   <button class="dropdown-item" on:click={editor.insertList('ul')}>Bulleted List</button> -->
                 </div>
@@ -409,7 +471,9 @@
 
         <!-- not part of quill toolbar: delete note -->
         <div>
-          <button on:click={onDeleteNoteClick}><Svg src="/img/Trash.svg" height="20px"></Svg></button>
+          <button on:click={onDeleteNoteClick} style="margin-top: 4px;">
+            <Svg src="/img/Trash.svg" height="20px"></Svg>
+          </button>
         </div>
 
         <!-- <div class="window-buttons-placeholder">
@@ -435,11 +499,9 @@
       <div class="text-editor-outer">
         <div id="text-editor" bind:this={editorElement} spellcheck="false" class:hidden={searchString && matchingNotes.length == 0}>
         </div>
-        <!-- TODO: add "and did at least one search" logic -->
-        <!-- {#if searchString && matchingNotes.length == 0}
-          <div>No Results Found</div>
-        {/if} -->
       </div>
     <div>
   </Split>
+
+  <SettingsOverlay/>
 </main>

@@ -1,7 +1,7 @@
 {
   "name": "codenoteapp",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,6 +14,7 @@
     "@geoffcox/svelte-splitter": "^1.0.1",
     "@tauri-apps/api": "^2.0.0-beta.7",
     "@tauri-apps/plugin-fs": "^2.0.0-beta.2",
+    "@tauri-apps/plugin-os": "2.0.0-beta.2",
     "@tauri-apps/plugin-shell": "^2.0.0-beta.2",
     "lucide-svelte": "^0.330.0",
     "parchment": "^2.0.1",
@@ -26,7 +27,7 @@
     "@tauri-apps/cli": "^2.0.0-beta.0",
     "@tsconfig/svelte": "^5.0.2",
     "sass": "^1.70.0",
-    "svelte": "^4.2.8",
+    "svelte": "^4.2.14",
     "svelte-check": "^3.4.6",
     "tslib": "^2.6.0",
     "typescript": "^5.3.3",

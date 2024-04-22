@@ -40,7 +40,7 @@
     overflow: hidden;
     height: 100%;
     width: 100%;
-    padding: 0 4px;
+    padding: 52px 4px 0 4px; // 52px to account for header bar
     user-select: none;
     & > .inner {
       height: 100%;

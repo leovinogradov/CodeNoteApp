@@ -17,6 +17,7 @@
     "fs:allow-mkdir",
     "fs:write-all",
     "fs:scope-appdata-recursive",
-    "window:allow-start-dragging"
+    "window:allow-start-dragging",
+    "os:allow-platform"
   ]
 }
