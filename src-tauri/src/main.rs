@@ -93,10 +93,10 @@ async fn search_handler(
             );
             let res = res.unwrap();
 
-            println!(
-                "FILENAME {} RES first: {} second: {}",
-                res.filename, res.first_line_matches, res.second_line_matches
-            );
+            // println!(
+            //     "FILENAME {} RES first: {} second: {}",
+            //     res.filename, res.first_line_matches, res.second_line_matches
+            // );
 
             if res.first_line_matches || res.second_line_matches {
                 result_list.push(res);

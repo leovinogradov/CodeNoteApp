@@ -60,20 +60,18 @@ pub fn search(
         Some(idx) => {
             first_line = &content[..idx];
             rest_of_content = &content[idx..];
-            println!("TEST1 idx: {} first line: '{}'", idx, first_line);
+            // println!("TEST1 idx: {} first line: '{}'", idx, first_line);
         }
         None => {
             first_line = &content;
             rest_of_content = "";
-            // return Ok(String::new());
         }
     }
 
     match simple_re.find(first_line) {
         Some(_m) => {
-            println!("TEST2 match in first line");
+            // println!("TEST2 match in first line");
             first_line_matches = true;
-            // return Ok(String::from(first_line));
         }
         None => {
             first_line_matches = false;

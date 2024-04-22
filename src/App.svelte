@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Greet from './lib/Greet.svelte'
   import CustomSplitterBar from './lib/components/CustomSplitterBar.svelte';
   import Dropdown from './lib/components/Dropdown.svelte';
   import Svg from './lib/components/Svg.svelte';
@@ -54,7 +53,7 @@
   let matchingNotes: Note[] = []
   // let openNoteIndex: number = 0;
   let searchString: string = '';
-  let searchResultsLoaded: boolean = false;
+  let lastSearchString: string = '';  // string for which results are shown
   let _searchTimeoutId;  // for timeout between searchString changed and actual search
 
   // DOM elements
@@ -63,8 +62,10 @@
   async function init() {
     // run this async function separately from the ones below
     platform().then(data => {
+      // Todo: use this for platform-specific styling
       if (data && typeof data == 'string') {
         currentPlatform = data;
+        console.log('current platform is', currentPlatform);
       }
     })
 
@@ -195,16 +196,14 @@
   }
 
   async function onNoteClick(note: Note) {
-    console.log('onNoteClick', note)
     const exitResult = await editor.open(note.filename)
     currentFilename = editor.getFilename()
-    console.log('exitResult:', exitResult)
+    console.log('onNoteClick(): exitResult:', exitResult)
 
     if (exitResult && exitResult.deleted && exitResult.filename) {
       notes = notes.filter((note) => note.filename != exitResult.filename)
     }
 
-    
     editorElement.firstElementChild.focus()
 
     if (searchString) {
@@ -240,7 +239,8 @@
     const filename = await editor.deleteNote()
     const index = notes.findIndex(x => x.filename == filename)  // should be first note, most of the time
     if (index > -1) {
-      notes = notes.splice(index, 1);
+      notes.splice(index, 1);
+      notes = notes;
     }
     if (notes.length > 0) {
       // Other notes exist; open top one
@@ -299,15 +299,14 @@
 
   function _doSearch() {
     console.log('running search', searchString)
-    searchResultsLoaded = false; // todo: think of better approach. Probably if string for loaded search results is in current searchstring
     if (!searchString) {
-      console.log('searchString empty, ignoring')
+      lastSearchString = ""
       return
     }
     const searchStringLocked = searchString
     invoke("search_handler", { searchString: searchStringLocked }).then(data => {
-      searchResultsLoaded = true;
-      console.log("SEARCH RESULT", data)
+      lastSearchString = searchStringLocked;
+      console.log("SEARCH RESULT for", searchStringLocked, data)
       if (data && data.data) {
         let matches = data.data;
         let matches_as_obj = {}
@@ -346,6 +345,7 @@
 
   function clearSearch() {
     searchString = ""
+    lastSearchString = ""
     matchingNotes = []
     editor.searcher.clear()
   }
@@ -367,7 +367,7 @@
         </button> -->
       </div>
       <div class="notes-list">
-        {#if searchString && (matchingNotes || searchResultsLoaded)}
+        {#if searchString && (lastSearchString || matchingNotes.length > 0)}
           <!-- list when searching -->
           {#each matchingNotes as note, i (note.filename) }
             <div animate:myflip class="note-summary" on:click={() => onNoteClick(note)}> 
@@ -392,6 +392,11 @@
               </p>
             </div>
           {/each}
+          {#if matchingNotes.length == 0}
+            <div class="note-summary">
+              <p>No results found</p>
+            </div>
+          {/if}
         {:else}
           <!-- normal list -->
           {#each notes as note, i (note.filename) }
@@ -466,7 +471,9 @@
 
         <!-- not part of quill toolbar: delete note -->
         <div>
-          <button on:click={onDeleteNoteClick}><Svg src="/img/Trash.svg" height="20px"></Svg></button>
+          <button on:click={onDeleteNoteClick} style="margin-top: 4px;">
+            <Svg src="/img/Trash.svg" height="20px"></Svg>
+          </button>
         </div>
 
         <!-- <div class="window-buttons-placeholder">
@@ -492,10 +499,6 @@
       <div class="text-editor-outer">
         <div id="text-editor" bind:this={editorElement} spellcheck="false" class:hidden={searchString && matchingNotes.length == 0}>
         </div>
-        <!-- TODO: add "and did at least one search" logic -->
-        <!-- {#if searchString && matchingNotes.length == 0}
-          <div>No Results Found</div>
-        {/if} -->
       </div>
     <div>
   </Split>

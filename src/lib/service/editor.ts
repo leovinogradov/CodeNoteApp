@@ -1,4 +1,3 @@
-
 import Quill from "quill";
 import Toolbar from "quill/modules/toolbar"
 // import Parchment from "parchment";
@@ -8,7 +7,7 @@ import { readTextFile } from "@tauri-apps/plugin-fs";
 import { BaseDirectory, join } from "@tauri-apps/api/path";
 
 import { SaveManager, createNewNote } from "./save-manager";
-import { isWhitespace, sleep } from "./utils";
+import { isWhitespace } from "./utils";
 
 import SearchedStringBlot from './search-highlight/SearchBlot'
 import Searcher from "./search-highlight/Searcher";
@@ -18,12 +17,24 @@ import Syntax from "./syntax-highlight/syntax";
 
 import { languages } from "./constants";
 
+const ColorStyle = Quill.import("attributors/style/color");
+const BackgroundStyle = Quill.import("attributors/style/background");
+// @ts-ignore
+ColorStyle.whitelist = []; // remove pasted colors
+// @ts-ignore
+BackgroundStyle.whitelist = []; // remove pasted bg colors
+// @ts-ignore
+Quill.register(ColorStyle);
+// @ts-ignore
+Quill.register(BackgroundStyle);
+
 // @ts-ignore
 Quill.register("modules/Searcher", Searcher);
 // @ts-ignore
 Quill.register(SearchedStringBlot);
-// Quill.register({ "modules/syntax": CodeSyntax }, true)
+
 Quill.register({ "modules/syntax": Syntax }, true)
+
 
 export interface ExitResult {
 	deleted: boolean,
@@ -163,7 +174,7 @@ export class Editor {
 
 	async exit(): Promise<ExitResult> {
 		let ret = {
-			deleted: true,
+			deleted: false,
 			filename: '',
 		};
 		if (!this.saveManager || this.saveManager.isDeleted) {
@@ -173,6 +184,7 @@ export class Editor {
 		const innerText = this.quill.getText()
 		if (!innerText || isWhitespace(innerText)) {
 			// delete
+			console.log('deleting on exit due to no content');
 			await this.saveManager.delete();
 			ret.deleted = true
 			
