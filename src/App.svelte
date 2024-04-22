@@ -4,13 +4,14 @@
   import Dropdown from './lib/components/Dropdown.svelte';
   import Svg from './lib/components/Svg.svelte';
   import Searchbar from './lib/components/Searchbar.svelte';
+  import SettingsOverlay from './lib/components/SettingsOverlay.svelte';
   import { Square, XIcon, MinusIcon, RemoveFormatting } from 'lucide-svelte'
 
   import { onMount } from 'svelte';
   import { myflip } from './lib/service/my-flip/my-flip';
   import { exists, mkdir, BaseDirectory } from "@tauri-apps/plugin-fs";
   import { invoke } from "@tauri-apps/api/core"
-  // import { appWindow } from '@tauri-apps/api/window';
+  import { platform } from '@tauri-apps/plugin-os';
 
   // @ts-ignore because no index.d.ts in dist?
   import { Split } from '@geoffcox/svelte-splitter';
@@ -47,6 +48,7 @@
 
   let editor: Editor;
   let currentFilename: string;
+  let currentPlatform: string = '';
   
   let notes: Note[] = []
   let matchingNotes: Note[] = []
@@ -59,6 +61,13 @@
   let editorElement;
 
   async function init() {
+    // run this async function separately from the ones below
+    platform().then(data => {
+      if (data && typeof data == 'string') {
+        currentPlatform = data;
+      }
+    })
+
     try {
       const notesDirExists = await exists('notes', { baseDir: BaseDirectory.AppData });
       if (!notesDirExists) {
@@ -68,20 +77,21 @@
       console.error(err)
     }
 
-    notes = await loadNotes()
-
+    try {
+      notes = await loadNotes()
+    } catch (err) {
+      console.error('Failed to load notes:', err)
+      notes = []
+    }
+    
     editor = new Editor(editorElement, onActiveNoteModified)
     if (notes.length > 0) {
-      // const exitResult = await editor.open(notes[0].filename)
       console.log('notes found; opening first note')
       await onNoteClick(notes[0])
     
     } else {
       console.log('no notes found; opening new note')
       await onNewNoteClick()
-      // const { exitResult, newNote } = await editor.openNew()
-      // console.log('Opened new note on init:', exitResult, newNote)
-      // notes.push(newNote)
     }
     editor.searcher.clear()
   }
@@ -105,7 +115,6 @@
         console.error(e)
         meta = {}
       }
-      console.log('meta is', meta)
       notesFormatted.push({
         filename: x.filename,
         modified: x.modified,
@@ -219,7 +228,12 @@
     notes.unshift(newNote);  // push to front
     notes = notes;  // trigger change
 
-    editorElement.firstElementChild.focus()
+    try {
+      editorElement.firstElementChild.focus()
+      editor.quill.format('header', 1)
+    } catch(err) {
+      console.error('onNewNoteClick(): failed to set first line to title', err)
+    }
   }
 
   async function onDeleteNoteClick() {
@@ -268,6 +282,8 @@
       }
       notes[0].note_meta.title = first2Lines[0] || 'Untitled'
       notes[0].note_meta.subtitle = first2Lines[1]
+      notes[0].modified = Date.now()
+      notes[0].note_meta.modifiedTime = _getModifiedAtStr(notes[0].modified)
     }
   }
 
@@ -408,7 +424,7 @@
               <Dropdown>
                 <div slot="button"><Svg src="/img/Font.svg" height="18px"></Svg></div>
                 <div slot="content">
-                  <span class="ql-formats" style="margin-right: 0">
+                  <span class="ql-formats dropdown-formats">
                     <!-- formats with easy keyboard shortcut go here -->
                     <button class="ql-bold" />
                     <button class="ql-italic" />
@@ -416,11 +432,23 @@
                     <button class="ql-strike" />
                   </span>
 
-                  {#each [['Title', 1], ['Heading', 2], ['Subheading', 3], ['Paragraph', 0]] as item, j }
+                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 1) }}>
+                    <h1>Title</h1>
+                  </button>
+                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 2) }}>
+                    <h2>Heading</h2>
+                  </button>
+                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 3) }}>
+                    <h3>Subheading</h3>
+                  </button>
+                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 0) }}>
+                    <p>Paragraph</p>
+                  </button>
+                  <!-- {#each [['Title', 1], ['Heading', 2], ['Subheading', 3], ['Paragraph', 0]] as item, j }
                     <button class="dropdown-item" on:click={() => { editor.quill.format('header', item[1]) }}>
                       {item[0]}
                     </button>
-                  {/each}
+                  {/each} -->
                   <!-- <button class="dropdown-item" on:click={editor.insertList('ol')}>Numbered List</button>
                   <button class="dropdown-item" on:click={editor.insertList('ul')}>Bulleted List</button> -->
                 </div>
@@ -471,4 +499,6 @@
       </div>
     <div>
   </Split>
+
+  <SettingsOverlay/>
 </main>

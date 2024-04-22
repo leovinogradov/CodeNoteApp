@@ -1,18 +1,20 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use tauri::Manager;  // makes .setup(|app|) work
-use tauri::path::BaseDirectory;
-use std::fs;
-use std::ffi::OsStr;
-use std::path::PathBuf;
 use regex::RegexBuilder;
+use std::ffi::OsStr;
+use std::fs;
+use std::path::PathBuf;
+use tauri::path::BaseDirectory;
+use tauri::Manager; // makes .setup(|app|) work
 
 mod read_notes;
 use read_notes::FileSummaryResponse;
 
 mod search;
 use search::SearchResult;
+
+mod open_in_filesystem;
 
 #[derive(serde::Serialize)]
 struct NotesResponse {
@@ -25,9 +27,7 @@ struct SearchResponse {
 }
 
 #[tauri::command]
-async fn read_notes_dir(
-    window: tauri::Window,
-) -> Result<NotesResponse, String> {
+async fn read_notes_dir(window: tauri::Window) -> Result<NotesResponse, String> {
     let app = window.app_handle();
     let path = app.path().resolve("notes", BaseDirectory::AppData).unwrap();
     let path = path.to_str().unwrap();
@@ -48,9 +48,7 @@ async fn read_notes_dir(
     //     filename: String::from(""),
     //     modified: 0,
     // });
-    Ok(NotesResponse {
-        data: vec,
-    })
+    Ok(NotesResponse { data: vec })
 }
 
 #[tauri::command]
@@ -65,10 +63,16 @@ async fn search_handler(
     let mut result_list: Vec<SearchResult> = Vec::new();
 
     let needle = search_string.to_lowercase();
-    let simple_search_re = RegexBuilder::new(needle.as_str()).case_insensitive(true).build().unwrap();
+    let simple_search_re = RegexBuilder::new(needle.as_str())
+        .case_insensitive(true)
+        .build()
+        .unwrap();
     // If needed, use "{{...}}" to escape "{...}" in format!
     let search_for_line_regex_string = format!(r".*{}.*\n?", needle);
-    let search_for_line_re = RegexBuilder::new(search_for_line_regex_string.as_str()).case_insensitive(true).build().unwrap();
+    let search_for_line_re = RegexBuilder::new(search_for_line_regex_string.as_str())
+        .case_insensitive(true)
+        .build()
+        .unwrap();
 
     let filepaths_in_dir = fs::read_dir(dir_path).unwrap();
     for path in filepaths_in_dir {
@@ -81,11 +85,18 @@ async fn search_handler(
             let filename: &OsStr = path_buf.file_name().unwrap();
             let filename: &str = filename.to_str().unwrap();
 
-            let res = search::search(full_path_as_str, filename, &simple_search_re, &search_for_line_re);
+            let res = search::search(
+                full_path_as_str,
+                filename,
+                &simple_search_re,
+                &search_for_line_re,
+            );
             let res = res.unwrap();
 
-
-            println!("FILENAME {} RES first: {} second: {}", res.filename, res.first_line_matches, res.second_line_matches);
+            println!(
+                "FILENAME {} RES first: {} second: {}",
+                res.filename, res.first_line_matches, res.second_line_matches
+            );
 
             if res.first_line_matches || res.second_line_matches {
                 result_list.push(res);
@@ -97,9 +108,7 @@ async fn search_handler(
     // let full_path = format!("{}/{}", dir_path, filename);
     // let full_path = full_path.as_str();
 
-    Ok(SearchResponse {
-        data: result_list,
-    })
+    Ok(SearchResponse { data: result_list })
 }
 
 // Menu testing that didn't work
@@ -110,6 +119,7 @@ async fn search_handler(
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_fs::init())
         .setup(|_app| {
             // let submenu = SubmenuBuilder::new(app, "Submenu")
@@ -124,7 +134,11 @@ fn main() {
             Ok(())
         })
         // .menu(menu)
-        .invoke_handler(tauri::generate_handler![read_notes_dir, search_handler])
+        .invoke_handler(tauri::generate_handler![
+            read_notes_dir,
+            search_handler,
+            open_in_filesystem::show_item_in_filesystem
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

@@ -194,7 +194,7 @@ interface SyntaxOptions {
 const highlight = (lib: any, language: string, text: string) => {
   // Assume hljs >= 11
   if (language == 'auto') {
-    return lib.highlightAuto(text);
+    return lib.highlightAuto(text).value;
   }
   return lib.highlight(text, { language }).value;
   // if (typeof lib.versionString === 'string') {
