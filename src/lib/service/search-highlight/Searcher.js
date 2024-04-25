@@ -1,3 +1,5 @@
+// Adapted from https://github.com/MuhammedAlkhudiry/quill-find-replace-module/blob/master/Searcher.js
+
 class Searcher {
     occurrencesIndices = [];
     currentIndex = 0;

@@ -4,13 +4,13 @@
   import Svg from './lib/components/Svg.svelte';
   import Searchbar from './lib/components/Searchbar.svelte';
   import SettingsOverlay from './lib/components/SettingsOverlay.svelte';
+  import SearchInNote from './lib/components/SearchInNote.svelte';
   import { Square, XIcon, MinusIcon, RemoveFormatting } from 'lucide-svelte'
 
   import { onMount } from 'svelte';
   import { myflip } from './lib/service/my-flip/my-flip';
   import { exists, mkdir, BaseDirectory } from "@tauri-apps/plugin-fs";
   import { invoke } from "@tauri-apps/api/core"
-  import { platform } from '@tauri-apps/plugin-os';
 
   // @ts-ignore because no index.d.ts in dist?
   import { Split } from '@geoffcox/svelte-splitter';
@@ -58,16 +58,17 @@
 
   // DOM elements
   let editorElement;
+  let searchInNoteElement;
 
   async function init() {
     // run this async function separately from the ones below
-    platform().then(data => {
-      // Todo: use this for platform-specific styling
-      if (data && typeof data == 'string') {
-        currentPlatform = data;
-        console.log('current platform is', currentPlatform);
-      }
-    })
+    // platform().then(data => {
+    //   // Todo: use this for platform-specific styling
+    //   if (data && typeof data == 'string') {
+    //     currentPlatform = data;
+    //     console.log('current platform is', currentPlatform);
+    //   }
+    // })
 
     try {
       const notesDirExists = await exists('notes', { baseDir: BaseDirectory.AppData });
@@ -86,6 +87,8 @@
     }
     
     editor = new Editor(editorElement, onActiveNoteModified)
+    searchInNoteElement.init(editor)
+
     if (notes.length > 0) {
       console.log('notes found; opening first note')
       await onNoteClick(notes[0])
@@ -206,6 +209,14 @@
 
     editorElement.firstElementChild.focus()
 
+    // should never be needed but just in case
+    if (searchInNoteElement && editor && !searchInNoteElement.isInitialized()) {
+      console.log('TEST!', searchInNoteElement.isInitialized())
+      searchInNoteElement.init(editor)
+    }
+
+    // Close in-note search if it was open, but still search in note if in search mode
+    searchInNoteElement.close()
     if (searchString) {
       editor.searcher.search(searchString)
     } else {
@@ -226,6 +237,11 @@
 
     notes.unshift(newNote);  // push to front
     notes = notes;  // trigger change
+
+    // Clear all searching
+    searchInNoteElement.close()
+    searchString = ""
+    editor.searcher.clear()
 
     try {
       editorElement.firstElementChild.focus()
@@ -350,6 +366,17 @@
     editor.searcher.clear()
   }
 
+  onMount(() => {
+    console.log('App onMount')
+    // Sanity checks; this is mainly to fix stuff thats broken by hot reload in development
+    setTimeout(() => {
+      if (searchInNoteElement && editor && !searchInNoteElement.isInitialized()) {
+        searchInNoteElement.init(editor)
+      }
+    }, 100)
+  })
+
+  // calling this here instead of in onMount technically saves like a millisecond?
   init()
 </script>
 
@@ -503,5 +530,7 @@
     <div>
   </Split>
 
+  <!-- fixed elements -->
   <SettingsOverlay/>
+  <SearchInNote bind:this={searchInNoteElement} />
 </main>

@@ -47,31 +47,22 @@ export class Editor {
     saveManager: SaveManager;
 	quill;
 	searcher;
+	editorEl;
 
 	onModified: Function|null;
 	private _clean: Function
 
-    constructor(editorEl, onModified: Function|null = null) {
-		const bindings = {
-			customDebug: {
-				key: 'd',
-				ctrlKey: true,
-				handler: function(range, context) {
-					// @ts-ignore
-					console.log('debug', this.quill.getContents())
-				}
-			}
-		}
-		
-        this.quill = new Quill(editorEl, {
+    constructor(editorEl, onModified: Function|null) {
+		this.editorEl = editorEl
+	    this.quill = new Quill(editorEl, {
             modules: {
                 syntax: {
 					languages: languages
 				},
                 toolbar: '#toolbar',
-				keyboard: {
-					bindings: bindings
-				}
+				// keyboard: {
+				// 	bindings: kbBindings
+				// }
             },
             placeholder: "Type something...",
             theme: "snow", // or 'bubble'
