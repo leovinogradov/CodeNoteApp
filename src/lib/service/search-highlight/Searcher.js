@@ -6,8 +6,9 @@ class Searcher {
     SearchedStringLength = 0;
     SearchedString = "";
 
-    constructor(quill) {
+    constructor(quill, editorElement) {
         this.quill = quill;
+        this.editorElement = editorElement;
 
         // this.container = document.getElementById("search-container");
         //   document
@@ -22,6 +23,10 @@ class Searcher {
         //   document
         //     .getElementById("replace-all")
         //     .addEventListener("click", this.replaceAll.bind(this));
+    }
+
+    updateSearchedElementList() {
+        this.searchedElementList = this.editorElement.getElementsByClassName('ql-searched-string')
     }
   
     search(searchString) {
@@ -40,13 +45,49 @@ class Searcher {
                 indices.forEach(index =>
                     this.quill.formatText(index, length, "SearchedString", true)
                 );
+
+                this.updateSearchedElementList();
+                if (this.searchedElementList.length != this.occurrencesIndices.length) {
+                    console.error('searchedElementList not the same length as occurrencesIndices')
+                }
             } else {
-                this.occurrencesIndices = null;
+                this.occurrencesIndices = [];
+                this.searchedElementList = []
                 this.currentIndex = 0;
             }
         }
         const t1 = performance.now();
         console.log('SearchQuill', searchString, t1 - t0, 'milliseconds');
+    }
+
+    _goToIndex(newIndex) {
+        if (!this.occurrencesIndices || this.occurrencesIndices.length == 0) {
+            return;
+        }
+        if (newIndex >= this.occurrencesIndices.length) newIndex = 0
+        else if (newIndex < 0) newIndex = this.occurrencesIndices.length - 1
+
+        const prevTarget = this.searchedElementList[this.currentIndex]
+        if (prevTarget) {
+            prevTarget.classList.remove("search-highlight");
+        }
+        
+        this.currentIndex = newIndex
+        
+        let targetElement = this.searchedElementList[this.currentIndex]
+        console.log(targetElement)
+        if (targetElement) {
+            targetElement.scrollIntoView()
+            targetElement.classList.add("search-highlight");
+        }
+    }
+
+    goToPrevIndex() {
+        this._goToIndex(this.currentIndex - 1)
+    }
+
+    goToNextIndex() {
+        this._goToIndex(this.currentIndex + 1)
     }
   
     replace(oldString, newString) {
@@ -57,47 +98,65 @@ class Searcher {
       if (!this.occurrencesIndices) return;
   
       let indices = this.occurrencesIndices;
+      let indexInText = indices[this.currentIndex];
+      
   
-      this.quill.deleteText(indices[this.currentIndex], oldString.length);
-      this.quill.insertText(indices[this.currentIndex], newString);
-      this.quill.formatText(
-        indices[this.currentIndex],
-        newString.length,
-        "SearchedString",
-        false
-      );
+      this.quill.deleteText(indexInText, oldString.length);
+      this.quill.insertText(indexInText, newString);
+    
+      let oldInNewIdx = newString.indexOf(oldString)
+      if (oldInNewIdx >= 0) {
+        // Replace in occurence list
+        indexInText += oldInNewIdx
+        this.quill.formatText(indexInText, oldString.length, "SearchedString", false);
+        this.occurrencesIndices[this.currentIndex] = indexInText
+        this.updateSearchedElementList();
+        this.currentIndex += 1
+      } else {
+        // Remove from occurence list
+        this.occurrencesIndices.splice(this.currentIndex, 1)
+        this.searchedElementList.splice(this.currentIndex, 1)
+      }
+      
       // update the occurrencesIndices.
-      this.search();
+      // this.search();
     }
   
     replaceAll(oldString, newString) {
       if (!this.SearchedString) return;
-      let oldStringLen = oldString.length;
+    //   let oldStringLen = oldString.length;
   
       // if no occurrences, then search first.
       if (!this.occurrencesIndices) this.search();
       if (!this.occurrencesIndices) return;
   
       if (this.occurrencesIndices) {
-        while (this.occurrencesIndices) {
-          this.quill.deleteText(this.occurrencesIndices[0], oldStringLen);
-          this.quill.insertText(this.occurrencesIndices[0], newString);
-  
-          // update the occurrencesIndices.
-          this.search();
+        const numToReplace = this.occurrencesIndices.length;
+        for (let i=0; i<numToReplace; ++i) {
+            this.replace(oldString, newString)
         }
+        // while (this.occurrencesIndices) {
+        //   this.quill.deleteText(this.occurrencesIndices[0], oldStringLen);
+        //   this.quill.insertText(this.occurrencesIndices[0], newString);
+  
+        //   // update the occurrencesIndices.
+        //   this.search();
+        // }
       }
       this.clear();
     }
   
-    keyPressedHandler(e) {
-        if (e.key === "Enter") {
-            this.search();
-        }
-    }    
+    // keyPressedHandler(e) {
+    //     if (e.key === "Enter") {
+    //         this.search();
+    //     }
+    // }    
 
     clear() {
-        this.quill.formatText(0, this.quill.getText().length, 'SearchedString', false);
+        this.quill.formatText(0, this.quill.getText().length, 'SearchedString', false)
+        this.searchedElementList = []
+        this.occurrencesIndices = []
+        this.currentIndex = 0
     }
 
     getIndicesOf(str, searchStr) {

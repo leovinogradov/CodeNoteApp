@@ -26,8 +26,14 @@
 
 .ql-searched-string {
     // background-color: #f8ff00;
-    color: var(--note-search-color);
+    // color: var(--note-search-color);
+   
+    background-color: rgba(var(--note-search-color-rgb), 0.3);
     display: inline-block;
+
+    &.search-highlight {
+        background-color: rgba(var(--note-search-color-rgb), 1);
+    }
 }
 
 select.ql-ui {

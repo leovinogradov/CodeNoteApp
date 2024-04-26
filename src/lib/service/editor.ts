@@ -68,7 +68,7 @@ export class Editor {
             theme: "snow", // or 'bubble'
             // ...options
         });
-		this.searcher = new Searcher(this.quill)
+		this.searcher = new Searcher(this.quill, editorEl)
 		
 		// Note: used for external format remove functionality; might not be needed
 		if (Toolbar.DEFAULTS.handlers) {

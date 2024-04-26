@@ -6,7 +6,7 @@
 	// const dispatch = createEventDispatcher();
 
 	let searchValue = "";
-	let newValue = "";
+	let replaceWithValue = "";
 	let isReplacing = false;
 	let show = false;
 
@@ -89,12 +89,18 @@
 		show = !show;
 	}
 
+	function replaceNext() {
+		findNext()
+		_editor.searcher.replace(searchValue, replaceWithValue)
+	}
+	
 	function findNext() {
-		_editor.searcher.search(searchValue)
+		// _editor.searcher.search(searchValue)
+		_editor.searcher.goToNextIndex()
 	}
 
 	function findPrev() {
-		
+		_editor.searcher.goToPrevIndex()
 	}
 
 	// tauri api call to get platform
@@ -119,6 +125,11 @@
 				// ctrl/CMD + f
 				find()
 			}
+		} 
+		else if (show && e.key === "Enter" && searchValue) {
+			// Todo: only if search value is focused, find next
+			findNext()
+			// If replace value is focused, replaceNext()
 		}
 	}
 </script> 
@@ -130,8 +141,11 @@
 		<XIcon size="14" strokeWidth="2" color="#444"  />
 	</button>
 
+	<button hidden={!searchValue} class="clear-search" on:click={findPrev}>
+		&lt;
+	</button>
 	<button hidden={!searchValue} class="clear-search" on:click={findNext}>
-		>
+		&gt;
 	</button>
 </div>
 

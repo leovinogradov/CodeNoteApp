@@ -5,11 +5,13 @@
   --background-color: #fff;
   --text-color: #121416d8;
   --note-search-color: #ffcc03;
+  --note-search-color-rgb: 255, 204, 3; // rgb values for above color
 
   background: var(--background-color);
   color: var(--text-color);
 
   font-family: "Lato", Avenir, Helvetica, Arial, sans-serif; // Todo: Look into Inter font
+  // TODO: change reference font-size with different levels of text zoom?
   font-size: 15px; // Reference font size
   line-height: 1.67;
 
