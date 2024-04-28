@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { XIcon, ChevronRight, ChevronDown, ArrowUp, ArrowDown } from "lucide-svelte";
+	import { XIcon, ChevronRight, ChevronDown, ArrowUp, ArrowDown, Replace, ReplaceAll } from "lucide-svelte";
 	// import { createEventDispatcher } from 'svelte';
 	import { Editor } from "../service/editor";
 	import { platform } from '@tauri-apps/plugin-os';
@@ -60,9 +60,12 @@
 
 	function doSearch() {
 		if (searchValue) {
-			_editor.searcher.search(searchValue)
+			numResults = _editor.searcher.search(searchValue)
+			currentIndex = _editor.searcher.currentIndex + 1
 		} else {
 			_editor.searcher.clear()
+			numResults = 0
+			currentIndex = 0
 		}
 
 	}
@@ -96,14 +99,22 @@
 	function replaceNext() {
 		findNext()
 		_editor.searcher.replace(searchValue, replaceWithValue)
+		currentIndex = _editor.searcher.currentIndex + 1
+	}
+
+	function replaceAll() {
+		_editor.searcher.replaceAll(searchValue, replaceWithValue)
+		doSearch()
 	}
 
 	function findNext() {
 		_editor.searcher.goToNextIndex()
+		currentIndex = _editor.searcher.currentIndex + 1
 	}
 
 	function findPrev() {
 		_editor.searcher.goToPrevIndex()
+		currentIndex = _editor.searcher.currentIndex + 1
 	}
 
 	function toggleReplace() {
@@ -146,12 +157,12 @@
     <div class="replace-toggle-container">
         {#if isReplacing}
             <button on:click={toggleReplace}>
-                <ChevronDown size="16" color="#444" />
+                <span><ChevronDown size="16" color="#444" /></span>
             </button>
         {:else}
-          <button on:click={toggleReplace}>
-              <ChevronRight size="16" color="#444" />
-          </button>
+			<button on:click={toggleReplace}>
+				<span><ChevronRight size="16" color="#444" /></span>
+			</button>
         {/if}
     </div>
     <div class="input-container">
@@ -160,28 +171,23 @@
 
 			<div class="results-text-container">
 				{#if numResults}
-			    	<span class="results">0 of 0</span>
+			    	<span class="results">{currentIndex} of {numResults}</span>
 				{:else}
 					<span class="results">No results</span>
+					<!-- <span class="results">0 of 0</span> -->
 				{/if}
 			</div>
 			
 
-			<div class="end-buttons">
+			<div class="action-buttons">
 				<button on:click={findPrev} disabled="{!searchValue}">
-					<span>
-						<ArrowUp size="16" color="{ searchValue ? '#444' : '#ccc' }" />
-					</span>
+					<span><ArrowUp size="16" color="{ searchValue ? '#444' : '#ccc' }" /></span>
 				</button>
 				<button on:click={findNext} disabled="{!searchValue}">
-					<span>
-						<ArrowDown size="16" color="{ searchValue ? '#444' : '#ccc' }" />
-					</span>
+					<span><ArrowDown size="16" color="{ searchValue ? '#444' : '#ccc' }" /></span>
 				</button>
 				<button on:click={close}>
-					<span>
-						<XIcon size="16" color="#444"  />
-					</span>
+					<span><XIcon size="16" color="#444" /></span>
 				</button>
 			</div>
 		</div>
@@ -189,6 +195,15 @@
 		{#if isReplacing}
 			<div class="row2">
 				<input bind:value={replaceWithValue} placeholder="Replace" />
+				
+				<div class="action-buttons">
+					<button on:click={replaceNext} disabled="{!replaceWithValue || numResults == 0}">
+						<span><Replace size="16" color="{ (!replaceWithValue || numResults == 0) ? '#ccc' : '#444' }" /></span>
+					</button>
+					<button on:click={replaceAll} disabled="{!replaceWithValue || numResults == 0}">
+						<span><ReplaceAll size="16" color="{ (!replaceWithValue || numResults == 0) ? '#ccc' : '#444' }" /></span>
+					</button>
+				</div>
 			</div>
 		{/if}
 	</div>
@@ -206,14 +221,15 @@
 		top: 60px;
 		right: 15px;
 		// width: 310px;
+		line-height: 1;
 		background-color: white;
 		border-radius: 4px;
 		border: 1px solid rgba(0,0,0,0.1);
 		display: none;
-		height: 28px;
-		&.replacing {
-			height: 53px;
-		}
+		// height: 28px;
+		// &.replacing {
+		//     height: 53px;
+		// }
 		.replace-toggle-container {
 			padding: 4px;
 			button {
@@ -226,10 +242,12 @@
 		.input-container {
 			padding: 2px;
 			.results-text-container {
-				width: 65px;
+				width: 64px;
 				display: inline-block;
+				padding: 2px;
+				line-height: 1;
 				.results {
-					font-size: 12px;
+					font-size: 13px;
 				}
 			}
 			
@@ -238,39 +256,44 @@
 				border: 0;
 				margin: 2px 0;
 				// width: calc(100% - 3px);
-				width: 160px;
-			}
-
-			.end-buttons {
-				padding: 2px;
-				line-height: 20px;
-				display: inline-block;
-				button {
-					width: 20px;
-					height: 20px;
-					// padding: 2px; // 21 - 3 - 3 = 15px (size of svg)
-					padding: 0;
-					border: 0;
-					position: relative;
-					display: inline-block;
-					span {
-						position: absolute; /*Can also be `fixed`*/
-						left: 0;
-						right: 0;
-						top: 0;
-						bottom: 0;
-						margin: auto;
-						width: 16px;
-						height: 16px;
-						display: inline-block;
-					}
-				}
+				width: 150px;
 			}
 		}
+
+		.action-buttons {
+			padding: 2px;
+			line-height: 20px;
+			display: inline-block;
+			button {
+				width: 20px;
+				height: 20px;
+				padding: 0;
+				border: 0;
+			}
+		}
+
+		// .row2 .action-buttons {
+		// 	button {
+		// 		border: 1px solid rgba(0,0,0,0.1);
+		// 	}
+		// }
 		
 		// All buttons
 		button {
 			vertical-align: top;
+			position: relative;
+			display: inline-block;
+			span {
+				position: absolute; /*Can also be `fixed`*/
+				left: 0;
+				right: 0;
+				top: 0;
+				bottom: 0;
+				margin: auto;
+				width: 16px;
+				height: 16px;
+				display: inline-block;
+			}
 		}
 	}
 	.find-and-replace.show {

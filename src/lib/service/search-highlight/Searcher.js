@@ -58,6 +58,7 @@ class Searcher {
         }
         const t1 = performance.now();
         console.log('SearchQuill', searchString, t1 - t0, 'milliseconds');
+        return this.occurrencesIndices.length;
     }
 
     _goToIndex(newIndex) {
