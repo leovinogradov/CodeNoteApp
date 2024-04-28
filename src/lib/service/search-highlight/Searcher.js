@@ -61,6 +61,7 @@ class Searcher {
     }
 
     _goToIndex(newIndex) {
+        console.log('TEST1', this.occurrencesIndices)
         if (!this.occurrencesIndices || this.occurrencesIndices.length == 0) {
             return;
         }
@@ -75,7 +76,7 @@ class Searcher {
         this.currentIndex = newIndex
         
         let targetElement = this.searchedElementList[this.currentIndex]
-        console.log(targetElement)
+        console.log('TEST1', targetElement)
         if (targetElement) {
             targetElement.scrollIntoView()
             targetElement.classList.add("search-highlight");

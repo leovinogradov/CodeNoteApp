@@ -49,8 +49,8 @@
     </div>
   </div>
 </div>
-	
-	
+
+
 <style lang="scss">
 .setting-overlay {
   position: fixed;
@@ -61,6 +61,7 @@
 }
 .settings-button {
   padding: 0;
+  border: 0;
   width: 26px;
   height: 26px;
   border-radius: 13px;
@@ -96,6 +97,6 @@
   }
 }
 
-/* Show the menu */	
-.show {display:block;}	
+/* Show the menu */
+.show {display:block;}
 </style>
