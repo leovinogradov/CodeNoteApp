@@ -17,6 +17,8 @@ import Syntax from "./syntax-highlight/syntax";
 
 import { languages } from "./constants";
 
+const SOURCE_USER = Quill.sources.USER;
+
 const ColorStyle = Quill.import("attributors/style/color");
 const BackgroundStyle = Quill.import("attributors/style/background");
 // @ts-ignore
@@ -90,10 +92,9 @@ export class Editor {
         this.quill.on("text-change", this._quillOnChange.bind(this))
 		this.quill.on('selection-change', (range, _oldRange, _source) => {
 			if (range) {
-				console.log('selection change', range)
 				this.searcher.cursorIndex = range.index
 			}
-		  });
+		});
 		this.onModified = onModified
     }
 
@@ -111,13 +112,16 @@ export class Editor {
 	// }
 
 	private _quillOnChange(delta, oldDelta, source) {
-		// TODO
-		// dispatchModified()
+		// console.log(delta, source)
 		// console.log(delta, oldDelta, source)
+		// TODO: maybe do change only if source == user or source == api and last index has inserts
 		if (this.saveManager) {
 			this.saveManager.saveAfterDelay()
 			if (this.onModified) {
 				this.onModified(this.saveManager.filename, this.quill.getContents())
+			}
+			if (this.searcher.SearchedString && source == SOURCE_USER && this.searcher.occurrencesIndices.length > 0) {
+				// TODO: searcher on modified
 			}
 		}
 	}

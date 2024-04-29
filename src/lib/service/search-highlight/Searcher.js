@@ -4,7 +4,6 @@ class Searcher {
     occurrencesIndices = [];
     searchedElementList = [];
     currentIndex = 0;
-    SearchedStringLength = 0;
     SearchedString = "";
     lastCursorIndex = null;
     cursorIndex = null;
@@ -35,7 +34,7 @@ class Searcher {
 
     search(searchString) {
         const t0 = performance.now();
-        this.clear();   // remove previous highlights
+        this.clearHighlight();
         this.SearchedString = searchString;
         let match = false;
 
@@ -45,7 +44,7 @@ class Searcher {
             match = re.test(totalText);
             if (match) {
                 let indices = (this.occurrencesIndices = this.getIndicesOf(totalText, this.SearchedString));
-                let length = (this.SearchedStringLength = this.SearchedString.length);
+                let length = this.SearchedString.length;
                 
                 // Apply SearchedString highlight blots to text
                 // Alternating blots is needed so that matches that are next to eachother are not combined into one blot
@@ -149,11 +148,19 @@ class Searcher {
         // if no occurrences, then search first.
         if (!this.occurrencesIndices) this.search();
         if (!this.occurrencesIndices) return;
-
+        
+        this.firstTime = true;
         this.goToNextIndex()
         if (oldString == newString) return;
         
         const indexInText = this.occurrencesIndices[this.currentIndex];
+        const oldInNewIdx = newString.indexOf(oldString)
+
+        let lastFormat;
+        if (oldInNewIdx >= 0) {
+            const formats = this.quill.getFormat(indexInText)
+            lastFormat = formats['SearchedString2'] ? 'SearchedString2' : 'SearchedString'
+        }
 
         this.quill.deleteText(indexInText, oldString.length);
         this.quill.insertText(indexInText, newString);
@@ -166,28 +173,28 @@ class Searcher {
         for (let i=this.currentIndex+1; i<this.occurrencesIndices.length; ++i) {
             this.occurrencesIndices[i] += lengthDiff
         }
-
-        let oldInNewIdx = newString.indexOf(oldString)
+        
         if (oldInNewIdx >= 0) {
             // Replace in occurence list
             let newIndex = indexInText + oldInNewIdx
             // TODO: test if this can mess up elements list for two searchstrings next to eachother
-            this.quill.formatText(newIndex, oldString.length, "SearchedString", true);
+            this.quill.formatText(newIndex, oldString.length, lastFormat, true);
             this.occurrencesIndices[this.currentIndex] = newIndex
             this.updateSearchedElementList();
+            this.currentIndex += 1;
         } else {
             // Remove from occurence list
             this.occurrencesIndices.splice(this.currentIndex, 1)
             if (this.searchedElementList) {
                 this.searchedElementList.splice(this.currentIndex, 1)
             }
-            // Wrap to beginning if needed
-            if (this.currentIndex >= this.occurrencesIndices.length) {
-                this.currentIndex = 0;
-            }
-            this.firstTime = true;
-            
         }
+
+        // Wrap to beginning if needed
+        if (this.currentIndex >= this.occurrencesIndices.length) {
+            this.currentIndex = 0;
+        }
+        this.firstTime = true;
 
         // Set cursor after replaced text
         this.quill.setSelection(indexInText + newString.length)
@@ -198,7 +205,7 @@ class Searcher {
     replaceAll(oldString, newString) {
         if (!this.SearchedString) return;
 
-        // if no occurrences, then search first.
+        // if no occurrences, then search first. first
         if (!this.occurrencesIndices) this.search();
         if (!this.occurrencesIndices) return;
 
@@ -212,20 +219,14 @@ class Searcher {
         return this.search(oldString)
     }
 
-    // keyPressedHandler(e) {
-    //     if (e.key === "Enter") {
-    //         this.search();
-    //     }
-    // }    
-
-    clear() {
+    clearHighlight() {
         this.quill.formatText(0, this.quill.getText().length, 'SearchedString', false)
         this.quill.formatText(0, this.quill.getText().length, 'SearchedString2', false)
-        // if (!soft) {
-        //     this.searchedElementList = []
-        //     this.occurrencesIndices = []
-        //     this.currentIndex = 0
-        // }
+    } 
+
+    clear() {
+        this.clearHighlight();
+        this.SearchedString = '';
     }
 
     getIndicesOf(str, searchStr) {
