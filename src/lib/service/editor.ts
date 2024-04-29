@@ -9,7 +9,7 @@ import { BaseDirectory, join } from "@tauri-apps/api/path";
 import { SaveManager, createNewNote } from "./save-manager";
 import { isWhitespace } from "./utils";
 
-import SearchedStringBlot from './search-highlight/SearchBlot'
+import { SearchedStringBlot, SearchedStringBlot2 } from './search-highlight/SearchBlot'
 import Searcher from "./search-highlight/Searcher";
 
 // import CodeSyntax from "./syntax-highlight/code-syntax";
@@ -32,6 +32,8 @@ Quill.register(BackgroundStyle);
 Quill.register("modules/Searcher", Searcher);
 // @ts-ignore
 Quill.register(SearchedStringBlot);
+// @ts-ignore
+Quill.register(SearchedStringBlot2);
 
 Quill.register({ "modules/syntax": Syntax }, true)
 
@@ -86,6 +88,12 @@ export class Editor {
 		// }
 
         this.quill.on("text-change", this._quillOnChange.bind(this))
+		this.quill.on('selection-change', (range, _oldRange, _source) => {
+			if (range) {
+				console.log('selection change', range)
+				this.searcher.cursorIndex = range.index
+			}
+		  });
 		this.onModified = onModified
     }
 
@@ -121,7 +129,7 @@ export class Editor {
 
 		this.quill.setContents([], 'silent')
 		this.saveManager = new SaveManager(this.quill, note.filename);
-
+		this.searcher.lastCursorIndex = null
 		console.log('opened new')
 		return {
 			exitResult,
@@ -154,6 +162,7 @@ export class Editor {
 
 		await this._setContentsFromFile(filename)
 		this.saveManager = new SaveManager(this.quill, filename)
+		this.searcher.lastCursorIndex = null
 
 		// if (this.onModified) {
 		// 	this.onModified(this.saveManager.filename, this.quill.getContents())

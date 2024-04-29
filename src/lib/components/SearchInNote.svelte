@@ -18,7 +18,9 @@
 	// use e.ctrlKey for Windows and e.metaKey for Mac
 	let _alternateFunctionProperty: string = "ctrlKey";
 
+	// DOM elements
 	let searchInputEl;
+	let replaceInputEl;
 
 	export function isInitialized() {
 		return !!_editor;
@@ -27,6 +29,8 @@
 	export function close() {
 		show = false;
 		isReplacing = false;
+		numResults = 0;
+		_editor.searcher.clear();
 	}
 
 	export function init(editor: Editor) {
@@ -70,12 +74,7 @@
 
 	}
 
-	function clearSearch() {
-		searchValue = ""
-		doSearch()
-	}
-
-	function openSearch() {
+	function openFind() {
 		show = true;
 		// setTimeout so that focus triggers after element is visible
 		setTimeout(() => {
@@ -86,25 +85,19 @@
 		}, 0)
 	}
 
-	function find() {
-		// TODO: search for selected
-		// searchValue = "test"
-		openSearch()
-	}
-
-	function findReplace() {
-		show = !show;
+	function openFindReplace() {
+		isReplacing = true;
+		openFind();
 	}
 
 	function replaceNext() {
-		findNext()
-		_editor.searcher.replace(searchValue, replaceWithValue)
+		numResults = _editor.searcher.replace(searchValue, replaceWithValue)
 		currentIndex = _editor.searcher.currentIndex + 1
 	}
 
 	function replaceAll() {
-		_editor.searcher.replaceAll(searchValue, replaceWithValue)
-		doSearch()
+		numResults = _editor.searcher.replaceAll(searchValue, replaceWithValue)
+		currentIndex = _editor.searcher.currentIndex + 1
 	}
 
 	function findNext() {
@@ -134,20 +127,22 @@
     })
 
 	function onKeyDown(e) {
-		if (e.key === 'f' && e[_alternateFunctionProperty]) {
+		if ((e.key === 'f' || e.key === 'F') && e[_alternateFunctionProperty]) {
 			e.preventDefault()
 			if (e.shiftKey) {
 				// ctrl/CMD + shift + f
-				findReplace()
+				openFindReplace()
 			} else {
 				// ctrl/CMD + f
-				find()
+				openFind()
 			}
 		}
-		else if (show && e.key === "Enter" && searchValue) {
-			// Todo: only if search value is focused, find next
-			findNext()
-			// If replace value is focused, replaceNext()
+		else if (show && e.key === "Enter" && searchValue && numResults) {
+			if (document.activeElement === searchInputEl) {
+				findNext()
+			} else if (document.activeElement === searchInputEl) {
+				replaceNext()
+			}
 		}
 	}
 </script>
@@ -194,7 +189,7 @@
 
 		{#if isReplacing}
 			<div class="row2">
-				<input bind:value={replaceWithValue} placeholder="Replace" />
+				<input bind:value={replaceWithValue} bind:this={replaceInputEl} placeholder="Replace" />
 				
 				<div class="action-buttons">
 					<button on:click={replaceNext} disabled="{!replaceWithValue || numResults == 0}">
@@ -219,7 +214,7 @@
 		position: fixed;
 		z-index: 99;
 		top: 60px;
-		right: 15px;
+		right: 23px;
 		// width: 310px;
 		line-height: 1;
 		background-color: white;
@@ -294,6 +289,9 @@
 				height: 16px;
 				display: inline-block;
 			}
+		}
+		button:not(:disabled):hover {
+			background-color: #f4f4f4;
 		}
 	}
 	.find-and-replace.show {
