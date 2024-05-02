@@ -16,8 +16,8 @@
     "@tauri-apps/plugin-fs": "^2.0.0-beta.2",
     "@tauri-apps/plugin-os": "2.0.0-beta.2",
     "lucide-svelte": "^0.330.0",
-    "parchment": "^2.0.1",
-    "quill": "^2.0.0-rc.5",
+    "parchment": "^3.0.0",
+    "quill": "^2.0.1",
     "quill-delta": "^5.1.0",
     "svelte-preprocess": "^5.1.3"
   },

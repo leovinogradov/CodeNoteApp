@@ -1,5 +1,7 @@
 // Adapted from https://github.com/MuhammedAlkhudiry/quill-find-replace-module/blob/master/Searcher.js (and heavily modified)
 
+import Delta from 'quill-delta';
+
 class Searcher {
     occurrencesIndices = [];
     searchedElementList = [];
@@ -33,44 +35,89 @@ class Searcher {
     }
 
     search(searchString) {
-        const t0 = performance.now();
-        this.clearHighlight();
         this.SearchedString = searchString;
+        // this.clearHighlight();
         let match = false;
 
         if (this.SearchedString) {
             let totalText = this.quill.getText();
+            this.quill.getContents();
+
             let re = new RegExp(this.SearchedString, "gi");
             match = re.test(totalText);
             if (match) {
-                let indices = (this.occurrencesIndices = this.getIndicesOf(totalText, this.SearchedString));
-                let length = this.SearchedString.length;
+                // Temp hack to stop clashing between syntax highlight and search highlight
+                window['lastSearchHighlight'] = Date.now()
+                
+                const indices = this.getIndicesOf(totalText, this.SearchedString);
+                // indices = indices.slice(0, 50)
+                this.occurrencesIndices = indices;
+                const length = this.SearchedString.length;
+
+
+                // Apply SearchedString highlight blots to text
+                // Alternating blots is needed so that matches that are next to eachother are not combined into one blot
+                const delta = new Delta()
+                let flipflop = false
+                let lastIndex = 0
+                for (let idx of indices) {
+                    flipflop = !flipflop
+                    if (idx > 0) {
+                        delta.retain(idx - lastIndex, { "SearchedString": false, "SearchedString2": false })
+                    }
+                    if (flipflop) {
+                        // this.quill.formatText(idx, length, "SearchedString", true)
+                        delta.retain(length, { "SearchedString": true })
+                    } else {
+                        // this.quill.formatText(idx, length, "SearchedString2", true)
+                        delta.retain(length, { "SearchedString2": true })
+                    }
+                    lastIndex = idx + length
+                }
+
+                console.log(indices, delta)
+                this.quill.updateContents(delta)
                 
                 // Apply SearchedString highlight blots to text
                 // Alternating blots is needed so that matches that are next to eachother are not combined into one blot
-                let flipflop = false
-                indices.forEach(index => {
-                    flipflop = !flipflop
-                    let formatName = flipflop ? "SearchedString" : "SearchedString2"
-                    this.quill.formatText(index, length, formatName, true)
-                });
+                // let flipflop = false
+                // console.log('GOT INDEXES', indices.length)
+                // indices.forEach(index => {
+                //     flipflop = !flipflop
+                //     let formatName = flipflop ? "SearchedString" : "SearchedString2"
+                //     this.quill.formatText(index, length, formatName, true)
+                // });
+
+                /*
+                // Assuming editor currently contains [{ insert: 'Hello World!' }]
+                quill.updateContents(new Delta()
+                .retain(6)                  // Keep 'Hello '
+                .delete(5)                  // 'World' is deleted
+                .insert('Quill')
+                .retain(1, { bold: true })  // Apply bold to exclamation mark
+                );
+                // Editor should now be [
+                //  { insert: 'Hello Quill' },
+                //  { insert: '!', attributes: { bold: true} }
+                // ]
+                */
 
                 this.firstTime = true
-
-                this.updateSearchedElementList();
-                if (this.searchedElementList.length != this.occurrencesIndices.length) {
-                    console.error(`searchedElementList (${this.searchedElementList.length}) not the same length as occurrencesIndices (${this.occurrencesIndices.length})`)
-                }
+                
+                setTimeout(() => {
+                    this.updateSearchedElementList();
+                    if (this.searchedElementList.length != this.occurrencesIndices.length) {
+                        console.error(`searchedElementList (${this.searchedElementList.length}) not the same length as occurrencesIndices (${this.occurrencesIndices.length})`)
+                    }
+                }, 0)
             }
         }
         if (!match) {
             this.occurrencesIndices = []
             this.searchedElementList = []
             this.currentIndex = 0;
+            window['lastSearchHighlight'] = 0
         }
-        console.log('index', this.currentIndex)
-        const t1 = performance.now();
-        console.log('SearchQuill', searchString, t1 - t0, 'milliseconds');
         return this.occurrencesIndices.length;
     }
 
@@ -220,13 +267,30 @@ class Searcher {
     }
 
     clearHighlight() {
-        this.quill.formatText(0, this.quill.getText().length, 'SearchedString', false)
-        this.quill.formatText(0, this.quill.getText().length, 'SearchedString2', false)
+        const textLength = this.quill.getText().length;
+        this.quill.formatText(0, textLength, { 'SearchedString': false, 'SearchedString2': false })
+
+        // this.quill.formatText(0, textLength, 'SearchedString', false)
+        // this.quill.formatText(0, textLength, 'SearchedString2', false)
+        /* // Weird bullshit fix 
+        const ops = this.quill.getContents().ops
+        for (let op of ops) {
+            if (op.attributes) {
+                if (op.attributes['SearchedString']) {
+                    op.attributes['SearchedString'] = false
+                }
+                if (op.attributes['SearchedString2']) {
+                    op.attributes['SearchedString2'] = false
+                }
+            }
+        }
+        this.quill.setContents(ops) */
     } 
 
     clear() {
         this.clearHighlight();
         this.SearchedString = '';
+        // window['lastSearchHighlight'] = 0
     }
 
     getIndicesOf(str, searchStr) {
@@ -234,7 +298,10 @@ class Searcher {
         let startIndex = 0,
             index,
             indices = [];
-        while ((index = str.toLowerCase().indexOf(searchStr.toLowerCase(), startIndex)) > -1) {
+        const hay = str.toLowerCase();
+        const needle = searchStr.toLowerCase()
+        while ((index = hay.indexOf(needle, startIndex)) > -1) {
+            console.log('wut', index, hay[index])
             indices.push(index);
             startIndex = index + searchStrLen;
         }

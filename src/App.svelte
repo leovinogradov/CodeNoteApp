@@ -152,7 +152,7 @@
     if (typeof obj == "string") {
       obj = JSON.parse(obj)
     }
-    const lines = Editor.getLinesFromDeltas(obj, 2)
+    const lines = Editor.getLinesFromDeltas(obj, 2, 50)
     while (lines.length < 2) lines.push("")
     return lines
   }
@@ -268,12 +268,9 @@
     }
   }
 
-  function onActiveNoteModified(filename, content) {
-    // console.log('modified', filename)
-    /* when note is modified (but not necessarily saved) */
-    // const filename = e.detail.filename
-    // const editorEl = e.detail.editorEl
-    const first2Lines: string[] = _getFirst2LinesFromContent(content)
+  function onActiveNoteModified(filename, delta, oldDelta, source) {
+    /* Recompute meta when note is modified (but not necessarily saved) */
+    const first2Lines: string[] = _getFirst2LinesFromContent(this.quill.getContents())
     if (searchString) {
       // When something is searched
       const matchingNoteIdx = matchingNotes.findIndex((note) => note.filename == filename)
@@ -409,13 +406,15 @@
               </h4>
               <p>
                 <span class="modified-time">{note.note_meta.modifiedTime}</span>
-                {#each note.note_meta.search_subtitle_as_tokens as token}
-                  {#if token.highlight}
-                    <span class="search-highlight">{token.text}</span>
-                  {:else}
-                    {token.text}
-                  {/if}
-                {/each}
+                <span class="subtitle">
+                  {#each note.note_meta.search_subtitle_as_tokens as token}
+                    {#if token.highlight}
+                      <span class="search-highlight">{token.text}</span>
+                    {:else}
+                      {token.text}
+                    {/if}
+                  {/each}
+                </span>
               </p>
             </div>
           {/each}
@@ -432,7 +431,7 @@
                 class:selected={currentFilename == note.filename}
                 on:click={() => onNoteClick(note)}> 
               <h4>{note.note_meta.title}</h4>
-              <p><span class="modified-time">{note.note_meta.modifiedTime}</span>{note.note_meta.subtitle}</p>
+              <p><span class="modified-time">{note.note_meta.modifiedTime}</span><span class="subtitle">{note.note_meta.subtitle}</span></p>
               <!-- <small style="font-size: 11px">{note.filename}</small> for debugging only -->
             </div>
           {/each}

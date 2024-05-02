@@ -293,16 +293,22 @@ button {
     z-index: 10 !important;  // for flip animation
   }
 
-  h4, h5 {
+  h4, h5, p {
     margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  h4, h5 {
+    white-space: nowrap;
   }
   p {
-    margin: 0;
-    // font-size: 0.75em;
-    // font-size: 12px;
+    font-size: 0.9em;
   }
   .modified-time {
-    margin-right: 8px;
+    margin-right: 5px;
+  }
+  .subtitle {
+    color: #888;
   }
   .search-highlight {
     color: var(--note-search-color);

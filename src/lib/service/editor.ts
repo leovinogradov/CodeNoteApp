@@ -118,7 +118,8 @@ export class Editor {
 		if (this.saveManager) {
 			this.saveManager.saveAfterDelay()
 			if (this.onModified) {
-				this.onModified(this.saveManager.filename, this.quill.getContents())
+				this.onModified(this.saveManager.filename, delta, oldDelta, source)
+				// this.quill.getContents()
 			}
 			if (this.searcher.SearchedString && source == SOURCE_USER && this.searcher.occurrencesIndices.length > 0) {
 				// TODO: searcher on modified
@@ -218,36 +219,39 @@ export class Editor {
 	}
 
 
-	static getLinesFromDeltas(obj, limit=2) {
-		/* get first {limit} not empty lines */
+	static getLinesFromDeltas(obj, lineLimit=2, charLimit=100) {
+		/* get first {lineLimit} not empty lines */
 		if (!obj.ops) return []
 		const deltas = obj.ops
 		const lines: string[] = []
 		let currentLine = ""
+		let count = 0
 		for (let d of deltas) {
 			for (let char of d.insert) {
+				count += 1;
 				if (char == '\n') {
+					// found new line
+					count = 0
 					if (currentLine) {
 						lines.push(currentLine)
-						currentLine = ""
-						if (lines.length >= limit) {
+						if (lines.length >= lineLimit) {
 							return lines
 						}
+						currentLine = ""
 					}
-				} else {
+				} 
+				else if (count < charLimit){
 					currentLine += char
 				}
+				else if (count == charLimit) {
+					// reached charLimit
+					lines.push(currentLine + "...")
+					if (lines.length >= lineLimit) {
+						return lines
+					}
+					currentLine = ""
+				} 
 			}
-			// if (d.insert != '\n') {
-			// 	currentLine += d.insert
-			// }
-			// if (d.insert == '\n' || d.insert.endsWith('\n')) {
-			// 	if (currentLine) {
-			// 		lines.push(currentLine)
-			// 		currentLine = ""
-			// 		if (lines.length >= limit) break
-			// 	}
-			// }
 		}
 		return lines
 	}
