@@ -490,20 +490,16 @@
                     <button class="ql-code" />
                   </span>
 
-                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 1) }}>
-                    {#if formatvalue == 1}<div class="selected-bar"></div>{/if}
+                  <button class="dropdown-item" class:selected="{formatvalue==1}" on:click={() => { editor.quill.format('header', 1) }}>
                     <h1>Title</h1>
                   </button>
-                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 2) }}>
-                    {#if formatvalue == 2}<div class="selected-bar"></div>{/if}
+                  <button class="dropdown-item" class:selected="{formatvalue==2}" on:click={() => { editor.quill.format('header', 2) }}>
                     <h2>Heading</h2>
                   </button>
-                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 3) }}>
-                    {#if formatvalue == 3}<div class="selected-bar"></div>{/if}
+                  <button class="dropdown-item" class:selected="{formatvalue==3}" on:click={() => { editor.quill.format('header', 3) }}>
                     <h3>Subheading</h3>
                   </button>
-                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 0) }}>
-                    {#if formatvalue == 0}<div class="selected-bar"></div>{/if}
+                  <button class="dropdown-item" class:selected="{formatvalue==0}" on:click={() => { editor.quill.format('header', 0) }}>
                     <p>Paragraph</p>
                   </button>
                 </div>

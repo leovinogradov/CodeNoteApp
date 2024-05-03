@@ -47,37 +47,46 @@
     height: 28px;
     width: 30px !important;
   }
-  .dropdown .dropdown-item {
+  .dropdown button.dropdown-item {
     text-align: left;
     position: relative;
-    p, h1, h2, h3 {
-      margin: 0;
-      color: inherit !important;
-    }
-    .selected-bar {
-      position: absolute;
-      top: calc(1.2em - 3px);
-      left: 4px;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background-color: var(--text-color);
-    }
-  }
-  .dropdown button.dropdown-item {
     width: 100%;
     margin: 0;
     border-radius: 0;
-    padding: 0 16px;
-    height: 2.4em;
-    line-height: 2.4em;
-    // line-height: 1;
+    padding: 0 10px;
+    height: 100%;
+    margin-bottom: 6px;
+
+    // For some reason, line-height: 1 is taller than the font?? Adjusting for it here
+    line-height: 0.9;
+    h1 {line-height: calc(2rem - 4px);}
+
+    p, h1, h2, h3 {
+      padding: 4px 6px;
+      margin: 0;
+      border-radius: 4px;
+      color: var(--text-color);
+      transition-property: background-color, color;
+      transition-duration: 0.1s;
+      transition-timing-function: ease-in-out;
+    }
+  }
+  .dropdown button.dropdown-item.selected {
+    p, h1, h2, h3 {
+      background-color: rgba(0,0,0,0.05);
+    }
+  }
+  .dropdown button.dropdown-item:hover {
+    p, h1, h2, h3 {
+      background-color: var(--text-color);
+      color: white !important;
+    }
   }
   .dropdown {
     .dropdown-content {
       .ql-formats {
         margin-right: 0;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
         padding: 0 8px 4px 8px;
         border-bottom: 1px solid rgba(0, 0, 0, 0.07);
       }
