@@ -5,11 +5,13 @@
   --background-color: #fff;
   --text-color: #121416d8;
   --note-search-color: #ffcc03;
+  --note-search-color-rgb: 255, 204, 3; // rgb values for above color
 
   background: var(--background-color);
   color: var(--text-color);
 
   font-family: "Lato", Avenir, Helvetica, Arial, sans-serif; // Todo: Look into Inter font
+  // TODO: change reference font-size with different levels of text zoom?
   font-size: 15px; // Reference font size
   line-height: 1.67;
 
@@ -129,7 +131,7 @@ body {
   position: fixed; // position fixed just in case to protect against any CSS bugs
   top: 0;
   right: 0;
-  z-index: 1;
+  z-index: 10;
   height: 30px;
   user-select: none;
   display: flex;
@@ -264,6 +266,19 @@ button {
 .text-editor-outer, .notes-list {
   height: calc(100vh - 53px); // 100% - height of header
 }
+.text-editor-outer {
+  overflow-y: scroll;
+  #text-editor {
+    // make text-editor be full height, and outer element scrollable.
+    // this is because search highlights are put into the #text-editor element.
+    // this won't be needed if you figure out how to put them in ql-editor without them getting removed.
+    height: auto !important;
+  }
+  .ql-editor {
+    overflow: hidden;
+  }
+}
+
 
 .notes-list {
   position: relative;
@@ -291,16 +306,22 @@ button {
     z-index: 10 !important;  // for flip animation
   }
 
-  h4, h5 {
+  h4, h5, p {
     margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  h4, h5 {
+    white-space: nowrap;
   }
   p {
-    margin: 0;
-    // font-size: 0.75em;
-    // font-size: 12px;
+    font-size: 0.9em;
   }
   .modified-time {
-    margin-right: 8px;
+    margin-right: 5px;
+  }
+  .subtitle {
+    color: #888;
   }
   .search-highlight {
     color: var(--note-search-color);

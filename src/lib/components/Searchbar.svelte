@@ -16,18 +16,18 @@
 <style lang="scss">
 	.searchbar {
 		border: 1px solid lightgray;
-		padding: 6px 12px;
-		border-radius: 18px;
+		padding: 5px 10px 5px 12px;
+		border-radius: 20px;
 		width: 100%;
 		input {
-			width: calc(100% - 29px);
+			width: calc(100% - 27px);
 			padding-right: 0;
-			padding-bottom: 2px;
+			// padding-bottom: 2px;
 		}
 		button.clear-search {
-			height: 22px;
-			min-width: 22px;
-			width: 22px;
+			height: 20px;
+			min-width: 20px;
+			width: 20px;
 			padding: 0;
 			margin: 0;
 			border: none;

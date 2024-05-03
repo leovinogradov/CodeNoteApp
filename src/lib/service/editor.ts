@@ -1,39 +1,25 @@
 import Quill from "quill";
 import Toolbar from "quill/modules/toolbar"
-// import Parchment from "parchment";
-// import { onMount, tick, createEventDispatcher, onDestroy } from "svelte";
-
-import { readTextFile } from "@tauri-apps/plugin-fs";
-import { BaseDirectory, join } from "@tauri-apps/api/path";
 
 import { SaveManager, createNewNote } from "./save-manager";
-import { isWhitespace } from "./utils";
+import { isWhitespace, readFile } from "./utils";
 
-import SearchedStringBlot from './search-highlight/SearchBlot'
 import Searcher from "./search-highlight/Searcher";
 
-// import CodeSyntax from "./syntax-highlight/code-syntax";
 import Syntax from "./syntax-highlight/syntax";
 
 import { languages } from "./constants";
 
 const ColorStyle = Quill.import("attributors/style/color");
 const BackgroundStyle = Quill.import("attributors/style/background");
-// @ts-ignore
 ColorStyle.whitelist = []; // remove pasted colors
-// @ts-ignore
 BackgroundStyle.whitelist = []; // remove pasted bg colors
-// @ts-ignore
 Quill.register(ColorStyle);
-// @ts-ignore
 Quill.register(BackgroundStyle);
 
-// @ts-ignore
 Quill.register("modules/Searcher", Searcher);
-// @ts-ignore
-Quill.register(SearchedStringBlot);
 
-Quill.register({ "modules/syntax": Syntax }, true)
+Quill.register({ "modules/syntax": Syntax }, true);
 
 
 export interface ExitResult {
@@ -47,37 +33,28 @@ export class Editor {
     saveManager: SaveManager;
 	quill;
 	searcher;
+	editorEl;
 
 	onModified: Function|null;
 	private _clean: Function
 
-    constructor(editorEl, onModified: Function|null = null) {
-		const bindings = {
-			customDebug: {
-				key: 'd',
-				ctrlKey: true,
-				handler: function(range, context) {
-					// @ts-ignore
-					console.log('debug', this.quill.getContents())
-				}
-			}
-		}
-		
-        this.quill = new Quill(editorEl, {
+    constructor(editorEl, onModified: Function|null) {
+		this.editorEl = editorEl
+	    this.quill = new Quill(editorEl, {
             modules: {
                 syntax: {
 					languages: languages
 				},
                 toolbar: '#toolbar',
-				keyboard: {
-					bindings: bindings
-				}
+				// keyboard: {
+				// 	bindings: kbBindings
+				// }
             },
             placeholder: "Type something...",
             theme: "snow", // or 'bubble'
             // ...options
         });
-		this.searcher = new Searcher(this.quill)
+		this.searcher = new Searcher(this.quill, editorEl)
 		
 		// Note: used for external format remove functionality; might not be needed
 		if (Toolbar.DEFAULTS.handlers) {
@@ -95,6 +72,11 @@ export class Editor {
 		// }
 
         this.quill.on("text-change", this._quillOnChange.bind(this))
+		this.quill.on('selection-change', (range, _oldRange, _source) => {
+			if (range) {
+				this.searcher.cursorIndex = range.index
+			}
+		});
 		this.onModified = onModified
     }
 
@@ -112,13 +94,14 @@ export class Editor {
 	// }
 
 	private _quillOnChange(delta, oldDelta, source) {
-		// TODO
-		// dispatchModified()
+		// console.log(delta, source)
 		// console.log(delta, oldDelta, source)
+		// TODO: maybe do change only if source == user or source == api and last index has inserts
 		if (this.saveManager) {
 			this.saveManager.saveAfterDelay()
 			if (this.onModified) {
-				this.onModified(this.saveManager.filename, this.quill.getContents())
+				this.onModified(this.saveManager.filename, delta, oldDelta, source)
+				// this.quill.getContents()
 			}
 		}
 	}
@@ -130,7 +113,7 @@ export class Editor {
 
 		this.quill.setContents([], 'silent')
 		this.saveManager = new SaveManager(this.quill, note.filename);
-
+		this.searcher.lastCursorIndex = null
 		console.log('opened new')
 		return {
 			exitResult,
@@ -139,9 +122,7 @@ export class Editor {
 	}
 
 	private async _setContentsFromFile(filename) {
-		const path = await join("notes", filename);
-		let content = await readTextFile(path, { baseDir: BaseDirectory.AppData });
-		// console.log('setting from content:', content)
+		const content = await readFile(filename);
 		
 		if (!content) {
 			console.log('setting from empty content')
@@ -163,6 +144,7 @@ export class Editor {
 
 		await this._setContentsFromFile(filename)
 		this.saveManager = new SaveManager(this.quill, filename)
+		this.searcher.lastCursorIndex = null
 
 		// if (this.onModified) {
 		// 	this.onModified(this.saveManager.filename, this.quill.getContents())
@@ -214,36 +196,39 @@ export class Editor {
 	}
 
 
-	static getLinesFromDeltas(obj, limit=2) {
-		/* get first {limit} not empty lines */
+	static getLinesFromDeltas(obj, lineLimit=2, charLimit=100) {
+		/* get first {lineLimit} not empty lines */
 		if (!obj.ops) return []
 		const deltas = obj.ops
 		const lines: string[] = []
 		let currentLine = ""
+		let count = 0
 		for (let d of deltas) {
 			for (let char of d.insert) {
+				count += 1;
 				if (char == '\n') {
+					// found new line
+					count = 0
 					if (currentLine) {
 						lines.push(currentLine)
-						currentLine = ""
-						if (lines.length >= limit) {
+						if (lines.length >= lineLimit) {
 							return lines
 						}
+						currentLine = ""
 					}
-				} else {
+				} 
+				else if (count < charLimit){
 					currentLine += char
 				}
+				else if (count == charLimit) {
+					// reached charLimit
+					lines.push(currentLine + "...")
+					if (lines.length >= lineLimit) {
+						return lines
+					}
+					currentLine = ""
+				} 
 			}
-			// if (d.insert != '\n') {
-			// 	currentLine += d.insert
-			// }
-			// if (d.insert == '\n' || d.insert.endsWith('\n')) {
-			// 	if (currentLine) {
-			// 		lines.push(currentLine)
-			// 		currentLine = ""
-			// 		if (lines.length >= limit) break
-			// 	}
-			// }
 		}
 		return lines
 	}

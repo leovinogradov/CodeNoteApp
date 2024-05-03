@@ -278,6 +278,10 @@ class Syntax extends Module<SyntaxOptions> {
 
   highlight(blot: SyntaxCodeBlockContainer | null = null, force = false) {
     if (this.quill.selection.composing) return;
+    // if (window['lastSearchHighlight']) {
+    //   console.log('skipping to not clash with search highlight')
+    //   return
+    // }
     this.quill.update(Quill.sources.USER);
     const range = this.quill.getSelection();
     const blots =

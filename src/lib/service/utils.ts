@@ -1,3 +1,12 @@
+import { readTextFile } from "@tauri-apps/plugin-fs";
+import { BaseDirectory, join } from "@tauri-apps/api/path";
+
+export async function readFile(filename) {
+  const path = await join("notes", filename);
+	const content = await readTextFile(path, { baseDir: BaseDirectory.AppData });
+  return content;
+}
+
 export function isPrintableChar(e) {
   // Seems to work
   // TODO: research precomposed characters
@@ -26,18 +35,13 @@ export function indexOfNode(node) {
 }
 
 export function hasCharactersSelected() {
+  // @ts-ignore
   return !document.getSelection().isCollapsed;
-  // const selection = document.getSelection()
-  // if (selection.rangeCount == 0) return false;
-  // const range = selection.getRangeAt(0)
-  // return range.startContainer != range.endContainer || range.startOffset != range.endOffset
 }
 
 export function isNewLine(node) {
   return node.localName == "br" || (node.nodeType == 3 && node.nodeValue == '\n')
 }
-
-
 
 export function calculateAdditionalLineOffset(searchEl) {
   if (searchEl.localName == 'li') {

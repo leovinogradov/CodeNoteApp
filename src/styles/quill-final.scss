@@ -24,25 +24,35 @@
     }
 }
 
-.ql-searched-string {
-    // background-color: #f8ff00;
-    color: var(--note-search-color);
-    display: inline-block;
-}
-
-select.ql-ui {
-    // visibility: hidden;
-    opacity: 0;
-    transition: opacity ease-in-out 0.2s;
-    background-color: #fafafa;
-    border-radius: 3px;
-    // border-color: light-dark(rgb(118, 118, 118), rgb(133, 133, 133));
-    option {
-        background-color: #fafafa;
+// V2 searcher
+#text-editor .search-highlight {
+    background-color: rgba(var(--note-search-color-rgb), 0.3);
+    &.focus-highlight {
+        background-color: rgba(var(--note-search-color-rgb), 1);
     }
 }
 
-select.ql-ui:hover {
-    opacity: 1;
-    // visibility: visible;
+.ql-editor {
+    // Modifications to make text be above search highlight
+    h1, h2, h3, h4, h5, h6, p, .ql-code-block {
+        position: relative !important;
+        z-index: 2;
+    }
+
+    // Syntax block select
+    select.ql-ui {
+        opacity: 0;
+        transition: opacity ease-in-out 0.2s;
+        background-color: #fafafa;
+        border-radius: 3px;
+        z-index: 3;
+        // border-color: light-dark(rgb(118, 118, 118), rgb(133, 133, 133));
+        option {
+            background-color: #fafafa;
+        }
+    }
+    select.ql-ui:hover {
+        opacity: 1;
+    }
 }
+

@@ -77,7 +77,9 @@ pub fn read_notes_in_dir(vec: &mut Vec<FileSummaryResponse>, dir_path: &str) {
         if path_str.ends_with(".json") {
             let modified_time = file_modified_time_in_seconds(path_str);
             let content: String;
-            if vec.len() <= 10 {
+            
+            // IMPORTANT TODO: read 20 latest ones
+            if vec.len() <= 100 {
                 let res = read_file(path_str);
                 content = res.unwrap();
             } else {

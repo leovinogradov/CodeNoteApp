@@ -1,101 +1,257 @@
 class Searcher {
     occurrencesIndices = [];
+    searchedElementList = [];
+    searchHighlightElementList = [];
     currentIndex = 0;
-    SearchedStringLength = 0;
     SearchedString = "";
+    lastCursorIndex = null;
+    cursorIndex = null;
+    firstTime = false;
+    
+    quill;
+    editorElement;
+    resizeObserver;
+    _timeout;
 
-    constructor(quill) {
+    constructor(quill, editorElement) {
         this.quill = quill;
+        this.editorElement = editorElement;
 
-        // this.container = document.getElementById("search-container");
-        //   document
-        //     .getElementById("search")
-        //     .addEventListener("click", this.search.bind(this));
-        //   document
-        //     .getElementById("search-input")
-        //     .addEventListener("keyup", this.keyPressedHandler.bind(this));
-        //   document
-        //     .getElementById("replace")
-        //     .addEventListener("click", this.replace.bind(this));
-        //   document
-        //     .getElementById("replace-all")
-        //     .addEventListener("click", this.replaceAll.bind(this));
+        this.resizeObserver = new ResizeObserver((entries) => {
+            if (this.SearchedString) {
+                // Update highlight position
+                this.search(this.SearchedString, true);
+            }
+        });
+
+        this.resizeObserver.observe(this.editorElement)
+
+        this.quill.on('text-change', (delta, oldDelta, source) => {
+            if (source == 'user' && this.SearchedString) {
+              if (this._timeout) {
+                clearTimeout(this._timeout)
+              }
+              this._timeout = setTimeout(() => {
+                this.search(this.SearchedString)
+              }, 50)
+            } 
+        });
     }
-  
-    search(searchString) {
-        //  remove any previous search
-        const t0 = performance.now();
-        this.clear();
-        this.SearchedString = searchString;
-        if (this.SearchedString) {
-            let totalText = this.quill.getText();
-            let re = new RegExp(this.SearchedString, "gi");
-            let match = re.test(totalText);
-            if (match) {
-                let indices = (this.occurrencesIndices = this.getIndicesOf(totalText, this.SearchedString));
-                let length = (this.SearchedStringLength = this.SearchedString.length);
 
-                indices.forEach(index =>
-                    this.quill.formatText(index, length, "SearchedString", true)
-                );
-            } else {
-                this.occurrencesIndices = null;
+    search(searchString, useExistingIndices=false) {
+        /* useExistingIndices: if true, just reapply highlight without searching text */
+        const lastNumResults = this.occurrencesIndices.length;
+        this.SearchedString = searchString;
+        this.clearHighlight();
+        let match = false;
+
+        if (useExistingIndices) {
+            match = this.occurrencesIndices.length != 0
+        }
+        else if (this.SearchedString) {
+            // const p1 = performance.now()
+            const totalText = this.quill.getText();
+            const re = new RegExp(this.SearchedString, "gi");
+            match = re.test(totalText);
+            if (match) {
+                this.occurrencesIndices = this.getIndicesOf(totalText, this.SearchedString);
+            }
+            // const p2 = performance.now()
+            // console.log('search performance:', p2-p1)
+            // Note: search performance is surprisingly fast, under 0.5ms for sizable text
+        }
+
+        if (match) {
+            const length = this.SearchedString.length;
+            const editorBounds = this.editorElement.getBoundingClientRect()
+
+            for (let idx of this.occurrencesIndices) {
+                const bounds = this.quill.selection.getBounds(idx, length);
+                
+                const newDiv = document.createElement('div')
+
+                newDiv.className = "search-highlight" // does the highlight
+                newDiv.style.position = "absolute"
+
+                newDiv.style.top = (bounds.top-editorBounds.top)+"px"
+                newDiv.style.left = (bounds.left-editorBounds.left)+"px"
+
+                newDiv.style.width = bounds.width+"px"
+                newDiv.style.height = bounds.height+"px"
+
+                this.searchHighlightElementList.push(newDiv)
+                this.editorElement.appendChild(newDiv)
+            }
+
+            this.firstTime = true
+
+            if (this.occurrencesIndices.length != lastNumResults) {
                 this.currentIndex = 0;
             }
         }
-        const t1 = performance.now();
-        console.log('SearchQuill', searchString, t1 - t0, 'milliseconds');
+        else {
+            // No match
+            this.occurrencesIndices = []
+            this.currentIndex = 0;
+            if (this.searchHighlightElementList.length) {
+                console.error('highlight not cleared at this point?', this.searchHighlightElementList)
+                this.clearHighlight()
+            }
+        }
+        return this.occurrencesIndices.length;
     }
-  
+
+    _getNextIndexFromCursor(cursorIndex, indices) {
+        for (let i = 0; i < indices.length; ++i) {
+            if (indices[i] >= cursorIndex) {
+                return i
+            }
+        }
+        return 0
+    }
+
+    _getPrevIndexFromCursor(cursorIndex, indices) {
+        for (let i = indices.length - 1; i >= 0; --i) {
+            if (indices[i] <= cursorIndex) {
+                return i
+            }
+        }
+        return indices.length - 1
+    }
+
+    _goToIndex(newIndex, navigatingFromCursorPosition = false) {
+        if (!this.occurrencesIndices || this.occurrencesIndices.length == 0) {
+            return;
+        }
+        if (newIndex >= this.occurrencesIndices.length) newIndex = 0
+        else if (newIndex < 0) newIndex = this.occurrencesIndices.length - 1
+        
+        const prevTarget = this.searchHighlightElementList[this.currentIndex]
+        if (this.firstTime) {
+            this.firstTime = false;
+            if (!navigatingFromCursorPosition) {
+                // If first time navigating, don't change index
+                if (prevTarget) {
+                    prevTarget.classList.add("focus-highlight");
+                    prevTarget.scrollIntoView({ block: "center" })
+                }
+                return;
+            }
+        }
+
+        this.currentIndex = newIndex
+
+        if (prevTarget) {
+            prevTarget.classList.remove("focus-highlight");
+        }
+        let targetElement = this.searchHighlightElementList[this.currentIndex]
+        if (targetElement) {
+            targetElement.classList.add("focus-highlight");
+            targetElement.scrollIntoView({ block: "center" })
+        }
+    }
+
+    goToPrevIndex() {
+        if (this.cursorIndex !== this.lastCursorIndex) {
+            this.lastCursorIndex = this.cursorIndex
+            const newIndex = this._getPrevIndexFromCursor(this.lastCursorIndex, this.occurrencesIndices)
+            return this._goToIndex(newIndex, true)
+        }
+        this._goToIndex(this.currentIndex - 1)
+    }
+
+    goToNextIndex() {
+        if (this.cursorIndex !== this.lastCursorIndex) {
+            this.lastCursorIndex = this.cursorIndex
+            const newIndex = this._getNextIndexFromCursor(this.lastCursorIndex, this.occurrencesIndices)
+            return this._goToIndex(newIndex, true)
+        }
+        this._goToIndex(this.currentIndex + 1)
+    }
+
     replace(oldString, newString) {
-      if (!this.SearchedString) return;
-  
-      // if no occurrences, then search first.
-      if (!this.occurrencesIndices) this.search();
-      if (!this.occurrencesIndices) return;
-  
-      let indices = this.occurrencesIndices;
-  
-      this.quill.deleteText(indices[this.currentIndex], oldString.length);
-      this.quill.insertText(indices[this.currentIndex], newString);
-      this.quill.formatText(
-        indices[this.currentIndex],
-        newString.length,
-        "SearchedString",
-        false
-      );
-      // update the occurrencesIndices.
-      this.search();
+        if (!this.SearchedString) return;
+
+        // if no occurrences, then search first.
+        if (!this.occurrencesIndices) this.search();
+        if (!this.occurrencesIndices) return;
+        
+        this.firstTime = true;
+        this.goToNextIndex()
+        if (oldString == newString) return;
+        
+        const indexInText = this.occurrencesIndices[this.currentIndex];
+        const oldInNewIdx = newString.indexOf(oldString)
+
+        this.quill.deleteText(indexInText, oldString.length);
+        this.quill.insertText(indexInText, newString);
+
+        // update all indexes afterwards with length difference
+        let lengthDiff = newString.length - oldString.length
+        for (let i=this.currentIndex+1; i<this.occurrencesIndices.length; ++i) {
+            this.occurrencesIndices[i] += lengthDiff
+        }
+        
+        if (oldInNewIdx >= 0) {
+            // Replace in occurence list
+            let newIndex = indexInText + oldInNewIdx
+            // TODO: test if this can mess up elements list for two searchstrings next to eachother
+            // this.quill.formatText(newIndex, oldString.length, lastFormat, true);
+            this.occurrencesIndices[this.currentIndex] = newIndex
+            this.search(this.SearchedString, true);
+            this.currentIndex += 1;
+        } else {
+            // Remove from occurence list
+            try {
+                this.occurrencesIndices.splice(this.currentIndex, 1)
+                const splicedEls = this.searchHighlightElementList.splice(this.currentIndex, 1)
+                for (let el of splicedEls) {
+                    el.remove()
+                }
+            } catch(err) {
+                console.error(err)
+            }
+        }
+
+        // Wrap to beginning if needed
+        if (this.currentIndex >= this.occurrencesIndices.length) {
+            this.currentIndex = 0;
+        }
+        this.firstTime = true;
+
+        // Set cursor after replaced text
+        this.quill.setSelection(indexInText + newString.length)
+
+        return this.occurrencesIndices.length
     }
-  
+
     replaceAll(oldString, newString) {
-      if (!this.SearchedString) return;
-      let oldStringLen = oldString.length;
-  
-      // if no occurrences, then search first.
-      if (!this.occurrencesIndices) this.search();
-      if (!this.occurrencesIndices) return;
-  
-      if (this.occurrencesIndices) {
-        while (this.occurrencesIndices) {
-          this.quill.deleteText(this.occurrencesIndices[0], oldStringLen);
-          this.quill.insertText(this.occurrencesIndices[0], newString);
-  
-          // update the occurrencesIndices.
-          this.search();
+        if (!this.SearchedString) return;
+
+        // if no occurrences, then search first. first
+        if (!this.occurrencesIndices) this.search();
+        if (!this.occurrencesIndices) return;
+
+        if (this.occurrencesIndices) {
+            const numToReplace = this.occurrencesIndices.length;
+            for (let i = 0; i < numToReplace; ++i) {
+                this.replace(oldString, newString)
+            }
         }
-      }
-      this.clear();
+        
+        return this.search(oldString)
     }
-  
-    keyPressedHandler(e) {
-        if (e.key === "Enter") {
-            this.search();
+
+    clearHighlight() {
+        while (this.searchHighlightElementList.length) {
+            const el = this.searchHighlightElementList.pop()
+            el.remove()
         }
-    }    
+    } 
 
     clear() {
-        this.quill.formatText(0, this.quill.getText().length, 'SearchedString', false);
+        this.clearHighlight();
+        this.SearchedString = '';
     }
 
     getIndicesOf(str, searchStr) {
@@ -103,25 +259,16 @@ class Searcher {
         let startIndex = 0,
             index,
             indices = [];
-        while ((index = str.toLowerCase().indexOf(searchStr.toLowerCase(), startIndex)) > -1) {
+        const hay = str.toLowerCase();
+        const needle = searchStr.toLowerCase()
+        while ((index = hay.indexOf(needle, startIndex)) > -1) {
             indices.push(index);
+            // If you want a limit:
+            // if (indices.length >= 2) return indices
             startIndex = index + searchStrLen;
         }
         return indices;
     };
-  
-    // function for utility
-    //   String.prototype.getIndicesOf = function(searchStr) {
-    //     let searchStrLen = searchStr.length;
-    //     let startIndex = 0,
-    //       index,
-    //       indices = [];
-    //     while ((index = this.toLowerCase().indexOf(searchStr.toLowerCase(), startIndex)) > -1) {
-    //       indices.push(index);
-    //       startIndex = index + searchStrLen;
-    //     }
-    //     return indices;
-    //   };
 }
-  
+
 export default Searcher;

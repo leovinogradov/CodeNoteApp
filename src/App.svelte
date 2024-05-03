@@ -4,13 +4,13 @@
   import Svg from './lib/components/Svg.svelte';
   import Searchbar from './lib/components/Searchbar.svelte';
   import SettingsOverlay from './lib/components/SettingsOverlay.svelte';
+  import SearchInNote from './lib/components/SearchInNote.svelte';
   import { Square, XIcon, MinusIcon, RemoveFormatting } from 'lucide-svelte'
 
   import { onMount } from 'svelte';
   import { myflip } from './lib/service/my-flip/my-flip';
   import { exists, mkdir, BaseDirectory } from "@tauri-apps/plugin-fs";
   import { invoke } from "@tauri-apps/api/core"
-  import { platform } from '@tauri-apps/plugin-os';
 
   // @ts-ignore because no index.d.ts in dist?
   import { Split } from '@geoffcox/svelte-splitter';
@@ -55,19 +55,22 @@
   let searchString: string = '';
   let lastSearchString: string = '';  // string for which results are shown
   let _searchTimeoutId;  // for timeout between searchString changed and actual search
+  let formatvalue = -1;  // representation of current format selected
+  let showFilenames = false;  // TODO: add setting to toggle this 
 
   // DOM elements
   let editorElement;
+  let searchInNoteElement;
 
   async function init() {
     // run this async function separately from the ones below
-    platform().then(data => {
-      // Todo: use this for platform-specific styling
-      if (data && typeof data == 'string') {
-        currentPlatform = data;
-        console.log('current platform is', currentPlatform);
-      }
-    })
+    // platform().then(data => {
+    //   // Todo: use this for platform-specific styling
+    //   if (data && typeof data == 'string') {
+    //     currentPlatform = data;
+    //     console.log('current platform is', currentPlatform);
+    //   }
+    // })
 
     try {
       const notesDirExists = await exists('notes', { baseDir: BaseDirectory.AppData });
@@ -86,6 +89,8 @@
     }
     
     editor = new Editor(editorElement, onActiveNoteModified)
+    searchInNoteElement.init(editor)
+
     if (notes.length > 0) {
       console.log('notes found; opening first note')
       await onNoteClick(notes[0])
@@ -127,18 +132,29 @@
   }
 
   function _getModifiedAtStr(modified: number) {
-    const now = new Date()
     try {
+      const now = new Date()
       const d = new Date(modified)
       if ((now.getTime() - d.getTime()) < ONE_DAY) {
-        // return d.toLocaleTimeString([], {hour: "numeric", minute: "2-digit" })
+        // less than a day ago
         // get am/pm
         const ampm = d.getHours() >= 12 ? 'pm' : 'am'
-        const hours = d.getHours() % 12 || 12  // 0 is actually 12
+        const hours = d.getHours() % 12 || 12  // 0 is actually 12am
         const minutes = d.getMinutes() < 10 ? '0' + d.getMinutes() : d.getMinutes()
         return hours + ':' + minutes + ampm;
+        // return d.toLocaleTimeString([], {hour: "numeric", minute: "2-digit" })
       }
-      return d.toDateString()
+
+      // default, more than one day ago
+      let datestring = d.toDateString()
+      const year: string = datestring.slice(datestring.length-4)
+      // string to number comparison, hell yeah
+      if (year == now.getFullYear()) {
+        // shortened date string, 'Sun Apr 21'
+        return datestring.slice(0, datestring.length-5)
+      }
+      // full date string, 'Sun Apr 21 2024'
+      return datestring
     } catch (err) {
       console.error(err)
     }
@@ -149,7 +165,7 @@
     if (typeof obj == "string") {
       obj = JSON.parse(obj)
     }
-    const lines = Editor.getLinesFromDeltas(obj, 2)
+    const lines = Editor.getLinesFromDeltas(obj, 2, 60)
     while (lines.length < 2) lines.push("")
     return lines
   }
@@ -206,6 +222,13 @@
 
     editorElement.firstElementChild.focus()
 
+    // should never be needed but just in case
+    if (searchInNoteElement && editor && !searchInNoteElement.isInitialized()) {
+      searchInNoteElement.init(editor)
+    }
+
+    // Close in-note search if it was open, but still search in note if in search mode
+    searchInNoteElement.close()
     if (searchString) {
       editor.searcher.search(searchString)
     } else {
@@ -226,6 +249,11 @@
 
     notes.unshift(newNote);  // push to front
     notes = notes;  // trigger change
+
+    // Clear all searching
+    searchInNoteElement.close()
+    searchString = ""
+    editor.searcher.clear()
 
     try {
       editorElement.firstElementChild.focus()
@@ -252,12 +280,9 @@
     }
   }
 
-  function onActiveNoteModified(filename, content) {
-    // console.log('modified', filename)
-    /* when note is modified (but not necessarily saved) */
-    // const filename = e.detail.filename
-    // const editorEl = e.detail.editorEl
-    const first2Lines: string[] = _getFirst2LinesFromContent(content)
+  function onActiveNoteModified(filename, delta, oldDelta, source) {
+    /* Recompute meta when note is modified (but not necessarily saved) */
+    const first2Lines: string[] = _getFirst2LinesFromContent(this.quill.getContents())
     if (searchString) {
       // When something is searched
       const matchingNoteIdx = matchingNotes.findIndex((note) => note.filename == filename)
@@ -284,6 +309,18 @@
       notes[0].note_meta.subtitle = first2Lines[1]
       notes[0].modified = Date.now()
       notes[0].note_meta.modifiedTime = _getModifiedAtStr(notes[0].modified)
+    }
+  }
+
+  function dropdownMenuOpened() {
+    const format = editor.quill.getFormat()
+    console.log('format', format)
+    if (format['header']) {
+      formatvalue = format['header']
+    } else if (format['code-block']) {
+      formatvalue = -1
+    } else {
+      formatvalue = 0
     }
   }
 
@@ -350,6 +387,17 @@
     editor.searcher.clear()
   }
 
+  onMount(() => {
+    console.log('App onMount')
+    // Sanity checks; this is mainly to fix stuff thats broken by hot reload in development
+    setTimeout(() => {
+      if (searchInNoteElement && editor && !searchInNoteElement.isInitialized()) {
+        searchInNoteElement.init(editor)
+      }
+    }, 100)
+  })
+
+  // calling this here instead of in onMount technically saves like a millisecond?
   init()
 </script>
 
@@ -382,13 +430,15 @@
               </h4>
               <p>
                 <span class="modified-time">{note.note_meta.modifiedTime}</span>
-                {#each note.note_meta.search_subtitle_as_tokens as token}
-                  {#if token.highlight}
-                    <span class="search-highlight">{token.text}</span>
-                  {:else}
-                    {token.text}
-                  {/if}
-                {/each}
+                <span class="subtitle">
+                  {#each note.note_meta.search_subtitle_as_tokens as token}
+                    {#if token.highlight}
+                      <span class="search-highlight">{token.text}</span>
+                    {:else}
+                      {token.text}
+                    {/if}
+                  {/each}
+                </span>
               </p>
             </div>
           {/each}
@@ -405,8 +455,10 @@
                 class:selected={currentFilename == note.filename}
                 on:click={() => onNoteClick(note)}> 
               <h4>{note.note_meta.title}</h4>
-              <p><span class="modified-time">{note.note_meta.modifiedTime}</span>{note.note_meta.subtitle}</p>
-              <!-- <small style="font-size: 11px">{note.filename}</small> for debugging only -->
+              <p><span class="modified-time">{note.note_meta.modifiedTime}</span><span class="subtitle">{note.note_meta.subtitle}</span></p>
+              {#if showFilenames}
+                <small style="font-size: 11px">{note.filename}</small>
+              {/if}
             </div>
           {/each}
         {/if}
@@ -426,7 +478,7 @@
         <div class="center-items" data-tauri-drag-region>
           <div id="toolbar">
             <span class="ql-formats" style="margin-right: 0">
-              <Dropdown>
+              <Dropdown on:menuOpened={dropdownMenuOpened}>
                 <div slot="button"><Svg src="/img/Font.svg" height="18px"></Svg></div>
                 <div slot="content">
                   <span class="ql-formats dropdown-formats">
@@ -435,27 +487,21 @@
                     <button class="ql-italic" />
                     <button class="ql-underline" />
                     <button class="ql-strike" />
+                    <button class="ql-code" />
                   </span>
 
-                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 1) }}>
+                  <button class="dropdown-item" class:selected="{formatvalue==1}" on:click={() => { editor.quill.format('header', 1) }}>
                     <h1>Title</h1>
                   </button>
-                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 2) }}>
+                  <button class="dropdown-item" class:selected="{formatvalue==2}" on:click={() => { editor.quill.format('header', 2) }}>
                     <h2>Heading</h2>
                   </button>
-                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 3) }}>
+                  <button class="dropdown-item" class:selected="{formatvalue==3}" on:click={() => { editor.quill.format('header', 3) }}>
                     <h3>Subheading</h3>
                   </button>
-                  <button class="dropdown-item" on:click={() => { editor.quill.format('header', 0) }}>
+                  <button class="dropdown-item" class:selected="{formatvalue==0}" on:click={() => { editor.quill.format('header', 0) }}>
                     <p>Paragraph</p>
                   </button>
-                  <!-- {#each [['Title', 1], ['Heading', 2], ['Subheading', 3], ['Paragraph', 0]] as item, j }
-                    <button class="dropdown-item" on:click={() => { editor.quill.format('header', item[1]) }}>
-                      {item[0]}
-                    </button>
-                  {/each} -->
-                  <!-- <button class="dropdown-item" on:click={editor.insertList('ol')}>Numbered List</button>
-                  <button class="dropdown-item" on:click={editor.insertList('ul')}>Bulleted List</button> -->
                 </div>
               </Dropdown> 
             </span>
@@ -465,6 +511,10 @@
               <button class="ql-list" value="ordered" />
               <button class="ql-list" value="bullet" />
               <button class="ql-clean"></button>
+              <!-- TODO: use better icon for code block -->
+              <!-- <button on:click={() => { editor.quill.format('code-block', 'plain') }} style="margin-top: 4px;">
+                <Svg src="/img/Code-block.svg" height="20px"></Svg>
+              </button> -->
             </span>
           </div>
         </div>
@@ -503,5 +553,7 @@
     <div>
   </Split>
 
+  <!-- fixed elements -->
   <SettingsOverlay/>
+  <SearchInNote bind:this={searchInNoteElement} />
 </main>
