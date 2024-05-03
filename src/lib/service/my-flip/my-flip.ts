@@ -19,18 +19,19 @@ import { is_function } from 'svelte/internal'
  * @returns {AnimationConfig}
  */
 export function myflip(node, { from, to }, params: FlipParams = {}): AnimationConfig {
-	// const isSelected = node.classList && node.classList.contains("selected")
+	// const defaultDurationFunc = (d) => Math.sqrt(d) * 120
 
 	const style = getComputedStyle(node);
 	// const transform = style.transform === 'none' ? '' : style.transform;
 	const [ox, oy] = style.transformOrigin.split(' ').map(parseFloat);
 	const dx = from.left + (from.width * ox) / to.width - (to.left + ox);
 	const dy = from.top + (from.height * oy) / to.height - (to.top + oy);
-	const { delay = 0, duration = (d) => Math.sqrt(d) * 120, easing = cubicOut } = params;
+	const { delay = 0, duration = 250, easing = cubicOut } = params;
 	return {
 		delay,
 		// @ts-ignore
-		duration: is_function(duration) ? duration(Math.sqrt(dx * dx + dy * dy)) : duration,
+		// duration: is_function(duration) ? duration(Math.sqrt(dx * dx + dy * dy)) : duration,
+		duration: duration, // always an number
 		easing,
 		css: (t, u) => {
 			const x = u * dx;

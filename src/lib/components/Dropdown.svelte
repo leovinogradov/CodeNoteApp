@@ -1,9 +1,15 @@
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
+	const dispatch = createEventDispatcher();
+
 	let menuOpen = false;
   let buttonEl;
 
   function onButtonClick() {
     menuOpen = !menuOpen;
+    if (menuOpen) {
+      dispatch('menuOpened')
+    }
   }
 
   function onDocumentClick(e) {
@@ -43,24 +49,36 @@
   }
   .dropdown .dropdown-item {
     text-align: left;
+    position: relative;
     p, h1, h2, h3 {
       margin: 0;
+      color: inherit !important;
+    }
+    .selected-bar {
+      position: absolute;
+      top: calc(1.2em - 3px);
+      left: 4px;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--text-color);
     }
   }
   .dropdown button.dropdown-item {
     width: 100%;
     margin: 0;
     border-radius: 0;
-    padding: 0 12px;
+    padding: 0 16px;
     height: 2.4em;
-    line-height: 1;
+    line-height: 2.4em;
+    // line-height: 1;
   }
   .dropdown {
     .dropdown-content {
       .ql-formats {
         margin-right: 0;
         margin-bottom: 8px;
-        padding: 0 6px 4px 6px;
+        padding: 0 8px 4px 8px;
         border-bottom: 1px solid rgba(0, 0, 0, 0.07);
       }
       .ql-formats button {
@@ -80,17 +98,20 @@
 .dropdown-content {
   display: none;
   position: absolute;
-  padding: 12px 8px 8px 8px;
+  padding: 8px;
   // background-color: #f6f6f6;
   background-color: rgba(255, 255, 255, 1);
   min-width: 150px;
-  width: 150px;
+  // width: 200px;
   border: 1px solid #ddd;
   border-radius: 3px;
-  z-index: 1;
+  z-index: 10;
   top: 32px;
-  left: -56px; // -75 (150/2) of content + 19 (38/2) button
+  // left: -56px; // -75 (150/2) of content + 19 (38/2) button
   // left: calc(-50% - 38px);
+  // left: calc(-50% + 19px);
+  left: 19px;
+  transform: translateX(-50%);
 }
 
 /* Show the dropdown menu */	

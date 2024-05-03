@@ -44,8 +44,8 @@
       </a>
     </div>
     <div>
-      <p class="small">Version: 0.0.2</p>
-      <p class="small">Releases and source code at: https://github.com/leovinogradov/CodeNoteApp</p>
+      <p class="small">Version: 0.0.3</p>
+      <p class="small">New releases and source code at: https://github.com/leovinogradov/CodeNoteApp</p>
     </div>
   </div>
 </div>
@@ -76,7 +76,7 @@
   width: 260px;
   border: 1px solid #ddd;
   border-radius: 3px;
-  z-index: 1;
+  z-index: 10;
   bottom: 40px;
   left: 0;
 

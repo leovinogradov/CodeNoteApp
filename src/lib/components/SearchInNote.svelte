@@ -1,9 +1,7 @@
 <script lang="ts">
 	import { XIcon, ChevronRight, ChevronDown, ArrowUp, ArrowDown, Replace, ReplaceAll } from "lucide-svelte";
-	// import { createEventDispatcher } from 'svelte';
 	import { Editor } from "../service/editor";
 	import { platform } from '@tauri-apps/plugin-os';
-	// const dispatch = createEventDispatcher();
 
 	let searchValue = "";
 	let replaceWithValue = "";
@@ -36,20 +34,6 @@
 	export function init(editor: Editor) {
 		console.log('SearchInNote init')
 		_editor = editor
-
-		// Clear these bindings, let them get handled by global event handler
-		/* editor.quill.keyboard.addBinding({  // ctrl + f
-			key: 'f',
-			ctrlKey: true,
-			handler: function() {}
-		});
-
-		editor.quill.keyboard.addBinding({  // ctrl + shift + f
-			key: 'f',
-			ctrlKey: true,
-			shiftKey: true,
-			handler: function() {}
-		}); */
 	}
 
 	let _timer;

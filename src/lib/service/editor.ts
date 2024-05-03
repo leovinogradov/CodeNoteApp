@@ -1,43 +1,25 @@
 import Quill from "quill";
 import Toolbar from "quill/modules/toolbar"
-// import Parchment from "parchment";
-// import { onMount, tick, createEventDispatcher, onDestroy } from "svelte";
-
-import { readTextFile } from "@tauri-apps/plugin-fs";
-import { BaseDirectory, join } from "@tauri-apps/api/path";
 
 import { SaveManager, createNewNote } from "./save-manager";
-import { isWhitespace } from "./utils";
+import { isWhitespace, readFile } from "./utils";
 
-import { SearchedStringBlot, SearchedStringBlot2 } from './search-highlight/SearchBlot'
 import Searcher from "./search-highlight/Searcher";
 
-// import CodeSyntax from "./syntax-highlight/code-syntax";
 import Syntax from "./syntax-highlight/syntax";
 
 import { languages } from "./constants";
 
-const SOURCE_USER = Quill.sources.USER;
-
 const ColorStyle = Quill.import("attributors/style/color");
 const BackgroundStyle = Quill.import("attributors/style/background");
-// @ts-ignore
 ColorStyle.whitelist = []; // remove pasted colors
-// @ts-ignore
 BackgroundStyle.whitelist = []; // remove pasted bg colors
-// @ts-ignore
 Quill.register(ColorStyle);
-// @ts-ignore
 Quill.register(BackgroundStyle);
 
-// @ts-ignore
 Quill.register("modules/Searcher", Searcher);
-// @ts-ignore
-Quill.register(SearchedStringBlot);
-// @ts-ignore
-Quill.register(SearchedStringBlot2);
 
-Quill.register({ "modules/syntax": Syntax }, true)
+Quill.register({ "modules/syntax": Syntax }, true);
 
 
 export interface ExitResult {
@@ -121,9 +103,6 @@ export class Editor {
 				this.onModified(this.saveManager.filename, delta, oldDelta, source)
 				// this.quill.getContents()
 			}
-			if (this.searcher.SearchedString && source == SOURCE_USER && this.searcher.occurrencesIndices.length > 0) {
-				// TODO: searcher on modified
-			}
 		}
 	}
 
@@ -143,9 +122,7 @@ export class Editor {
 	}
 
 	private async _setContentsFromFile(filename) {
-		const path = await join("notes", filename);
-		let content = await readTextFile(path, { baseDir: BaseDirectory.AppData });
-		// console.log('setting from content:', content)
+		const content = await readFile(filename);
 		
 		if (!content) {
 			console.log('setting from empty content')
