@@ -1,6 +1,6 @@
 {
   "productName": "CodeNoteApp",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "identifier": "CodeNoteApp",
   "build": {
     "beforeDevCommand": "pnpm dev",

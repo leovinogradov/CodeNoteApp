@@ -159,29 +159,64 @@ body {
   }
 }
 
+button.custom-icon-btn {
+  display: flex !important;
+  padding: 0 !important;
+  .custom-svg {
+    margin: auto;
+  }
+}
+
 .header {
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   height: 36px; // 36px to line up with thick toolbar on Mac
   display: flex;
   justify-content: space-between;
   align-items: center;
-  & > div {
-    // height: 24px;
-    line-height: 1;
+  line-height: 1;
+
+  #toolbar {
+    height: 36px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    & > div {
+      display: inline-block;
+      margin: 0 2px;
+      & > button, & > span {
+        margin: 0 !important;
+      }
+    }
   }
-  .custom-svg svg path {
-    fill: #444;
+
+  // & > div {
+  //   // height: 24px;
+  //   line-height: 1;
+  // }
+  .custom-svg svg {
+    path:not(.nofill) {
+      fill: #444;
+    }
+    path.nofill {
+      stroke: #444;
+    }
   }
+  
   button {
     margin-right: 4px;
     margin-left: 4px;
     padding: 0 6px;
     height: 36px;
     min-width: 28px;
+    // border: 1px solid black !important;
   }
-  button:hover {
-    .custom-svg svg path {
-      fill: #396cd8;
+  button:hover, button.ql-active {
+    .custom-svg svg {
+      path:not(.nofill) {
+        fill: #396cd8;
+      }
+      path.nofill {
+        stroke: #396cd8;
+      }
     }
   }
   .center-items {

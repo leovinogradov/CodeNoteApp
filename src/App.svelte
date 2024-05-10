@@ -1,6 +1,6 @@
 <script lang="ts">
   import CustomSplitterBar from './lib/components/CustomSplitterBar.svelte';
-  import Dropdown from './lib/components/Dropdown.svelte';
+  import FormatDropdown from './lib/components/FormatDropdown.svelte';
   import Svg from './lib/components/Svg.svelte';
   import Searchbar from './lib/components/Searchbar.svelte';
   import SettingsOverlay from './lib/components/SettingsOverlay.svelte';
@@ -312,18 +312,6 @@
     }
   }
 
-  function dropdownMenuOpened() {
-    const format = editor.quill.getFormat()
-    console.log('format', format)
-    if (format['header']) {
-      formatvalue = format['header']
-    } else if (format['code-block']) {
-      formatvalue = -1
-    } else {
-      formatvalue = 0
-    }
-  }
-
   function onSearchInput() {
     if (!searchString) {
       matchingNotes = []
@@ -407,7 +395,7 @@
 <main class="dark">
   <Split initialPrimarySize='300px' minPrimarySize='180px' minSecondarySize='50%' splitterSize='9px' >
     <div slot="primary">
-      <div class="header" data-tauri-drag-region style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;">
+      <div class="header" style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;">
         <Searchbar bind:value={searchString} on:input={onSearchInput} on:clear={clearSearch}></Searchbar>
         <!-- <input class="search" type="text" placeholder="Search" bind:value={searchString} on:input={onSearchInput} /> -->
         <!-- <button hidden={!searchString} class="clear-search" on:click={clearSearch}>
@@ -470,58 +458,49 @@
     </svelte:fragment>
 
     <div slot="secondary">
-      <div class="header" data-tauri-drag-region style="padding: 6px 10px 8px 12px; margin: 2px 2px 0 0;">
+      <div class="header" style="padding: 6px 10px 8px 12px; margin: 2px 2px 0 0;">
         <div style="margin-left: -6px;">
-          <button on:click={onNewNoteClick} style="padding: 9px 5px"><Svg src="/img/Edit.svg" height="18px"></Svg></button>
+          <button on:click={onNewNoteClick} class="custom-icon-btn">
+            <Svg src="/img/Edit.svg" height="18px"></Svg>
+          </button>
         </div>
 
-        <div class="center-items" data-tauri-drag-region>
+        <div class="center-items">
           <div id="toolbar">
-            <span class="ql-formats" style="margin-right: 0">
-              <Dropdown on:menuOpened={dropdownMenuOpened}>
-                <div slot="button"><Svg src="/img/Font.svg" height="18px"></Svg></div>
-                <div slot="content">
-                  <span class="ql-formats dropdown-formats">
-                    <!-- formats with easy keyboard shortcut go here -->
-                    <button class="ql-bold" />
-                    <button class="ql-italic" />
-                    <button class="ql-underline" />
-                    <button class="ql-strike" />
-                    <button class="ql-code" />
-                  </span>
-
-                  <button class="dropdown-item" class:selected="{formatvalue==1}" on:click={() => { editor.quill.format('header', 1) }}>
-                    <h1>Title</h1>
-                  </button>
-                  <button class="dropdown-item" class:selected="{formatvalue==2}" on:click={() => { editor.quill.format('header', 2) }}>
-                    <h2>Heading</h2>
-                  </button>
-                  <button class="dropdown-item" class:selected="{formatvalue==3}" on:click={() => { editor.quill.format('header', 3) }}>
-                    <h3>Subheading</h3>
-                  </button>
-                  <button class="dropdown-item" class:selected="{formatvalue==0}" on:click={() => { editor.quill.format('header', 0) }}>
-                    <p>Paragraph</p>
-                  </button>
-                </div>
-              </Dropdown> 
-            </span>
-
-            <span class="ql-formats">
-              <button class="ql-code-block"></button>
-              <button class="ql-list" value="ordered" />
-              <button class="ql-list" value="bullet" />
-              <button class="ql-clean"></button>
-              <!-- TODO: use better icon for code block -->
-              <!-- <button on:click={() => { editor.quill.format('code-block', 'plain') }} style="margin-top: 4px;">
+            <div style="height: 24px;">
+              <FormatDropdown editor={editor}></FormatDropdown>
+            </div>
+            <div>
+              <button data-ql-format="ql-code-block" class="custom-icon-btn toolbar-button">
+                <Svg src="/img/Code-block.svg" height="20px"></Svg>
+              </button>
+            </div>
+            <div>
+              <button class="ql-list toolbar-button" value="ordered" />
+            </div>
+            <div>
+              <button class="ql-list toolbar-button" value="bullet" />
+            </div>
+            <div>
+              <button class="ql-clean toolbar-button"></button>
+            </div>
+            <!-- <span class="ql-formats" style="margin-right: -4px; height: 24px;">
+              <FormatDropdown editor={editor}></FormatDropdown>
+            </span> -->
+            <!-- <span class="ql-formats"> -->
+              <!-- <button data-ql-format="ql-code-block" class="custom-icon-btn">
                 <Svg src="/img/Code-block.svg" height="20px"></Svg>
               </button> -->
-            </span>
+            <!-- <span class="ql-formats"></span> -->
+              <!-- <button class="ql-code-block"></button> -->
+              
+            <!-- </span> -->
           </div>
         </div>
 
         <!-- not part of quill toolbar: delete note -->
         <div>
-          <button on:click={onDeleteNoteClick} style="margin-top: 4px;">
+          <button on:click={onDeleteNoteClick} class="custom-icon-btn">
             <Svg src="/img/Trash.svg" height="20px"></Svg>
           </button>
         </div>

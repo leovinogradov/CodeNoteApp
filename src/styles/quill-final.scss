@@ -24,6 +24,10 @@
     }
 }
 
+.ql-tooltip {
+    z-index: 99;
+}
+
 // V2 searcher
 #text-editor .search-highlight {
     background-color: rgba(var(--note-search-color-rgb), 0.3);

@@ -44,7 +44,7 @@
       </a>
     </div>
     <div>
-      <p class="small">Version: 0.0.3</p>
+      <p class="small">Version: 0.0.4</p>
       <p class="small">New releases and source code at: https://github.com/leovinogradov/CodeNoteApp</p>
     </div>
   </div>
