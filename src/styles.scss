@@ -23,15 +23,6 @@
     font-family: "Lato", Avenir, Helvetica, Arial, sans-serif;
     font-size: 15px;
   }
-
-  .split > .secondary {
-    width: calc(100% + 4px) !important; 
-    margin-left: -4px !important;
-  }
-  .split > .primary {
-    width: calc(100% + 4px) !important; 
-    margin-right: -4px !important;
-  }
   
   // line-height: 24px;
   font-weight: 400;
@@ -179,14 +170,20 @@ button.custom-icon-btn {
     height: 36px;
     padding-top: 6px;
     padding-bottom: 6px;
-    & > div {
-      display: inline-block;
-      margin: 0 2px;
-      & > button, & > span {
-        margin: 0 !important;
-      }
-    }
   }
+
+  // #toolbar {
+  //   height: 36px;
+  //   padding-top: 6px;
+  //   padding-bottom: 6px;
+  //   & > div {
+  //     display: inline-block;
+  //     margin: 0 2px;
+  //     & > button, & > span {
+  //       margin: 0 !important;
+  //     }
+  //   }
+  // }
 
   // & > div {
   //   // height: 24px;

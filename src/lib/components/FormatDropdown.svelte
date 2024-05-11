@@ -66,8 +66,6 @@
     <Svg src="/img/Font.svg" height="18px"></Svg>
   </button>
 
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div hidden={!menuOpen} class="dropdown-content" on:click={ () => menuOpen = !menuOpen }>	
     <div class="ql-formats format-row-1">
       <!-- formats with easy keyboard shortcut go here -->
@@ -102,65 +100,65 @@
 	
 <style lang="scss">
 .dropdown .dropdown-button {
-  margin: 0 !important;
   height: 24px;
   width: 30px;
   vertical-align: middle;
 }
-.dropdown button.dropdown-item {
-  text-align: left;
-  position: relative;
-  width: 100%;
-  margin: 0;
-  border-radius: 0;
-  padding: 0 10px;
-  height: 100%;
-  margin-bottom: 6px;
-
-  // For some reason, line-height: 1 is taller than the font?? Adjusting for it here
-  line-height: 0.9;
-  h1 {line-height: calc(2rem - 4px);}
-
-  p, h1, h2, h3 {
-    padding: 4px 6px;
+.dropdown-content {
+  button.dropdown-item {
+    text-align: left;
+    position: relative;
+    width: 100%;
     margin: 0;
-    border-radius: 4px;
-    color: var(--text-color);
-    transition-property: background-color, color;
-    transition-duration: 0.1s;
-    transition-timing-function: ease-in-out;
-  }
-}
-.dropdown button.dropdown-item.selected {
-  p, h1, h2, h3 {
-    background-color: rgba(0,0,0,0.05);
-  }
-}
-.dropdown button.dropdown-item:hover {
-  p, h1, h2, h3 {
-    background-color: var(--text-color);
-    color: white !important;
-  }
-}
-.dropdown {
-  .dropdown-content {
-    .ql-formats {
-      margin-right: 0;
-      padding: 0 10px 4px 10px;
+    border-radius: 0;
+    padding: 0 10px;
+    height: 100%;
+    margin-bottom: 6px;
 
-      &.format-row-2 {
-        width: 100%;
-        .inner {
-          width: 50%;
-          display: flex;
-        }
-        margin-bottom: 6px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.07);
-      }
+    // For some reason, line-height: 1 is taller than the font?? Adjusting for it here
+    line-height: 0.9;
+    h1 {line-height: calc(2rem - 4px);}
 
-      button {
-        margin: 0 auto;
+    p, h1, h2, h3 {
+      padding: 4px 6px;
+      margin: 0;
+      border-radius: 4px;
+      color: var(--text-color);
+      transition-property: background-color, color;
+      transition-duration: 0.1s;
+      transition-timing-function: ease-in-out;
+    }
+
+    &.selected {
+      p, h1, h2, h3 {
+        background-color: rgba(0,0,0,0.05);
       }
+    }
+
+    &:hover {
+      p, h1, h2, h3 {
+        background-color: var(--text-color);
+        color: white !important;
+      }
+    }
+  }
+
+  .ql-formats {
+    margin-right: 0;
+    padding: 0 10px 4px 10px;
+
+    &.format-row-2 {
+      width: 100%;
+      .inner {
+        width: 50%;
+        display: flex;
+      }
+      margin-bottom: 6px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+    }
+
+    button {
+      margin: 0 auto;
     }
   }
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Splitter from './lib/components/splitter/Splitter.svelte';
   import CustomSplitterBar from './lib/components/CustomSplitterBar.svelte';
   import FormatDropdown from './lib/components/FormatDropdown.svelte';
   import Svg from './lib/components/Svg.svelte';
@@ -13,7 +14,7 @@
   import { invoke } from "@tauri-apps/api/core"
 
   // @ts-ignore because no index.d.ts in dist?
-  import { Split } from '@geoffcox/svelte-splitter';
+  // import { Split } from '@geoffcox/svelte-splitter';
 
   import { saveStatus } from './store';
   import { isWhitespace } from './lib/service/utils';
@@ -389,11 +390,8 @@
   init()
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-missing-attribute -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
 <main class="dark">
-  <Split initialPrimarySize='300px' minPrimarySize='180px' minSecondarySize='50%' splitterSize='9px' >
+  <Splitter initialPrimarySize='300px' minPrimarySize='180px' minSecondarySize='50%' splitterSize='9px'>
     <div slot="primary">
       <div class="header" style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;">
         <Searchbar bind:value={searchString} on:input={onSearchInput} on:clear={clearSearch}></Searchbar>
@@ -465,9 +463,20 @@
           </button>
         </div>
 
-        <div class="center-items">
+        <div>
           <div id="toolbar">
-            <div style="height: 24px;">
+            <span class="ql-formats" style="margin-right: -2px; height: 24px;">
+              <FormatDropdown editor={editor}></FormatDropdown>
+            </span>
+            <span class="ql-formats" style="margin-left: -2px; margin-right: 0;">
+              <button data-ql-format="ql-code-block" class="custom-icon-btn toolbar-button">
+                <Svg src="/img/Code-block.svg" height="20px"></Svg>
+              </button>
+              <button class="ql-list toolbar-button" value="ordered" />
+              <button class="ql-list toolbar-button" value="bullet" />
+              <button class="ql-clean toolbar-button"></button>
+            </span>
+            <!-- <div style="height: 24px;">
               <FormatDropdown editor={editor}></FormatDropdown>
             </div>
             <div>
@@ -483,7 +492,7 @@
             </div>
             <div>
               <button class="ql-clean toolbar-button"></button>
-            </div>
+            </div> -->
             <!-- <span class="ql-formats" style="margin-right: -4px; height: 24px;">
               <FormatDropdown editor={editor}></FormatDropdown>
             </span> -->
@@ -530,7 +539,7 @@
         </div>
       </div>
     <div>
-  </Split>
+  </Splitter>
 
   <!-- fixed elements -->
   <SettingsOverlay/>
