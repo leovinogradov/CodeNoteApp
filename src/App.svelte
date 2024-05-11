@@ -463,7 +463,7 @@
           </button>
         </div>
 
-        <div>
+        <div class="center-items">
           <div id="toolbar">
             <span class="ql-formats" style="margin-right: -2px; height: 24px;">
               <FormatDropdown editor={editor}></FormatDropdown>
@@ -476,34 +476,6 @@
               <button class="ql-list toolbar-button" value="bullet" />
               <button class="ql-clean toolbar-button"></button>
             </span>
-            <!-- <div style="height: 24px;">
-              <FormatDropdown editor={editor}></FormatDropdown>
-            </div>
-            <div>
-              <button data-ql-format="ql-code-block" class="custom-icon-btn toolbar-button">
-                <Svg src="/img/Code-block.svg" height="20px"></Svg>
-              </button>
-            </div>
-            <div>
-              <button class="ql-list toolbar-button" value="ordered" />
-            </div>
-            <div>
-              <button class="ql-list toolbar-button" value="bullet" />
-            </div>
-            <div>
-              <button class="ql-clean toolbar-button"></button>
-            </div> -->
-            <!-- <span class="ql-formats" style="margin-right: -4px; height: 24px;">
-              <FormatDropdown editor={editor}></FormatDropdown>
-            </span> -->
-            <!-- <span class="ql-formats"> -->
-              <!-- <button data-ql-format="ql-code-block" class="custom-icon-btn">
-                <Svg src="/img/Code-block.svg" height="20px"></Svg>
-              </button> -->
-            <!-- <span class="ql-formats"></span> -->
-              <!-- <button class="ql-code-block"></button> -->
-              
-            <!-- </span> -->
           </div>
         </div>
 
