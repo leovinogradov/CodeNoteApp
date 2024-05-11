@@ -22,6 +22,7 @@
   import { searchNote, type SearchResult } from './lib/service/search.ts';
   import { Editor } from './lib/service/editor';
   import { createNewNote, SaveManager } from './lib/service/save-manager';
+  import { runInitialsizeFix } from './initialsize-fix';
 
 
   interface NoteMeta {
@@ -386,8 +387,10 @@
     }, 100)
   })
 
-  // calling this here instead of in onMount technically saves like a millisecond?
+  // Calling this here instead of in onMount technically saves like a millisecond?
   init()
+
+  runInitialsizeFix()
 </script>
 
 <main class="dark">
