@@ -1,19 +1,31 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+
   let containerEl;
+
   export let src;
-  export let height = null;
-  export let width = null;
+  export let height: string|null = null;
+  export let width: string|null = null;
 
   function setSvgHtml(html) {
     containerEl.innerHTML = html;
+    // console.log('test1')
+    // console.log(containerEl.innerHTML)
+    // console.log(containerEl.firstElementChild)
+    containerEl.querySelectorAll('rect, polyline, path').forEach(el => {
+      if (el.attributes && el.attributes.fill && el.attributes.fill.value == "none") {
+        el.classList.add('nofill')
+      }
+    })
 
     let svgEl = containerEl.firstElementChild;
     if (height) {
       svgEl.style.height = height;
+      containerEl.style.height = height;
     }
     if (width) {
       svgEl.style.width = width;
+      containerEl.style.width = width;
     }
   }
 
@@ -39,4 +51,8 @@
 <div class="custom-svg" bind:this={containerEl}>
 </div>
 
-<!-- height={height} width={width} -->
+<style lang="scss">
+:global {
+
+}
+</style>

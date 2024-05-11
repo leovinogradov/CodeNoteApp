@@ -78,7 +78,29 @@ export class Editor {
 			}
 		});
 		this.onModified = onModified
+
+		// Hack to register easily quill format buttons without replacing the html inside them
+		setTimeout(() => {
+			const toolbar = this.quill.getModule('toolbar')
+			const toolbarEl = document.getElementById('toolbar') as HTMLElement
+			toolbarEl.querySelectorAll('button').forEach(input => {
+				// Take any element that has data-ql-format, apply that value as a class and attach to toolbar
+				// For some reason this registers the element without replacing the html inside of it
+				if (input['dataset'] && input['dataset']['qlFormat']) {
+					input.classList.add(input['dataset']['qlFormat'])
+					toolbar.attach(input)
+				}
+			});
+		}, 0)
     }
+
+
+	attachToToolbar(elements: HTMLElement[]) {
+		const toolbar = this.quill.getModule('toolbar');
+		for (let el of elements) {
+			toolbar.attach(el)
+		}
+	}
 
 	// private _getLanguages() {
 	// 	try {

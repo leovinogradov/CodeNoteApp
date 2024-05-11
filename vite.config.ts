@@ -14,9 +14,8 @@ export default defineConfig(async () => ({
       ],
       onwarn: (warning, handler) => {
         // disable a11y warnings
-        if (warning.code.startsWith('a11y-')) {
-          return;
-        }
+        // @ts-ignore
+        if (warning.code.startsWith('a11y-')) return;
         handler(warning);
       },
     }),
