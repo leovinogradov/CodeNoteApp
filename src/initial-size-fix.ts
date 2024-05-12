@@ -1,11 +1,11 @@
-export function runInitialsizeFix() {
+export function runInitialSizeFix() {
     /* Detect stupid Windows bug where window is not recognized as the correct size until a resize */
     try {
         const isEdgeChromium = !!window.chrome && (navigator.userAgent.indexOf("Edg") != -1);
         if (isEdgeChromium && window.outerWidth >= 1001 && isCloseTo(window.outerWidth / window.devicePixelRatio, 1000)) {
             console.warn('Detected initial size bug! Adding fix')
             const app = document.getElementById('app')
-            app.classList.add('initialsize-fix')
+            app.classList.add('initial-size-fix')
             window.addEventListener('resize', resizeListenerFunc)
         }
     } catch(err) {
@@ -14,9 +14,9 @@ export function runInitialsizeFix() {
 }
 
 function resizeListenerFunc() {
-    console.log('Removing initialsize fix')
+    console.log('Removing initial size fix')
     const app = document.getElementById('app')
-    app.classList.remove('initialsize-fix')
+    app.classList.remove('initial-size-fix')
     window.removeEventListener('resize', resizeListenerFunc, false)
 }
 

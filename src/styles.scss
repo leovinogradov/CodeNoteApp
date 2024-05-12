@@ -35,7 +35,7 @@
 
   // Stupid bug on Windows where window size is not recognized as 1000px by 750px until resize
   // Need to manually shape the body to be 1000px by 750px 
-  #app.initialsize-fix {
+  #app.initial-size-fix {
     max-width: 1000px;
     max-height: 750px;
     .text-editor-outer, .notes-list {

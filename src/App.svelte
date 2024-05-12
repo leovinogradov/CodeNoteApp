@@ -22,7 +22,7 @@
   import { searchNote, type SearchResult } from './lib/service/search.ts';
   import { Editor } from './lib/service/editor';
   import { createNewNote, SaveManager } from './lib/service/save-manager';
-  import { runInitialsizeFix } from './initialsize-fix';
+  import { runInitialSizeFix } from './initial-size-fix';
 
 
   interface NoteMeta {
@@ -390,9 +390,10 @@
   // Calling this here instead of in onMount technically saves like a millisecond?
   init()
 
-  runInitialsizeFix()
+  runInitialSizeFix()
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <main class="dark">
   <Splitter initialPrimarySize='300px' minPrimarySize='180px' minSecondarySize='50%' splitterSize='9px'>
     <div slot="primary">
