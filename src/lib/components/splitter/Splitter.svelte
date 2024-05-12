@@ -143,6 +143,8 @@
     startPosition = horizontal ? event.clientY : event.clientX;
     startPrimarySize = primaryClientSize;
     dragging = true;
+    event.preventDefault()
+    event.stopPropagation()
   };
 
   const onPointerMove = (event: SplitterPointerEvent) => {
@@ -153,11 +155,15 @@
       const newPercent = (newPrimarySize / clientSize) * 100;
       percent = newPercent;
     }
+    event.preventDefault()
+    event.stopPropagation()
   };
 
   const onPointerUp = (event: SplitterPointerEvent) => {
     event.currentTarget.releasePointerCapture(event.pointerId);
     dragging = false;
+    event.preventDefault()
+    event.stopPropagation()
   };
 
   const onDoubleClick = () => {

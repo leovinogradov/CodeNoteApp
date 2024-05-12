@@ -195,8 +195,6 @@ class Searcher {
         if (oldInNewIdx >= 0) {
             // Replace in occurence list
             let newIndex = indexInText + oldInNewIdx
-            // TODO: test if this can mess up elements list for two searchstrings next to eachother
-            // this.quill.formatText(newIndex, oldString.length, lastFormat, true);
             this.occurrencesIndices[this.currentIndex] = newIndex
             this.search(this.SearchedString, true);
             this.currentIndex += 1;
@@ -227,7 +225,8 @@ class Searcher {
 
     replaceAll(oldString, newString) {
         if (!this.SearchedString) return;
-
+        // console.log('1', this.quill.history.stack.undo)
+        this.quill.history.cutoff();
         // if no occurrences, then search first. first
         if (!this.occurrencesIndices) this.search();
         if (!this.occurrencesIndices) return;
@@ -238,7 +237,9 @@ class Searcher {
                 this.replace(oldString, newString)
             }
         }
-        
+        // console.log('2', this.quill.history.stack.undo)
+        this.quill.history.cutoff();
+        this.quill.focus();
         return this.search(oldString)
     }
 

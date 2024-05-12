@@ -45,9 +45,22 @@ export class Editor {
                 syntax: {
 					languages: languages
 				},
+				history: {
+					delay: 500,
+					maxStack: 100,
+					userOnly: false
+				},
                 toolbar: '#toolbar',
 				// keyboard: {
-				// 	bindings: kbBindings
+				// 	bindings: {
+				// 		undo: {
+				// 			key: ['z', 'Z', 's', 'S'],
+				// 			shortKey: true,
+				// 			handler: function(range, context) {
+				// 				console.log('TEST', context)
+				// 			}
+				// 		},
+				// 	}
 				// }
             },
             placeholder: "Type something...",
@@ -63,13 +76,6 @@ export class Editor {
 			this._clean = function() {}
 			console.error('Could not bing quill clean function')
 		}
-		
-		// if (initialFilename) {
-		// 	this._setContentsFromFile(initialFilename)
-		// 	this.saveManager = new SaveManager(this.quill, initialFilename)
-		// } else {
-		// 	this.openNew()
-		// }
 
         this.quill.on("text-change", this._quillOnChange.bind(this))
 		this.quill.on('selection-change', (range, _oldRange, _source) => {
