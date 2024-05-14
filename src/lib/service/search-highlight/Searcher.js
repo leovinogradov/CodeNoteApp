@@ -11,6 +11,7 @@ class Searcher {
     quill;
     editorElement;
     resizeObserver;
+    onSearchCB;
     _timeout;
 
     constructor(quill, editorElement) {
@@ -28,14 +29,19 @@ class Searcher {
 
         this.quill.on('text-change', (delta, oldDelta, source) => {
             if (source == 'user' && this.SearchedString) {
-              if (this._timeout) {
-                clearTimeout(this._timeout)
-              }
-              this._timeout = setTimeout(() => {
-                this.search(this.SearchedString)
-              }, 50)
+                if (this._timeout) {
+                    clearTimeout(this._timeout)
+                }
+                this._timeout = setTimeout(() => {
+                    this.search(this.SearchedString)
+                }, 50)
             } 
         });
+        this.quill.on('selection-change', (range, _oldRange, source) => {
+			if (range && source == 'user') {
+				this.cursorIndex = range.index
+			}
+		});
     }
 
     search(searchString, useExistingIndices=false) {
@@ -84,8 +90,11 @@ class Searcher {
             }
 
             this.firstTime = true
-
-            if (this.occurrencesIndices.length != lastNumResults) {
+            
+            if (this.currentIndex >= this.occurrencesIndices.length) {
+                this.currentIndex = this.occurrencesIndices.length - 1;
+            }
+            else if (this.occurrencesIndices.length != lastNumResults && lastNumResults == 0) {
                 this.currentIndex = 0;
             }
         }
@@ -97,6 +106,10 @@ class Searcher {
                 console.error('highlight not cleared at this point?', this.searchHighlightElementList)
                 this.clearHighlight()
             }
+        }
+
+        if (this.onSearchCB) {
+            this.onSearchCB(this.occurrencesIndices.length, this.currentIndex)
         }
         return this.occurrencesIndices.length;
     }
@@ -169,20 +182,26 @@ class Searcher {
         this._goToIndex(this.currentIndex + 1)
     }
 
-    replace(oldString, newString) {
+    replace(oldString, newString, isReplacingAll=false) {
         if (!this.SearchedString) return;
 
         // if no occurrences, then search first.
         if (!this.occurrencesIndices) this.search();
         if (!this.occurrencesIndices) return;
         
-        this.firstTime = true;
-        this.goToNextIndex()
-        if (oldString == newString) return;
+        // this.firstTime = true;
+        if (this.cursorIndex !== this.lastCursorIndex || oldString === newString) {
+            this.goToNextIndex()
+            if (oldString === newString) return; // short circuit if no replace is necessary
+        }
         
         const indexInText = this.occurrencesIndices[this.currentIndex];
         const oldInNewIdx = newString.indexOf(oldString)
 
+        if (!isReplacingAll) {
+            this.quill.history.cutoff();
+            this.quill.blur();
+        }
         this.quill.deleteText(indexInText, oldString.length);
         this.quill.insertText(indexInText, newString);
 
@@ -196,7 +215,9 @@ class Searcher {
             // Replace in occurence list
             let newIndex = indexInText + oldInNewIdx
             this.occurrencesIndices[this.currentIndex] = newIndex
-            this.search(this.SearchedString, true);
+            if (!isReplacingAll) {
+                this.search(this.SearchedString, true);
+            }
             this.currentIndex += 1;
         } else {
             // Remove from occurence list
@@ -218,7 +239,8 @@ class Searcher {
         this.firstTime = true;
 
         // Set cursor after replaced text
-        this.quill.setSelection(indexInText + newString.length)
+        // this.quill.setSelection(indexInText + newString.length)
+        this.goToNextIndex()
 
         return this.occurrencesIndices.length
     }
@@ -227,6 +249,7 @@ class Searcher {
         if (!this.SearchedString) return;
         // console.log('1', this.quill.history.stack.undo)
         this.quill.history.cutoff();
+        this.quill.blur();
         // if no occurrences, then search first. first
         if (!this.occurrencesIndices) this.search();
         if (!this.occurrencesIndices) return;
@@ -234,12 +257,14 @@ class Searcher {
         if (this.occurrencesIndices) {
             const numToReplace = this.occurrencesIndices.length;
             for (let i = 0; i < numToReplace; ++i) {
-                this.replace(oldString, newString)
+                this.replace(oldString, newString, true)
             }
         }
         // console.log('2', this.quill.history.stack.undo)
-        this.quill.history.cutoff();
-        this.quill.focus();
+        // this.quill.history.cutoff();
+        // TODO: make global Ctrl+Z handler         
+        // focus so that Ctrl+Z works afterwards
+        this.quill.focus(); 
         return this.search(oldString)
     }
 

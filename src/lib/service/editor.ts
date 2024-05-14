@@ -12,13 +12,17 @@ import { languages } from "./constants";
 
 const ColorStyle = Quill.import("attributors/style/color");
 const BackgroundStyle = Quill.import("attributors/style/background");
+// @ts-ignore
 ColorStyle.whitelist = []; // remove pasted colors
+// @ts-ignore
 BackgroundStyle.whitelist = []; // remove pasted bg colors
+// @ts-ignore
 Quill.register(ColorStyle);
+// @ts-ignore
 Quill.register(BackgroundStyle);
 
+// @ts-ignore
 Quill.register("modules/Searcher", Searcher);
-
 Quill.register({ "modules/syntax": Syntax }, true);
 
 
@@ -36,7 +40,8 @@ export class Editor {
 	editorEl;
 
 	onModified: Function|null;
-	private _clean: Function
+	private _clean: Function;
+	private _timeOpened: number = 0;
 
     constructor(editorEl, onModified: Function|null) {
 		this.editorEl = editorEl
@@ -78,11 +83,6 @@ export class Editor {
 		}
 
         this.quill.on("text-change", this._quillOnChange.bind(this))
-		this.quill.on('selection-change', (range, _oldRange, _source) => {
-			if (range) {
-				this.searcher.cursorIndex = range.index
-			}
-		});
 		this.onModified = onModified
 
 		// Hack to register easily quill format buttons without replacing the html inside them
@@ -140,8 +140,10 @@ export class Editor {
 		const note = await createNewNote();
 
 		this.quill.setContents([], 'silent')
+		this.quill.history.clear()
 		this.saveManager = new SaveManager(this.quill, note.filename);
 		this.searcher.lastCursorIndex = null
+		this._timeOpened = Date.now();
 		console.log('opened new')
 		return {
 			exitResult,
@@ -149,35 +151,20 @@ export class Editor {
 		};
 	}
 
-	private async _setContentsFromFile(filename) {
-		const content = await readFile(filename);
-		
-		if (!content) {
-			console.log('setting from empty content')
-			this.quill.setContents('', 'silent')
-		} else {
-			console.log('setting from content')
-			const delta = JSON.parse(content)
-			this.quill.setContents(delta, 'silent')
-		}
-	}
-
 	async open(filename) {
 		console.log('opening', filename)
-		// if (this.saveManager.filename == filename) {
-		// 	console.log('already opened; doing nothing')
-		// 	return null
-		// }
+		if (this.saveManager && this.saveManager.filename == filename && Date.now() - this._timeOpened < 500) {
+			// Prevent opening twice in rapid succession, but allow re-opening the same file just in case
+			console.log('already opened recently; doing nothing')
+			return null
+		}
 		const exitResult = await this.exit();
 
 		await this._setContentsFromFile(filename)
+		this.quill.history.clear()
 		this.saveManager = new SaveManager(this.quill, filename)
 		this.searcher.lastCursorIndex = null
-
-		// if (this.onModified) {
-		// 	this.onModified(this.saveManager.filename, this.quill.getContents())
-		// }
-
+		this._timeOpened = Date.now();
 		console.log('opened', filename)
 		return exitResult;
 	}
@@ -223,6 +210,17 @@ export class Editor {
 		this.quill.setContents(delta, 'silent')
 	}
 
+	private async _setContentsFromFile(filename) {
+		const content = await readFile(filename);
+		if (!content) {
+			console.log('setting from empty content')
+			this.quill.setContents([], 'silent')
+		} else {
+			console.log('setting from content')
+			const delta = JSON.parse(content)
+			this.quill.setContents(delta, 'silent')
+		}
+	}
 
 	static getLinesFromDeltas(obj, lineLimit=2, charLimit=100) {
 		/* get first {lineLimit} not empty lines */
@@ -259,6 +257,14 @@ export class Editor {
 			}
 		}
 		return lines
+	}
+
+	undo() {
+		return this.quill.history.undo()
+	}
+
+	redo() {
+		return this.quill.history.redo()
 	}
 
 	removeFormatting() {
