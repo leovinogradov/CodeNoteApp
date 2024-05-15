@@ -56,7 +56,8 @@
   position: fixed;
   bottom: 16px;
   left: 16px;
-  height: auto;
+  width: 26px;
+  height: 26px;
   z-index: 99;
 }
 .settings-button {
@@ -77,7 +78,7 @@
   border: 1px solid #ddd;
   border-radius: 3px;
   z-index: 10;
-  bottom: 40px;
+  bottom: 36px;
   left: 0;
 
   .settings-actions {

@@ -27,14 +27,29 @@
   // line-height: 24px;
   font-weight: 400;
 
-  // color: #0f0f0f;
-  // background-color: #fff; // #f6f6f6;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
+  // Stupid bug on Windows where window size is not recognized as 1000px by 750px until resize
+  // Need to manually shape the body to be 1000px by 750px 
+  #app.initial-size-fix {
+    max-width: 1000px;
+    max-height: 750px;
+    .text-editor-outer, .notes-list {
+      height: 697px !important; // instead of calc(100vh - 53px);
+    }
+    .setting-overlay {
+      top: 708px !important; // instead of bottom: 16px;
+      bottom: auto !important;
+    }
+    .find-and-replace {
+      left: 647px !important; // instead of right: 23px;
+      right: auto !important;
+    }
+  }
 }
 
 html[data-theme='light'] {
@@ -172,23 +187,6 @@ button.custom-icon-btn {
     padding-bottom: 6px;
   }
 
-  // #toolbar {
-  //   height: 36px;
-  //   padding-top: 6px;
-  //   padding-bottom: 6px;
-  //   & > div {
-  //     display: inline-block;
-  //     margin: 0 2px;
-  //     & > button, & > span {
-  //       margin: 0 !important;
-  //     }
-  //   }
-  // }
-
-  // & > div {
-  //   // height: 24px;
-  //   line-height: 1;
-  // }
   .custom-svg svg {
     path:not(.nofill) {
       fill: #444;

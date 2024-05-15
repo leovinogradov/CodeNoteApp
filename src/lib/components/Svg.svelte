@@ -9,10 +9,8 @@
 
   function setSvgHtml(html) {
     containerEl.innerHTML = html;
-    // console.log('test1')
-    // console.log(containerEl.innerHTML)
-    // console.log(containerEl.firstElementChild)
-    containerEl.querySelectorAll('rect, polyline, path').forEach(el => {
+    // may need to do all three of 'rect, polyline, path' later
+    containerEl.querySelectorAll('path').forEach(el => {
       if (el.attributes && el.attributes.fill && el.attributes.fill.value == "none") {
         el.classList.add('nofill')
       }
@@ -45,14 +43,7 @@
       })
       .catch(console.error.bind(console));
   })
-  // const svgDecoded = decodeURIComponent(src).replace('data:image/svg+xml,', '');=
 </script>
 
 <div class="custom-svg" bind:this={containerEl}>
 </div>
-
-<style lang="scss">
-:global {
-
-}
-</style>

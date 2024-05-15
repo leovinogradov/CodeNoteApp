@@ -34,6 +34,7 @@
 	export function init(editor: Editor) {
 		console.log('SearchInNote init')
 		_editor = editor
+		editor.searcher.onSearchCB = onSearchCB
 	}
 
 	let _timer;
@@ -46,16 +47,21 @@
 		debounce(doSearch, 50)
 	}
 
+	function onSearchCB(newNumResults, newCurrentIndex) {
+		/* on search callback; triggered by Searcher */
+		numResults = newNumResults
+		currentIndex = newCurrentIndex + 1
+	}
+
 	function doSearch() {
 		if (searchValue) {
-			numResults = _editor.searcher.search(searchValue)
-			currentIndex = _editor.searcher.currentIndex + 1
+			_editor.searcher.search(searchValue)
+			// numResults and currentIndex will be updated in onSearchCB()
 		} else {
 			_editor.searcher.clear()
 			numResults = 0
 			currentIndex = 0
 		}
-
 	}
 
 	function openFind() {
@@ -111,21 +117,43 @@
     })
 
 	function onKeyDown(e) {
-		if ((e.key === 'f' || e.key === 'F') && e[_alternateFunctionProperty]) {
-			e.preventDefault()
-			if (e.shiftKey) {
-				// ctrl/CMD + shift + f
-				openFindReplace()
-			} else {
-				// ctrl/CMD + f
-				openFind()
+		if (e[_alternateFunctionProperty]) {
+			if ((e.key === 'f' || e.key === 'F')) {
+				e.preventDefault()
+				if (e.shiftKey) {
+					// ctrl/CMD + shift + f
+					openFindReplace()
+				} else {
+					// ctrl/CMD + f
+					openFind()
+				}
 			}
+			// else if ((e.key === 'z' || e.key === 'Z') && !_isInputFocused()) {
+			// 	_editor.undo()
+			// 	e.preventDefault()
+			// }
+			// else if ((e.key === 'y' || e.key === 'Y') && !_isInputFocused()) {
+			// 	_editor.redo()
+			// 	e.preventDefault()
+			// }
 		}
-		else if (show && e.key === "Enter" && searchValue && numResults) {
-			if (document.activeElement === searchInputEl) {
-				findNext()
-			} else if (document.activeElement === searchInputEl) {
-				replaceNext()
+		else if (show) {
+			if (e.key === "Enter" && searchValue && numResults) {
+				if (document.activeElement === searchInputEl) {
+					findNext()
+				} else if (document.activeElement === searchInputEl) {
+					replaceNext()
+				}
+			}
+			else if (e.key === "Tab" && isReplacing) {
+				// Override default tabbing behavior to switch between search and replace fields
+				if (document.activeElement === searchInputEl) {
+					e.preventDefault()
+					replaceInputEl.focus()
+				} else if (document.activeElement === replaceInputEl) {
+					e.preventDefault()
+					searchInputEl.focus()
+				}
 			}
 		}
 	}
@@ -146,7 +174,7 @@
     </div>
     <div class="input-container">
 		<div class="row1">
-			<input bind:value={searchValue} bind:this={searchInputEl} on:input={onSearchInput} placeholder="Find" />
+			<input bind:value={searchValue} bind:this={searchInputEl} on:input={onSearchInput} placeholder="Find" tabindex="0" />
 
 			<div class="results-text-container">
 				{#if numResults}
@@ -159,13 +187,13 @@
 			
 
 			<div class="action-buttons">
-				<button on:click={findPrev} disabled="{!searchValue}">
+				<button on:click={findPrev} disabled="{!searchValue}" tabindex="-1">
 					<span><ArrowUp size="16" color="{ searchValue ? '#444' : '#ccc' }" /></span>
 				</button>
-				<button on:click={findNext} disabled="{!searchValue}">
+				<button on:click={findNext} disabled="{!searchValue}" tabindex="-1">
 					<span><ArrowDown size="16" color="{ searchValue ? '#444' : '#ccc' }" /></span>
 				</button>
-				<button on:click={close}>
+				<button on:click={close} tabindex="-1">			
 					<span><XIcon size="16" color="#444" /></span>
 				</button>
 			</div>
@@ -173,7 +201,7 @@
 
 		{#if isReplacing}
 			<div class="row2">
-				<input bind:value={replaceWithValue} bind:this={replaceInputEl} placeholder="Replace" />
+				<input bind:value={replaceWithValue} bind:this={replaceInputEl} placeholder="Replace" tabindex="0" />
 				
 				<div class="action-buttons">
 					<button on:click={replaceNext} disabled="{!replaceWithValue || numResults == 0}">

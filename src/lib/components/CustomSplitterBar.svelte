@@ -46,7 +46,9 @@
     width: 100%;
     padding: 52px 4px 0 4px; // 52px to account for header bar=
     user-select: none;
+    -webkit-user-select: none;
     & > .inner {
+      user-select: none;
       height: 100%;
       width: 100%;
       width: 1px;
