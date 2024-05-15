@@ -116,14 +116,6 @@
       }
     })
 
-	function _findInputsFocused() {
-		return document.activeElement == searchInputEl || document.activeElement == replaceInputEl
-	}
-
-	function _isEditorFocused() {
-		return _editor.quill.hasFocus()
-	}
-
 	function onKeyDown(e) {
 		if (e[_alternateFunctionProperty]) {
 			if ((e.key === 'f' || e.key === 'F')) {
@@ -136,14 +128,14 @@
 					openFind()
 				}
 			}
-			else if ((e.key === 'z' || e.key === 'Z') && !_findInputsFocused()) {
-				_editor.undo()
-				e.preventDefault()
-			}
-			else if ((e.key === 'y' || e.key === 'Y') && !_findInputsFocused()) {
-				_editor.redo()
-				e.preventDefault()
-			}
+			// else if ((e.key === 'z' || e.key === 'Z') && !_isInputFocused()) {
+			// 	_editor.undo()
+			// 	e.preventDefault()
+			// }
+			// else if ((e.key === 'y' || e.key === 'Y') && !_isInputFocused()) {
+			// 	_editor.redo()
+			// 	e.preventDefault()
+			// }
 		}
 		else if (show) {
 			if (e.key === "Enter" && searchValue && numResults) {
@@ -163,15 +155,6 @@
 					searchInputEl.focus()
 				}
 			}
-		}
-	}
-
-	// Special handler mainly for Mac
-	function onBeforeInput(e) {
-		if (e.inputType == "historyUndo" && !_findInputsFocused() && !_isEditorFocused()) {
-			e.preventDefault()
-			e.stopPropagation()
-			_editor.undo()
 		}
 	}
 </script>
@@ -236,7 +219,7 @@
 	</div>
 </div>
 
-<svelte:window on:keydown={onKeyDown} on:beforeinput={onBeforeInput} />
+<svelte:window on:keydown={onKeyDown} />
 
 <style lang="scss">
 	.find-and-replace {

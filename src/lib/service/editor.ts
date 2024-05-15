@@ -40,8 +40,8 @@ export class Editor {
 	editorEl;
 
 	onModified: Function|null;
-	private _clean: Function;
 	private _timeOpened: number = 0;
+	// private _clean: Function;
 
     constructor(editorEl, onModified: Function|null) {
 		this.editorEl = editorEl
@@ -74,13 +74,13 @@ export class Editor {
         });
 		this.searcher = new Searcher(this.quill, editorEl)
 		
-		// Note: used for external format remove functionality; might not be needed
-		if (Toolbar.DEFAULTS.handlers) {
-			this._clean = Toolbar.DEFAULTS.handlers.clean.bind(this)
-		} else {
-			this._clean = function() {}
-			console.error('Could not bing quill clean function')
-		}
+		// Note: use this for for external format remove functionality if needed
+		// if (Toolbar.DEFAULTS.handlers) {
+		// 	this._clean = Toolbar.DEFAULTS.handlers.clean.bind(this)
+		// } else {
+		// 	this._clean = function() {}
+		// 	console.error('Could not bind quill clean function')
+		// }
 
         this.quill.on("text-change", this._quillOnChange.bind(this))
 		this.onModified = onModified
@@ -129,7 +129,6 @@ export class Editor {
 			this.saveManager.saveAfterDelay()
 			if (this.onModified) {
 				this.onModified(this.saveManager.filename, delta, oldDelta, source)
-				// this.quill.getContents()
 			}
 		}
 	}
@@ -267,42 +266,10 @@ export class Editor {
 		return this.quill.history.redo()
 	}
 
-	removeFormatting() {
-		this._clean()
-
-		// Slightly modified quill/modules/toolbar.js clean function
-		// let range = this.quill.getSelection();
-		// if (range == null) return;
-		// if (range.length == 0) {
-		// 	let formats = this.quill.getFormat();
-		// 	Object.keys(formats).forEach((name) => {
-		// 		// Clean functionality in existing apps only clean inline formats
-		// 		// if (Parchment.query(name, Parchment.Scope.INLINE) != null) {
-		// 		this.quill.format(name, false);
-		// 		// }
-		// 	});
-		// } else {
-		// 	this.quill.removeFormat(range, 'user');
-		// }
-		
-		
-		/*   Definition of quill.format:
-		let range = this.getSelection(true);
-		let change = new Delta();
-		if (range == null) {
-			return change;
-		} else if (Parchment.query(name, Parchment.Scope.BLOCK)) {
-			change = this.editor.formatLine(range.index, range.length, { [name]: value });
-		} else if (range.length === 0) {
-			this.selection.format(name, value);
-			return change;
-		} else {
-			change = this.editor.formatText(range.index, range.length, { [name]: value });
-		}
-		this.setSelection(range, Emitter.sources.SILENT);
-		return change;
-		*/
-	}
+	// External remove formatting func
+	// removeFormatting() {
+	// 	this._clean()
+	// }
 }
 
 

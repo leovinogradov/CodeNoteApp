@@ -3,7 +3,7 @@ export function runInitialSizeFix() {
     try {
         // @ts-ignore
         const isEdgeChromium = !!window.chrome && (navigator.userAgent.indexOf("Edg") != -1);
-        console.log('TEST', isEdgeChromium, window.outerWidth, window.devicePixelRatio)
+        console.log('runInitialSizeFix:', isEdgeChromium, window.outerWidth, window.devicePixelRatio)
         if (isEdgeChromium && window.outerWidth >= 1001 && isCloseTo(window.outerWidth / window.devicePixelRatio, 1000)) {
             console.warn('Detected initial size bug! Adding fix')
             const app = document.getElementById('app')
@@ -25,5 +25,5 @@ function resizeListenerFunc() {
 }
 
 function isCloseTo(a, b) {
-    return Math.abs(a - b) <= 1; 
+    return Math.abs(a - b) <= 2; 
 }

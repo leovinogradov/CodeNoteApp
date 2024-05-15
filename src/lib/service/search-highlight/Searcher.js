@@ -247,7 +247,7 @@ class Searcher {
 
     replaceAll(oldString, newString) {
         if (!this.SearchedString) return;
-        // console.log('1', this.quill.history.stack.undo)
+        // console.log('1 stack before', this.quill.history.stack.undo.length, JSON.stringify(this.quill.history.stack.undo))
         this.quill.history.cutoff();
         this.quill.blur();
         // if no occurrences, then search first. first
@@ -260,11 +260,9 @@ class Searcher {
                 this.replace(oldString, newString, true)
             }
         }
-        // console.log('2', this.quill.history.stack.undo)
+        // console.log('2 stack after', this.quill.history.stack.undo.length, JSON.stringify(this.quill.history.stack.undo))
+        // console.log('ref', this.quill.history)
         // this.quill.history.cutoff();
-        // TODO: make global Ctrl+Z handler         
-        // focus so that Ctrl+Z works afterwards
-        this.quill.focus(); 
         return this.search(oldString)
     }
 

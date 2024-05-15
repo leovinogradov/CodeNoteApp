@@ -17,7 +17,7 @@
   // import { Split } from '@geoffcox/svelte-splitter';
 
   import { saveStatus } from './store';
-  import { isWhitespace } from './lib/service/utils';
+  import { isWhitespace, isInputFocused } from './lib/service/utils';
   // import { stateBold, stateItalic, textType } from './store';
   import { searchNote, type SearchResult } from './lib/service/search.ts';
   import { Editor } from './lib/service/editor';
@@ -282,23 +282,35 @@
     }
   }
 
+  // let _noteModifiedTimeout = null
   function onActiveNoteModified(filename, delta, oldDelta, source) {
     /* Recompute meta when note is modified (but not necessarily saved) */
-    const first2Lines: string[] = _getFirst2LinesFromContent(this.quill.getContents())
+    _updateNoteTitle(filename)
+    // Version with debounce: seems to not be needed because compute is super fast
+    // if (_noteModifiedTimeout) clearTimeout(_noteModifiedTimeout)
+    // _noteModifiedTimeout = setTimeout(_updateNoteTitle, 50)
+  }
+
+  function _updateNoteTitle(filename) {
+    // const filename = editor.getFilename()
+    // if (!filename) return
+    const first2Lines: string[] = _getFirst2LinesFromContent(editor.quill.getContents())
     if (searchString) {
       // When something is searched
       const matchingNoteIdx = matchingNotes.findIndex((note) => note.filename == filename)
       if (matchingNoteIdx < 0 || !matchingNotes) return
-      if (first2Lines[0]) {
-        if (first2Lines[0] == matchingNotes[matchingNoteIdx].note_meta.title) return;  // no change
-        matchingNotes[matchingNoteIdx].note_meta.title = first2Lines[0]
-        let idxOfSearchStr = first2Lines[0].toLowerCase().indexOf(searchString.toLowerCase())
-        matchingNotes[matchingNoteIdx].note_meta.search_title_as_tokens = _searchResultAsTokensV1(first2Lines[0], idxOfSearchStr, searchString.length)
-      } else {
+      const newTitle = first2Lines[0]
+      if (!newTitle) {
         matchingNotes[matchingNoteIdx].note_meta.title = 'Untitled'
         matchingNotes[matchingNoteIdx].note_meta.search_title_as_tokens = [{ highlight: false, text: 'Untitled'}]
       }
-      // Todo: update subtitle under certain conditions
+      else if (newTitle != matchingNotes[matchingNoteIdx].note_meta.title) {
+        // If there's a change in title, update it
+        matchingNotes[matchingNoteIdx].note_meta.title = first2Lines[0]
+        let idxOfSearchStr = first2Lines[0].toLowerCase().indexOf(searchString.toLowerCase())
+        matchingNotes[matchingNoteIdx].note_meta.search_title_as_tokens = _searchResultAsTokensV1(first2Lines[0], idxOfSearchStr, searchString.length)
+      }
+      // TODO: also update subtitle, like the title above
     }
     else {
       // Normal operation
@@ -377,6 +389,18 @@
     editor.searcher.clear()
   }
 
+
+	function onBeforeInput(e) {
+    /* Global handler for Ctrl+Z
+       This makes sure Ctrl+Z fires even when editor is not in focus (useful for undoing a recent find+replace)
+    */
+		if (e.inputType == "historyUndo" && !isInputFocused() && !editor.quill.hasFocus()) {
+			e.preventDefault()
+			e.stopPropagation()
+			editor.undo()
+		}
+	}
+
   onMount(() => {
     console.log('App onMount')
     // Sanity checks; this is mainly to fix stuff thats broken by hot reload in development
@@ -393,7 +417,9 @@
   runInitialSizeFix()
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
+<svelte:window on:beforeinput={onBeforeInput} />
+
+
 <main class="dark">
   <Splitter initialPrimarySize='300px' minPrimarySize='180px' minSecondarySize='50%' splitterSize='9px'>
     <div slot="primary">

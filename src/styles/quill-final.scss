@@ -24,6 +24,12 @@
     }
 }
 
+.ql-snow .ql-editor code {
+    // use transparency via rgba instead of #f0f0f0 for search highlight to be visible
+    // consider also adding .ql-snow .ql-editor .ql-code-block-container
+    background-color: rgba(0, 0, 0, 0.055);
+}
+
 .ql-tooltip {
     z-index: 99;
 }
