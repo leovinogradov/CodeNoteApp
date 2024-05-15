@@ -51,7 +51,7 @@ export class Editor {
 					languages: languages
 				},
 				history: {
-					delay: 500,
+					delay: 800,
 					maxStack: 100,
 					userOnly: false
 				},
