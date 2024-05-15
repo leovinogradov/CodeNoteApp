@@ -48,6 +48,7 @@
 	}
 
 	function onSearchCB(newNumResults, newCurrentIndex) {
+		/* on search callback; triggered by Searcher */
 		numResults = newNumResults
 		currentIndex = newCurrentIndex + 1
 	}
@@ -55,12 +56,11 @@
 	function doSearch() {
 		if (searchValue) {
 			_editor.searcher.search(searchValue)
-			// numResults = _editor.searcher.search(searchValue)
-			// currentIndex = _editor.searcher.currentIndex + 1
+			// numResults and currentIndex will be updated in onSearchCB()
 		} else {
 			_editor.searcher.clear()
-			// numResults = 0
-			// currentIndex = 0
+			numResults = 0
+			currentIndex = 0
 		}
 	}
 
