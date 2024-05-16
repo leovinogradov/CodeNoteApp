@@ -3,8 +3,8 @@
 
 use regex::RegexBuilder;
 use std::ffi::OsStr;
-use std::fs;
-use std::path::PathBuf;
+// use std::fs;
+// use std::path::PathBuf;
 use tauri::path::BaseDirectory;
 use tauri::Manager; // makes .setup(|app|) work
 
@@ -42,7 +42,7 @@ async fn read_notes_dir(window: tauri::Window) -> Result<NotesResponse, String> 
     // search::typed_example();
 
     let mut vec: Vec<FileSummaryResponse> = Vec::new();
-    read_notes::read_notes_in_dir(&mut vec, &path);
+    read_notes::read_notes_in_dir(&mut vec, &path, 10);
     // vec.push(FileSummaryResponse {
     //     content:  String::from(""),
     //     filename: String::from(""),
@@ -74,15 +74,18 @@ async fn search_handler(
         .build()
         .unwrap();
 
-    let filepaths_in_dir = fs::read_dir(dir_path).unwrap();
-    for path in filepaths_in_dir {
-        let path_buf: PathBuf = path.unwrap().path();
-        let full_path_as_str: &str = path_buf.to_str().unwrap();
+    // let filepaths_in_dir = fs::read_dir(dir_path).unwrap();
+    // for path in filepaths_in_dir {
+
+    let fileinfovec = read_notes::get_note_files_sorted(&dir_path);
+    for fileinfo in fileinfovec {
+        // let path_buf: PathBuf = path.unwrap().path();
+        let full_path_as_str: &str = fileinfo.path_buf.to_str().unwrap();
         if full_path_as_str.ends_with(".json") {
             // let modified_time = file_modified_time_in_seconds(path_str);
             // let content: String = read_file(path_str);
             // let res = search::search(full_path_as_str, search_string.clone());
-            let filename: &OsStr = path_buf.file_name().unwrap();
+            let filename: &OsStr = fileinfo.path_buf.file_name().unwrap();
             let filename: &str = filename.to_str().unwrap();
 
             let res = search::search(

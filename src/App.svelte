@@ -37,7 +37,8 @@
     filename: string,
     content: string,
     modified: number,
-    note_meta: NoteMeta
+    note_meta: NoteMeta,
+    el?: HTMLElement
   }
 
 
@@ -63,6 +64,8 @@
   // DOM elements
   let editorElement;
   let searchInNoteElement;
+
+  $: hasMatchingNotes = searchString && (lastSearchString || matchingNotes.length > 0);
 
   async function init() {
     // run this async function separately from the ones below
@@ -207,8 +210,9 @@
       if (isWhitespace(title)) {
         title = "Untitled"
       }
-    } else {
-      title = "Untitled"
+    } 
+    else {
+      title = "Loading..."
     }
     return { title, subtitle, modifiedTime }
   }
@@ -389,6 +393,28 @@
     editor.searcher.clear()
   }
 
+  function onNoteListScroll(e) {
+    // e.target is notes-list div
+    // At bottom, e.target.scrollHeight ~= e.target.offsetHeight + e.target.scrollTop
+    const visibleNotes = hasMatchingNotes ? matchingNotes : notes;
+    // offsetTop of bottom of visible portion
+    const bottom = e.target.scrollTop + e.target.offsetHeight
+    for (let i=visibleNotes.length-1; i >= 0; i--) {
+      const note = visibleNotes[i]
+      if (!note.el) {
+        console.error("could not fine note summary el")
+        break
+      }
+      if (note.content) {
+        // reached notes that have content. No more needs to be done
+        break
+      }
+      if (note.el.offsetTop - bottom < 200) {
+        // note is close to visible bottom
+        console.log('TEST!')
+      }
+    }
+  }
 
 	function onBeforeInput(e) {
     /* Global handler for Ctrl+Z
@@ -430,11 +456,14 @@
           <XIcon size="14" strokeWidth="2" color="#444" />
         </button> -->
       </div>
-      <div class="notes-list">
-        {#if searchString && (lastSearchString || matchingNotes.length > 0)}
+      <div class="notes-list" on:scroll="{onNoteListScroll}">
+        {#if hasMatchingNotes}
           <!-- list when searching -->
           {#each matchingNotes as note, i (note.filename) }
-            <div animate:myflip class="note-summary" on:click={() => onNoteClick(note)}> 
+            <div animate:myflip 
+                class="note-summary"
+                bind:this={note.el}
+                on:click={() => onNoteClick(note)}> 
               <h4>
                 {#each note.note_meta.search_title_as_tokens as token}
                   {#if token.highlight}
@@ -468,6 +497,7 @@
           {#each notes as note, i (note.filename) }
             <div animate:myflip
                 class="note-summary"
+                bind:this={note.el}
                 class:selected={currentFilename == note.filename}
                 on:click={() => onNoteClick(note)}> 
               <h4>{note.note_meta.title}</h4>
