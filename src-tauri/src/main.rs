@@ -33,21 +33,11 @@ async fn read_notes_dir(window: tauri::Window) -> Result<NotesResponse, String> 
     let path = path.to_str().unwrap();
     println!("Reading notes; path is {}", path);
 
-    // let result: Option<String> = some_other_function().await;
-    // if let Some(message) = result { ...
-    // } else {
-    //     Err("No result".into())
-    // }
-
-    // search::typed_example();
-
     let mut vec: Vec<FileSummaryResponse> = Vec::new();
-    read_notes::read_notes_in_dir(&mut vec, &path, 10);
-    // vec.push(FileSummaryResponse {
-    //     content:  String::from(""),
-    //     filename: String::from(""),
-    //     modified: 0,
-    // });
+    // Return all note filenames, most recent first
+    // Read content of first 20 notes (the rest are lazy loaded when scrolled to)
+    read_notes::read_notes_in_dir(&mut vec, &path, 20);
+
     Ok(NotesResponse { data: vec })
 }
 
@@ -74,20 +64,13 @@ async fn search_handler(
         .build()
         .unwrap();
 
-    // let filepaths_in_dir = fs::read_dir(dir_path).unwrap();
-    // for path in filepaths_in_dir {
-
     let fileinfovec = read_notes::get_note_files_sorted(&dir_path);
     for fileinfo in fileinfovec {
-        // let path_buf: PathBuf = path.unwrap().path();
         let full_path_as_str: &str = fileinfo.path_buf.to_str().unwrap();
         if full_path_as_str.ends_with(".json") {
-            // let modified_time = file_modified_time_in_seconds(path_str);
-            // let content: String = read_file(path_str);
-            // let res = search::search(full_path_as_str, search_string.clone());
             let filename: &OsStr = fileinfo.path_buf.file_name().unwrap();
             let filename: &str = filename.to_str().unwrap();
-
+            // TODO: can optimize search for large amount of files
             let res = search::search(
                 full_path_as_str,
                 filename,
@@ -96,20 +79,11 @@ async fn search_handler(
             );
             let res = res.unwrap();
 
-            // println!(
-            //     "FILENAME {} RES first: {} second: {}",
-            //     res.filename, res.first_line_matches, res.second_line_matches
-            // );
-
             if res.first_line_matches || res.second_line_matches {
                 result_list.push(res);
             }
         }
     }
-
-    // let full_path = dir_path + "/" + filepath;
-    // let full_path = format!("{}/{}", dir_path, filename);
-    // let full_path = full_path.as_str();
 
     Ok(SearchResponse { data: result_list })
 }

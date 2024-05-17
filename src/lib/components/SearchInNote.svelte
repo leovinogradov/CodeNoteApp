@@ -3,6 +3,7 @@
 	import { Editor } from "../service/editor";
 	import { platform } from '@tauri-apps/plugin-os';
 
+
 	let searchValue = "";
 	let replaceWithValue = "";
 	let isReplacing = false;
@@ -11,7 +12,6 @@
 	let currentIndex = 0;
 	let numResults = 0;
 
-	let _editor: Editor|any = null;
 	// property of KeyboardEvent for detecting ctrl + f on Windows and CMD + f on mac
 	// use e.ctrlKey for Windows and e.metaKey for Mac
 	let _alternateFunctionProperty: string = "ctrlKey";
@@ -20,23 +20,21 @@
 	let searchInputEl;
 	let replaceInputEl;
 
-	export function isInitialized() {
-		return !!_editor;
+
+	export let editor: Editor|any = null;
+	$: if (editor) {
+		console.log('SearchInNote: editor onSearch callback initialized')
+		editor.searcher.onSearchCB = onSearchCB
 	}
 
 	export function close() {
 		show = false;
 		isReplacing = false;
 		numResults = 0;
-		_editor.searcher.clear();
+		if (editor) editor.searcher.clear();
 	}
 
-	export function init(editor: Editor) {
-		console.log('SearchInNote init')
-		_editor = editor
-		editor.searcher.onSearchCB = onSearchCB
-	}
-
+	
 	let _timer;
 	function debounce(func, timeout=50){
 		clearTimeout(_timer);
@@ -55,10 +53,10 @@
 
 	function doSearch() {
 		if (searchValue) {
-			_editor.searcher.search(searchValue)
+			editor.searcher.search(searchValue)
 			// numResults and currentIndex will be updated in onSearchCB()
 		} else {
-			_editor.searcher.clear()
+			editor.searcher.clear()
 			numResults = 0
 			currentIndex = 0
 		}
@@ -81,23 +79,23 @@
 	}
 
 	function replaceNext() {
-		numResults = _editor.searcher.replace(searchValue, replaceWithValue)
-		currentIndex = _editor.searcher.currentIndex + 1
+		numResults = editor.searcher.replace(searchValue, replaceWithValue)
+		currentIndex = editor.searcher.currentIndex + 1
 	}
 
 	function replaceAll() {
-		numResults = _editor.searcher.replaceAll(searchValue, replaceWithValue)
-		currentIndex = _editor.searcher.currentIndex + 1
+		numResults = editor.searcher.replaceAll(searchValue, replaceWithValue)
+		currentIndex = editor.searcher.currentIndex + 1
 	}
 
 	function findNext() {
-		_editor.searcher.goToNextIndex()
-		currentIndex = _editor.searcher.currentIndex + 1
+		editor.searcher.goToNextIndex()
+		currentIndex = editor.searcher.currentIndex + 1
 	}
 
 	function findPrev() {
-		_editor.searcher.goToPrevIndex()
-		currentIndex = _editor.searcher.currentIndex + 1
+		editor.searcher.goToPrevIndex()
+		currentIndex = editor.searcher.currentIndex + 1
 	}
 
 	function toggleReplace() {
