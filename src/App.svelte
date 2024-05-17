@@ -17,7 +17,7 @@
   // import { Split } from '@geoffcox/svelte-splitter';
 
   import { saveStatus } from './store';
-  import { isWhitespace, isInputFocused } from './lib/service/utils';
+  import { isWhitespace, isInputFocused, readFile } from './lib/service/utils';
   // import { stateBold, stateItalic, textType } from './store';
   import { searchNote, type SearchResult } from './lib/service/search.ts';
   import { Editor } from './lib/service/editor';
@@ -37,7 +37,8 @@
     filename: string,
     content: string,
     modified: number,
-    note_meta: NoteMeta
+    note_meta: NoteMeta,
+    el?: HTMLElement
   }
 
 
@@ -63,6 +64,9 @@
   // DOM elements
   let editorElement;
   let searchInNoteElement;
+  let notesListElement;
+
+  $: hasMatchingNotes = searchString && (lastSearchString || matchingNotes.length > 0);
 
   async function init() {
     // run this async function separately from the ones below
@@ -75,6 +79,8 @@
     // })
 
     try {
+      // Check is notes dir exists and create it if needed
+      // Todo: ~15ms optimization if this is done in Rust on app startup or in loadNotes func
       const notesDirExists = await exists('notes', { baseDir: BaseDirectory.AppData });
       if (!notesDirExists) {
         await mkdir('notes', { baseDir: BaseDirectory.AppData, recursive: true });
@@ -86,19 +92,18 @@
     try {
       notes = await loadNotes()
     } catch (err) {
-      console.error('Failed to load notes:', err)
+      console.error('Main init: Failed to load notes:', err)
       notes = []
     }
-    
+
     editor = new Editor(editorElement, onActiveNoteModified)
-    searchInNoteElement.init(editor)
 
     if (notes.length > 0) {
-      console.log('notes found; opening first note')
+      console.log('Main init: notes found. Opening first note')
       await onNoteClick(notes[0])
     
     } else {
-      console.log('no notes found; opening new note')
+      console.log('Main init: no notes found. Opening new note')
       await onNewNoteClick()
     }
     editor.searcher.clear()
@@ -207,8 +212,9 @@
       if (isWhitespace(title)) {
         title = "Untitled"
       }
-    } else {
-      title = "Untitled"
+    } 
+    else {
+      title = "Loading..."
     }
     return { title, subtitle, modifiedTime }
   }
@@ -223,11 +229,6 @@
     }
 
     editorElement.firstElementChild.focus()
-
-    // should never be needed but just in case
-    if (searchInNoteElement && editor && !searchInNoteElement.isInitialized()) {
-      searchInNoteElement.init(editor)
-    }
 
     // Close in-note search if it was open, but still search in note if in search mode
     searchInNoteElement.close()
@@ -389,11 +390,52 @@
     editor.searcher.clear()
   }
 
+  const loadingFilenames = new Set()
+  async function loadNoteContent(note: Note) {
+    const filename = note.filename
+    if (loadingFilenames.has(filename)) { return }
+    loadingFilenames.add(filename)
+    const content = await readFile(filename)
+    note.content = content
+    note.note_meta = _getNoteMeta(note)
+    notes = notes
+    loadingFilenames.delete(filename)
+  }
+
+  function onNoteListScroll() {
+    /* Helper to load note titles as user scrolls towards then
+       e.target is the notes-list div == notesListElement
+       However notesListElement is used instead of e.target so that other functions can call this
+       At the bottom, .scrollHeight ~= .offsetHeight + .scrollTop */
+    // Search result notes have their own title and subtitle, so this func isn't needed in that case
+    if (hasMatchingNotes) return;
+    // Calculate postion bottom of visible portion of notes list
+    const bottom = notesListElement.scrollTop + notesListElement.offsetHeight
+    for (let i=notes.length-1; i >= 0; i--) {
+      const note = notes[i]
+      if (!note.el) {
+        console.error("could not find note summary el")
+        break
+      }
+      if (note.content) {
+        // reached notes that have content. No more needs to be done
+        break
+      }
+      if (note.el.offsetTop - bottom < 200) {
+        // note is close to visible bottom
+        loadNoteContent(note)
+      }
+    }
+  }
+
+  function onWindowResize(e) {
+    // Call on scroll method since resizing can show notes that are not yet visible
+    onNoteListScroll()
+  }
 
 	function onBeforeInput(e) {
     /* Global handler for Ctrl+Z
-       This makes sure Ctrl+Z fires even when editor is not in focus (useful for undoing a recent find+replace)
-    */
+       This makes sure Ctrl+Z fires even when editor is not in focus (useful for undoing a recent find+replace) */
 		if (e.inputType == "historyUndo" && !isInputFocused() && !editor.quill.hasFocus()) {
 			e.preventDefault()
 			e.stopPropagation()
@@ -401,24 +443,18 @@
 		}
 	}
 
-  onMount(() => {
-    console.log('App onMount')
-    // Sanity checks; this is mainly to fix stuff thats broken by hot reload in development
-    setTimeout(() => {
-      if (searchInNoteElement && editor && !searchInNoteElement.isInitialized()) {
-        searchInNoteElement.init(editor)
-      }
-    }, 100)
-  })
+  // onMount(() => {
+  //   console.log('App onMount')
+  // })
 
-  // Calling this here instead of in onMount technically saves like a millisecond?
+  // Calling this here instead of in onMount saves like 20ms?
   init()
 
   runInitialSizeFix()
 </script>
 
-<svelte:window on:beforeinput={onBeforeInput} />
 
+<svelte:window on:beforeinput={onBeforeInput} on:resize={onWindowResize} />
 
 <main class="dark">
   <Splitter initialPrimarySize='300px' minPrimarySize='180px' minSecondarySize='50%' splitterSize='9px'>
@@ -430,11 +466,14 @@
           <XIcon size="14" strokeWidth="2" color="#444" />
         </button> -->
       </div>
-      <div class="notes-list">
-        {#if searchString && (lastSearchString || matchingNotes.length > 0)}
+      <div class="notes-list" bind:this={notesListElement} on:scroll="{onNoteListScroll}">
+        {#if hasMatchingNotes}
           <!-- list when searching -->
           {#each matchingNotes as note, i (note.filename) }
-            <div animate:myflip class="note-summary" on:click={() => onNoteClick(note)}> 
+            <div animate:myflip 
+                class="note-summary"
+                bind:this={note.el}
+                on:click={() => onNoteClick(note)}> 
               <h4>
                 {#each note.note_meta.search_title_as_tokens as token}
                   {#if token.highlight}
@@ -468,6 +507,7 @@
           {#each notes as note, i (note.filename) }
             <div animate:myflip
                 class="note-summary"
+                bind:this={note.el}
                 class:selected={currentFilename == note.filename}
                 on:click={() => onNoteClick(note)}> 
               <h4>{note.note_meta.title}</h4>
@@ -545,5 +585,5 @@
 
   <!-- fixed elements -->
   <SettingsOverlay/>
-  <SearchInNote bind:this={searchInNoteElement} />
+  <SearchInNote bind:this={searchInNoteElement} editor={editor} />
 </main>

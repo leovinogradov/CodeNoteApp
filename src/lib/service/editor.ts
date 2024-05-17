@@ -1,5 +1,5 @@
 import Quill from "quill";
-import Toolbar from "quill/modules/toolbar"
+// import Toolbar from "quill/modules/toolbar"
 
 import { SaveManager, createNewNote } from "./save-manager";
 import { isWhitespace, readFile } from "./utils";
