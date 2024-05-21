@@ -13,16 +13,13 @@
   import { exists, mkdir, BaseDirectory } from "@tauri-apps/plugin-fs";
   import { invoke } from "@tauri-apps/api/core"
 
-  // @ts-ignore because no index.d.ts in dist?
-  // import { Split } from '@geoffcox/svelte-splitter';
-
-  import { saveStatus } from './store';
+  import { alternateFunctionKeyStore } from "./store";
   import { isWhitespace, isInputFocused, readFile } from './lib/service/utils';
-  // import { stateBold, stateItalic, textType } from './store';
   import { searchNote, type SearchResult } from './lib/service/search.ts';
   import { Editor } from './lib/service/editor';
   import { createNewNote, SaveManager } from './lib/service/save-manager';
   import { runInitialSizeFix } from './initial-size-fix';
+  import { loadSettings, saveSettings, loadPlatformIntoStore, type AppSettings } from './app-settings';
 
 
   interface NoteMeta {
@@ -60,24 +57,40 @@
   let _searchTimeoutId;  // for timeout between searchString changed and actual search
   let formatvalue = -1;  // representation of current format selected
   let showFilenames = false;  // TODO: add setting to toggle this 
+  let appSettings: AppSettings = null;
+  let _alternateFunctionProperty: string = "ctrlKey";
+	alternateFunctionKeyStore.subscribe(val => {
+		_alternateFunctionProperty = val
+	})
 
   // DOM elements
-  let editorElement;
-  let searchInNoteElement;
-  let notesListElement;
+  let editorElement: HTMLElement;
+  let searchInNoteElement: HTMLElement;
+  let notesListElement: HTMLElement;
+  let mainElement: HTMLElement;
 
   $: hasMatchingNotes = searchString && (lastSearchString || matchingNotes.length > 0);
 
-  async function init() {
-    // run this async function separately from the ones below
-    // platform().then(data => {
-    //   // Todo: use this for platform-specific styling
-    //   if (data && typeof data == 'string') {
-    //     currentPlatform = data;
-    //     console.log('current platform is', currentPlatform);
-    //   }
-    // })
+  $: {
+		if (mainElement && appSettings) {
+      for (let c of Array.from(mainElement.classList)) {
+        if (c.startsWith('zoom')) mainElement.classList.remove(c)
+      }
+      let newClassname = "zoom0"
+      if (appSettings.zoom > 0) {
+        newClassname = "zoom"+appSettings.zoom
+      } else if (appSettings.zoom < 0) {
+        newClassname = "zoomNeg"+Math.abs(appSettings.zoom)
+      }
+      mainElement.classList.add(newClassname)
+    } 
+	}
 
+  async function initSettings() {
+    appSettings = await loadSettings()
+  }
+
+  async function initNotes() {
     try {
       // Check is notes dir exists and create it if needed
       // Todo: ~15ms optimization if this is done in Rust on app startup or in loadNotes func
@@ -346,7 +359,7 @@
     const searchStringLocked = searchString
     invoke("search_handler", { searchString: searchStringLocked }).then(data => {
       lastSearchString = searchStringLocked;
-      console.log("SEARCH RESULT for", searchStringLocked, data)
+      // console.log("SEARCH RESULT for", searchStringLocked, data)
       if (data && data.data) {
         let matches = data.data;
         let matches_as_obj = {}
@@ -402,6 +415,14 @@
     loadingFilenames.delete(filename)
   }
 
+  function handleSettingsAction(e) {
+    console.log(e)
+    const name = e.detail?.name
+    if (name == "toggleShowFilenames") {
+      showFilenames = !showFilenames
+    }
+  }
+
   function onNoteListScroll() {
     /* Helper to load note titles as user scrolls towards then
        e.target is the notes-list div == notesListElement
@@ -443,28 +464,57 @@
 		}
 	}
 
+  function zoomIn() {
+    if (appSettings && appSettings.zoom < 2) {
+      appSettings.zoom += 1
+      console.log('zoomIn', appSettings.zoom)
+      appSettings = appSettings
+      saveSettings(appSettings)
+    }
+  }
+
+  function zoomOut() {
+    if (appSettings && appSettings.zoom > -2) {
+      appSettings.zoom -= 1
+      console.log('zoomOut', appSettings.zoom)
+      appSettings = appSettings
+      saveSettings(appSettings)
+    }
+  }
+
+  function onKeyDown(e) {
+    if (e[_alternateFunctionProperty]) {
+      if (e.key == "=") {  // '+' key 
+        zoomIn()
+        e.preventDefault()
+      } 
+      else if (e.key == "-") {  // '-' key
+        zoomOut()
+        e.preventDefault()
+      }
+		}
+  }
+
   // onMount(() => {
   //   console.log('App onMount')
   // })
 
   // Calling this here instead of in onMount saves like 20ms?
-  init()
+  initNotes()
+  initSettings()
+  loadPlatformIntoStore()
 
   runInitialSizeFix()
 </script>
 
 
-<svelte:window on:beforeinput={onBeforeInput} on:resize={onWindowResize} />
+<svelte:window on:beforeinput={onBeforeInput} on:resize={onWindowResize} on:keydown={onKeyDown} />
 
-<main class="dark">
+<main class="dark" bind:this={mainElement}>
   <Splitter initialPrimarySize='300px' minPrimarySize='180px' minSecondarySize='50%' splitterSize='9px'>
     <div slot="primary">
       <div class="header" style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;">
         <Searchbar bind:value={searchString} on:input={onSearchInput} on:clear={clearSearch}></Searchbar>
-        <!-- <input class="search" type="text" placeholder="Search" bind:value={searchString} on:input={onSearchInput} /> -->
-        <!-- <button hidden={!searchString} class="clear-search" on:click={clearSearch}>
-          <XIcon size="14" strokeWidth="2" color="#444" />
-        </button> -->
       </div>
       <div class="notes-list" bind:this={notesListElement} on:scroll="{onNoteListScroll}">
         {#if hasMatchingNotes}
@@ -513,7 +563,7 @@
               <h4>{note.note_meta.title}</h4>
               <p><span class="modified-time">{note.note_meta.modifiedTime}</span><span class="subtitle">{note.note_meta.subtitle}</span></p>
               {#if showFilenames}
-                <small style="font-size: 11px">{note.filename}</small>
+                <p class="filename">{note.filename}</p>
               {/if}
             </div>
           {/each}
@@ -535,10 +585,10 @@
 
         <div class="center-items">
           <div id="toolbar">
-            <span class="ql-formats" style="margin-right: -2px; height: 24px;">
+            <span class="ql-formats" style="height: 24px;">
               <FormatDropdown editor={editor}></FormatDropdown>
             </span>
-            <span class="ql-formats" style="margin-left: -2px; margin-right: 0;">
+            <span class="ql-formats">
               <button data-ql-format="ql-code-block" class="custom-icon-btn toolbar-button">
                 <Svg src="/img/Code-block.svg" height="20px"></Svg>
               </button>
@@ -584,6 +634,6 @@
   </Splitter>
 
   <!-- fixed elements -->
-  <SettingsOverlay/>
+  <SettingsOverlay on:action={handleSettingsAction} />
   <SearchInNote bind:this={searchInNoteElement} editor={editor} />
 </main>

@@ -16,9 +16,11 @@
 <style lang="scss">
 	.searchbar {
 		border: 1px solid lightgray;
-		padding: 5px 10px 5px 12px;
+		padding: 0 10px 0 12px;
 		border-radius: 20px;
 		width: 100%;
+		height: 32px;
+		line-height: 32px;
 		input {
 			width: calc(100% - 27px);
 			padding-right: 0;

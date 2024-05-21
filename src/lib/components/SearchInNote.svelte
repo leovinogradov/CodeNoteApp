@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { XIcon, ChevronRight, ChevronDown, ArrowUp, ArrowDown, Replace, ReplaceAll } from "lucide-svelte";
 	import { Editor } from "../service/editor";
-	import { platform } from '@tauri-apps/plugin-os';
+	import { alternateFunctionKeyStore } from "../../store";
 
 
 	let searchValue = "";
@@ -15,6 +15,9 @@
 	// property of KeyboardEvent for detecting ctrl + f on Windows and CMD + f on mac
 	// use e.ctrlKey for Windows and e.metaKey for Mac
 	let _alternateFunctionProperty: string = "ctrlKey";
+	alternateFunctionKeyStore.subscribe(val => {
+		_alternateFunctionProperty = val
+	})
 
 	// DOM elements
 	let searchInputEl;
@@ -102,18 +105,6 @@
 	   isReplacing = !isReplacing
 	}
 
-	// tauri api call to get platform
-	platform().then(platformName => {
-      if (platformName && typeof platformName == 'string') {
-        console.log('current platform is', platformName);
-		if (platformName == 'macos') {
-			_alternateFunctionProperty = "metaKey"
-		} else {
-			_alternateFunctionProperty = "ctrlKey"
-		}
-      }
-    })
-
 	function onKeyDown(e) {
 		if (e[_alternateFunctionProperty]) {
 			if ((e.key === 'f' || e.key === 'F')) {
@@ -126,14 +117,6 @@
 					openFind()
 				}
 			}
-			// else if ((e.key === 'z' || e.key === 'Z') && !_isInputFocused()) {
-			// 	_editor.undo()
-			// 	e.preventDefault()
-			// }
-			// else if ((e.key === 'y' || e.key === 'Y') && !_isInputFocused()) {
-			// 	_editor.redo()
-			// 	e.preventDefault()
-			// }
 		}
 		else if (show) {
 			if (e.key === "Enter" && searchValue && numResults) {

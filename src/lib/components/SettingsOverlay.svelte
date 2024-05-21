@@ -1,6 +1,8 @@
 <script lang="ts">
   import { Settings } from 'lucide-svelte';
   import { invoke } from "@tauri-apps/api/core"
+  import { createEventDispatcher } from 'svelte';
+	const dispatch = createEventDispatcher();
 
 	let menuOpen = false;
   let overlayEl;
@@ -26,6 +28,10 @@
   function openInFS() {
     invoke("show_item_in_filesystem")
   }
+
+  function emitAction(name) {
+    dispatch('action', { name: name })
+  }
 </script>
 
 <svelte:window on:click={onDocumentClick} />
@@ -39,9 +45,16 @@
   </button>
   <div class:show={menuOpen} class="settings-content">
     <div class="settings-actions">
-      <a on:click={openInFS} role="button" tabindex="0">
-        Open notes in file system
-      </a>
+      <div class="action">
+        <a on:click={openInFS} role="button" tabindex="0">
+          Open notes in file system
+        </a>
+      </div>
+      <div class="action">
+        <a on:click={() => emitAction('toggleShowFilenames')} role="button" tabindex="0">
+          Toggle filenames
+        </a>
+      </div>
     </div>
     <div>
       <p class="small">Version: 0.0.5</p>
@@ -84,6 +97,9 @@
   .settings-actions {
     padding-bottom: 6px;
     border-bottom: 1px solid rgba(0,0,0,0.1);
+    .action {
+      margin-bottom: 4px;
+    }
   }
 
   a {

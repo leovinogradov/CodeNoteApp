@@ -11,9 +11,28 @@
   color: var(--text-color);
 
   font-family: "Lato", Avenir, Helvetica, Arial, sans-serif; // Todo: Look into Inter font
-  // TODO: change reference font-size with different levels of text zoom?
-  font-size: 15px; // Reference font size
   line-height: 1.67;
+
+  // Reference font sizes
+  font-size: 15px;
+  main.zoom3 {
+    font-size: 17px;
+  }
+  main.zoom2 {
+    font-size: 17px;
+  }
+  main.zoom1 {
+    font-size: 16px;
+  }
+  main.zoom0 {
+    font-size: 15px;
+  }
+  main.zoomNeg1 {
+    font-size: 14px;
+  }
+  main.zoomNeg2 {
+    font-size: 13px;
+  }
 
   h1 { font-size: 2em; }
   h2 { font-size: 1.5em; }
@@ -21,7 +40,7 @@
 
   .ql-container {  // override
     font-family: "Lato", Avenir, Helvetica, Arial, sans-serif;
-    font-size: 15px;
+    font-size: 1em;
   }
   
   // line-height: 24px;
@@ -132,39 +151,6 @@ body {
 //   @include meta.load-css("highlight.js/styles/a11y-dark");
 // }
 
-
-.window-buttons {
-  position: fixed; // position fixed just in case to protect against any CSS bugs
-  top: 0;
-  right: 0;
-  z-index: 10;
-  height: 30px;
-  user-select: none;
-  display: flex;
-  justify-content: flex-end;
-  .titlebar-button {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
-    height: 30px;
-    width: 46.5px;
-    transition: background-color 80ms ease-in-out;
-    path {
-      transition: color 80ms ease-in-out;
-    }
-  }
-  .titlebar-button:hover {
-    background-color: rgba(0, 0, 0, 0.05);
-    
-  }
-  #titlebar-close:hover {
-    background-color: #cb231a;  // not exact color of windows close button but close enough
-    path {
-      color: white !important;
-    }
-  }
-}
-
 button.custom-icon-btn {
   display: flex !important;
   padding: 0 !important;
@@ -185,6 +171,11 @@ button.custom-icon-btn {
     height: 36px;
     padding-top: 6px;
     padding-bottom: 6px;
+    display: flex;
+    & > .ql-formats {
+      display: block;
+      margin-right: 0;
+    }
   }
 
   .custom-svg svg {
@@ -355,6 +346,11 @@ button {
   }
   .search-highlight {
     color: var(--note-search-color);
+  }
+  .filename {
+    margin-top: 2px;
+    font-size: 0.73334em;
+    line-height: 1;
   }
 }
 

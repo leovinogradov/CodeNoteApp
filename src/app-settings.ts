@@ -1,0 +1,55 @@
+import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { BaseDirectory } from "@tauri-apps/api/path";
+import { platform } from '@tauri-apps/plugin-os';
+import { platformNameStore, alternateFunctionKeyStore } from "./store";
+
+
+const SettingsFilename = "settings.json";
+
+const defaultSettings = {
+  zoom: 0,  // ranges -2 to 2
+  theme: 'light'  // dark/light/auto not implemented yet
+}
+
+export interface AppSettings {
+  zoom: number,
+  theme: string
+}
+
+export async function loadSettings() {
+  try {
+    let content = await readTextFile(SettingsFilename, { baseDir: BaseDirectory.AppData });
+    if (content) {
+      content = JSON.parse(content)
+      for (let key in defaultSettings) {
+        if (content.hasOwnProperty(key)) {
+          defaultSettings[key] = content[key]
+        }
+      }
+      console.log('loaded settings:', defaultSettings)
+      return defaultSettings // updated with content
+    }
+  } catch (err) {
+    console.log('loadSettings', err)
+  }
+  return defaultSettings
+}
+
+export async function saveSettings(settings) {
+  const asStr = JSON.stringify(settings)
+  await writeTextFile(SettingsFilename, asStr, { baseDir: BaseDirectory.AppData })
+}
+
+export async function loadPlatformIntoStore() {
+  try {
+    const platformName = await platform()
+    if (platformName && typeof platformName == 'string') {
+      console.log('current platform is', platformName);
+      platformNameStore.set(platformName)
+      const alternateFunctionKey = platformName == "macos" ? "metaKey" : "ctrlKey";
+      alternateFunctionKeyStore.set(alternateFunctionKey)
+    }
+  } catch (err) {
+    console.error('error getting platform:', err)
+  }
+}
