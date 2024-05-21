@@ -15,9 +15,6 @@
 
   // Reference font sizes
   font-size: 15px;
-  main.zoom3 {
-    font-size: 17px;
-  }
   main.zoom2 {
     font-size: 17px;
   }
@@ -171,6 +168,8 @@ button.custom-icon-btn {
     height: 36px;
     padding-top: 6px;
     padding-bottom: 6px;
+    // flex and display: block needed to avoid spacing shifting 
+    // for some reason when changing zoom
     display: flex;
     & > .ql-formats {
       display: block;
