@@ -18,6 +18,7 @@
     "fs:write-all",
     "fs:scope-appdata-recursive",
     "window:allow-start-dragging",
-    "os:allow-platform"
+    "os:allow-platform",
+    "shell:allow-open"
   ]
 }

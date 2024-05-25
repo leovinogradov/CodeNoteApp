@@ -44,7 +44,7 @@
 
 .ql-editor {
     // Modifications to make text be above search highlight
-    h1, h2, h3, h4, h5, h6, p, .ql-code-block {
+    h1, h2, h3, h4, h5, h6, p, .ql-code-block, li {
         position: relative !important;
         z-index: 2;
     }

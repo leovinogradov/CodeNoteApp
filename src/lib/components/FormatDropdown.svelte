@@ -34,9 +34,16 @@
       }
       menuOpen = false;
     }
+
+    // if (e.srcElement?.localName == "a") {
+    //   // e.preventDefault()
+    //   // e.stopPropagation()
+    //   // onLinkFormatClick()
+    // }
   }
 
   function onLinkFormatClick() {
+    /*
     // Adjust postion of tooltip, because it can sometimes be out of bounds
     setTimeout(() => {
       const containerEl = editor.quill.container;
@@ -55,6 +62,7 @@
         }
       }
     }, 0)
+    */
   }
 </script>
 
