@@ -154,6 +154,7 @@ class CustomSnowTheme extends BaseTheme {
           toolbar.handlers.link.call(toolbar, !context.format.link);
         },
       );
+      // TODO: add code block and inline code keyboard handlers here?
     }
   }
 }
