@@ -146,14 +146,14 @@ class CustomSnowTheme extends BaseTheme {
       this.buildPickers(toolbar.container.querySelectorAll('select'), icons);
       // @ts-expect-error
       this.tooltip = new CustomSnowTooltip(this.quill, this.options.bounds);
-      if (toolbar.container.querySelector('.ql-link')) {
-        this.quill.keyboard.addBinding(
-          { key: 'k', shortKey: true },
-          (_range: Range, context: Context) => {
-            toolbar.handlers.link.call(toolbar, !context.format.link);
-          },
-        );
-      }
+      // Don't need the if statement: guaranteed to be true
+      // if (toolbar.container.querySelector('.ql-link')) {
+      this.quill.keyboard.addBinding(
+        { key: 'k', shortKey: true },
+        (_range: Range, context: Context) => {
+          toolbar.handlers.link.call(toolbar, !context.format.link);
+        },
+      );
     }
   }
 }
