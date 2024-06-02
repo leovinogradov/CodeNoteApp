@@ -162,7 +162,8 @@
         display: flex;
       }
       margin-bottom: 6px;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+      // border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+      border-bottom: 1px solid var(--splitter-color);
     }
 
     button {
@@ -179,9 +180,11 @@
 .dropdown-content {
   position: absolute;
   padding: 8px;
-  background-color: rgba(255, 255, 255, 1);
+  // background-color: rgba(255, 255, 255, 1);
+  background-color: var(--background-color);
+  // border: 1px solid #ddd;
+  border: 1px solid var(--splitter-color);
   min-width: 150px;
-  border: 1px solid #ddd;
   border-radius: 3px;
   z-index: 99;
   top: 32px;

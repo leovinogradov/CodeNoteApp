@@ -3,9 +3,11 @@
   import { splitterContextKey } from "./splitter/constants";
   import type { SplitterContextStore } from "./splitter/types";
 
-  export let color: string = "rgba(0,0,0,0.1)";
+  // export let color: string = "rgba(0,0,0,0.1)";
+  export let color: string = "var(--splitter-color)";
   // export let hoverColor: string = "rgba(0,0,0,0.25)";
-  export let dragColor: string = "rgba(0,0,0,0.25)";
+  // export let dragColor: string = "rgba(0,0,0,0.25)";
+  export let dragColor: string = "var(--splitter-color-dragging)";
 
   let splitterContext: SplitterContextStore = getContext<SplitterContextStore>(splitterContextKey);
 
@@ -14,7 +16,7 @@
 
 
   $: splitterStyles = {
-    "--splitter-color": dragging ? dragColor : color,
+    "--splitter-color-internal": dragging ? dragColor : color,
     // "--splitter-hover-color": dragging ? dragColor : hoverColor,
   };
 
@@ -52,7 +54,7 @@
       height: 100%;
       width: 100%;
       width: 1px;
-      background: var(--splitter-color);
+      background: var(--splitter-color-internal);
       transition: background-color 250ms;
     }
   }
@@ -70,8 +72,8 @@
   //   background: var(--splitter-hover-color);
   // }
 
-  .splitter:focus > .inner {
-    // background: rgba(0,0,0,0.25); 
-    background: var(--splitter-hover-color);
-  }
+  // .splitter:focus > .inner {
+  //   // background: rgba(0,0,0,0.25); 
+  //   background: var(--splitter-hover-color);
+  // }
 </style>

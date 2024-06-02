@@ -24,7 +24,6 @@
 		input {
 			width: calc(100% - 27px);
 			padding-right: 0;
-			// padding-bottom: 2px;
 		}
 		button.clear-search {
 			height: 20px;

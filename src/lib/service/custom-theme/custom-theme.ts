@@ -146,7 +146,7 @@ class CustomSnowTheme extends BaseTheme {
       this.buildPickers(toolbar.container.querySelectorAll('select'), icons);
       // @ts-expect-error
       this.tooltip = new CustomSnowTooltip(this.quill, this.options.bounds);
-      // Don't need the if statement: guaranteed to be true
+      // Don't need this if statement: it is guaranteed to be true
       // if (toolbar.container.querySelector('.ql-link')) {
       this.quill.keyboard.addBinding(
         { key: 'k', shortKey: true },
@@ -154,38 +154,25 @@ class CustomSnowTheme extends BaseTheme {
           toolbar.handlers.link.call(toolbar, !context.format.link);
         },
       );
-      // TODO: add code block and inline code keyboard handlers here?
+      // Inline Code -- Ctrl+Shift+C
+      this.quill.keyboard.addBinding(
+        { key: 'C', shortKey: true, shiftKey: true },
+        (_range: Range, context: Context) => {
+          this.quill.format('code', !context.format.code)
+        },
+      );
+      // Code Block -- Ctrl+Shift+Alt+C
+      this.quill.keyboard.addBinding(
+        { key: 'C', shortKey: true, shiftKey: true, altKey: true },
+        (_range: Range, context: Context) => {
+          this.quill.format('code-block', !context.format['code-block'])
+        },
+      );
     }
   }
 }
 
+// Adds a handler for link
 CustomSnowTheme.DEFAULTS = SnowTheme.DEFAULTS;
-
-// CustomSnowTheme.DEFAULTS = merge({}, BaseTheme.DEFAULTS, {
-//   modules: {
-//     toolbar: {
-//       handlers: {
-//         link(value: string) {
-//           if (value) {
-//             const range = this.quill.getSelection();
-//             if (range == null || range.length === 0) return;
-//             let preview = this.quill.getText(range);
-//             if (
-//               /^\S+@\S+\.\S+$/.test(preview) &&
-//               preview.indexOf('mailto:') !== 0
-//             ) {
-//               preview = `mailto:${preview}`;
-//             }
-//             // @ts-expect-error
-//             const { tooltip } = this.quill.theme;
-//             tooltip.edit('link', preview);
-//           } else {
-//             this.quill.format('link', false, Quill.sources.USER);
-//           }
-//         },
-//       },
-//     },
-//   },
-// } satisfies ThemeOptions);
 
 export default CustomSnowTheme;

@@ -3,7 +3,6 @@ import LinkBlot from 'quill/formats/link.js';
 class CustomLinkBlot extends LinkBlot {
   static create(value: string) {
     const node = super.create(value) as HTMLElement;
-    console.log('value', value)
     node.setAttribute('href', this.sanitize(value));
     node.setAttribute('rel', 'noopener noreferrer');
     // node.setAttribute('target', '_blank');
@@ -19,7 +18,6 @@ class CustomLinkBlot extends LinkBlot {
       return 'https://' + url;
     }
     return url;
-    // super.sanitize(url);
   }
 }
 

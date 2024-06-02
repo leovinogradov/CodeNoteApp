@@ -86,9 +86,10 @@
   position: absolute;
   padding: 8px;
   // background-color: #f6f6f6;
-  background-color: rgba(255, 255, 255, 1);
+  // background-color: rgba(255, 255, 255, 1);
+  background-color: var(--background-color);
+  border: 1px solid var(--splitter-color);
   width: 260px;
-  border: 1px solid #ddd;
   border-radius: 3px;
   z-index: 10;
   bottom: 36px;

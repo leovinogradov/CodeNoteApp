@@ -210,9 +210,9 @@
 		right: 23px;
 		// width: 310px;
 		line-height: 1;
-		background-color: white;
+		background-color: var(--background-color);
 		border-radius: 4px;
-		border: 1px solid rgba(0,0,0,0.1);
+		border: 1px solid var(--splitter-color);
 		display: none;
 		// height: 28px;
 		// &.replacing {
