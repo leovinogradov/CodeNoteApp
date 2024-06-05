@@ -6,6 +6,8 @@ export const saveStatus = writable({
   modifiedTime: 0,
 })
 
+export const settingsStore = writable()
+
 // result of @tauri-apps/plugin-os platform() 
 export const platformNameStore = writable("");
 

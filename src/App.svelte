@@ -11,7 +11,9 @@
   import { onMount } from 'svelte';
   import { myflip } from './lib/service/my-flip/my-flip';
   import { exists, mkdir, BaseDirectory } from "@tauri-apps/plugin-fs";
-  import { invoke } from "@tauri-apps/api/core"
+  import { invoke } from "@tauri-apps/api/core";
+  import { event } from '@tauri-apps/api';
+  // import { getCurrent } from "@tauri-apps/api/window";
 
   import { alternateFunctionKeyStore } from "./store";
   import { isWhitespace, isInputFocused, readFile } from './lib/service/utils';
@@ -72,10 +74,17 @@
   $: hasMatchingNotes = searchString && (lastSearchString || matchingNotes.length > 0);
 
   $: {
+    // Handle appSettings
 		if (mainElement && appSettings) {
+      // Remove existing classes
+      // let classList = mainElement.classList;
+      // while (classList.length > 0) {
+      //   classList.remove(classList.item(0));
+      // }
       for (let c of Array.from(mainElement.classList)) {
         if (c.startsWith('zoom')) mainElement.classList.remove(c)
       }
+      // Handle zoom level
       let newClassname = "zoom0"
       if (appSettings.zoom > 0) {
         newClassname = "zoom"+appSettings.zoom
@@ -83,11 +92,23 @@
         newClassname = "zoomNeg"+Math.abs(appSettings.zoom)
       }
       mainElement.classList.add(newClassname)
+
+      // Handle theme
+      if (appSettings.theme) {
+        // One of 'light', 'dark', 'auto'
+        document.documentElement.dataset['theme'] = appSettings.theme
+      }
     } 
 	}
 
+  
+
   async function initSettings() {
     appSettings = await loadSettings()
+    // Theme change detection doesn't work yet:
+    // const unlisten = await getCurrent().onThemeChanged(({ payload: theme }) => {
+    //   console.log('New theme: ' + theme);
+    // });
   }
 
   async function initNotes() {
@@ -416,10 +437,15 @@
   }
 
   function handleSettingsAction(e) {
-    console.log(e)
     const name = e.detail?.name
+    const value = e.detail?.value
     if (name == "toggleShowFilenames") {
       showFilenames = !showFilenames
+    }
+    else if (name == 'themeChanged' && value && typeof value == 'string') {
+      appSettings.theme = value;
+      appSettings = appSettings;
+      saveSettings(appSettings)
     }
   }
 
@@ -510,7 +536,7 @@
 
 <svelte:window on:beforeinput={onBeforeInput} on:resize={onWindowResize} on:keydown={onKeyDown} />
 
-<main class="dark" bind:this={mainElement}>
+<main bind:this={mainElement}>
   <Splitter initialPrimarySize='300px' minPrimarySize='180px' minSecondarySize='50%' splitterSize='9px'>
     <div slot="primary">
       <div class="header" style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;">

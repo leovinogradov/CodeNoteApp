@@ -1,8 +1,18 @@
 <script lang="ts">
   import { Settings } from 'lucide-svelte';
-  import { invoke } from "@tauri-apps/api/core"
+  import { invoke } from "@tauri-apps/api/core";
+  import { settingsStore } from '../../store';
   import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
+
+
+  let theme;
+
+  settingsStore.subscribe((val: any) => {
+		if (val && val.theme) {
+      theme = val.theme;
+    }
+	})
 
 	let menuOpen = false;
   let overlayEl;
@@ -29,8 +39,8 @@
     invoke("show_item_in_filesystem")
   }
 
-  function emitAction(name) {
-    dispatch('action', { name: name })
+  function emitAction(name, value:any = null) {
+    dispatch('action', { name, value })
   }
 </script>
 
@@ -45,6 +55,15 @@
   </button>
   <div class:show={menuOpen} class="settings-content">
     <div class="settings-actions">
+      <div class="action">
+        <span style="margin-right: 4px;">Theme</span>
+        <select tabindex="0" bind:value={theme} on:change="{(e) => emitAction('themeChanged', theme)}">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <!-- detecting system theme does not work yet! It is always dark for some reason -->
+          <!-- <option value="auto">System Default</option> -->
+        </select>
+      </div>
       <div class="action">
         <a on:click={openInFS} role="button" tabindex="0">
           Open notes in file system

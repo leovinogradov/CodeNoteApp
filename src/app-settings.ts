@@ -1,7 +1,7 @@
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { BaseDirectory } from "@tauri-apps/api/path";
 import { platform } from '@tauri-apps/plugin-os';
-import { platformNameStore, alternateFunctionKeyStore } from "./store";
+import { settingsStore, platformNameStore, alternateFunctionKeyStore } from "./store";
 
 
 const SettingsFilename = "settings.json";
@@ -27,6 +27,7 @@ export async function loadSettings() {
         }
       }
       console.log('loaded settings:', defaultSettings)
+      settingsStore.set(defaultSettings)
       return defaultSettings // updated with content
     }
   } catch (err) {
@@ -36,6 +37,8 @@ export async function loadSettings() {
 }
 
 export async function saveSettings(settings) {
+  console.log('saving settings')
+  settingsStore.set(settings)
   const asStr = JSON.stringify(settings)
   await writeTextFile(SettingsFilename, asStr, { baseDir: BaseDirectory.AppData })
 }

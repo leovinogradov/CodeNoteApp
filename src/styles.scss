@@ -1,5 +1,6 @@
-@use "sass:meta";
+// @use "sass:meta";
 @import url('./styles/lato-font.scss');
+@import url('./styles/quill-final.scss');
 
 :root {
   // DEFAULT VARS
@@ -17,14 +18,21 @@
   // --button-highlight-color: #444;
   // --button-highlight-color: #202020;
 
+  // root/html styling
   background: var(--background-color);
   color: var(--text-color);
 
   font-family: "Lato", Avenir, Helvetica, Arial, sans-serif; // Todo: Look into Inter font
   line-height: 1.67;
-
+  
   // Reference font sizes
   font-size: 15px;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
   main.zoom2 {
     font-size: 17px;
   }
@@ -49,15 +57,25 @@
     font-family: "Lato", Avenir, Helvetica, Arial, sans-serif;
     font-size: 1em;
   }
-  
-  // line-height: 24px;
-  font-weight: 400;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
+  a:hover {
+    text-decoration: underline;
+    filter: brightness(80%);
+  }
+
+  select {
+    border-radius: 3px;
+  }
+
+  select, option {
+    color: var(--text-color);
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
 
   // Stupid bug on Windows where window size is not recognized as 1000px by 750px until resize
   // Need to manually shape the body to be 1000px by 750px 
@@ -75,17 +93,6 @@
       left: 647px !important; // instead of right: 23px;
       right: auto !important;
     }
-  }
-
-  a:hover {
-    text-decoration: underline;
-    filter: brightness(80%);
-  }
-  
-  body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
   }
 }
 
@@ -128,12 +135,17 @@
     }
   }
   
-
   #text-editor .ql-code-block-container {
     background-color: #202020;
-    // background-color: #222;
-    // color: #d8d8d8;
   }
+
+  select {
+    background-color: #444;
+  }
+  select.ql-ui, select.ql-ui option {
+    background-color: var(--background-color);
+  }
+
   // a:hover {
   //   color: #24c8db;
   // }
@@ -151,11 +163,21 @@
 // @media (prefers-color-scheme: dark) {
 
 
-
-
-@import url('./styles/quill-final.scss');
 // @import url('./styles/highlight/default.css');
 // TODO: load highlightjs styles properly 
+
+main.theme-dark,
+html[data-theme='dark'] {
+  @include darktheme();
+}
+@media (prefers-color-scheme: dark) {
+  main.theme-auto,
+  html[data-theme='auto'] {
+    @include darktheme();
+  }
+}
+
+
 
 .dropdown-formats {
   margin-right: 0;
@@ -165,7 +187,6 @@
     margin-right: auto !important;
     margin-left: auto !important;
   }
-
 }
 
 // @use "sass:meta";
@@ -176,6 +197,7 @@
 // html[data-theme="dark"] {
 //   @include meta.load-css("highlight.js/styles/a11y-dark");
 // }
+
 
 button.custom-icon-btn {
   display: flex !important;
