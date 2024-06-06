@@ -60,7 +60,6 @@ where
     Ok(io::BufReader::new(file).lines())
 }
 
-
 pub struct FileInfo {
     pub path_buf: PathBuf,
     pub modified: u64,
@@ -81,7 +80,7 @@ pub fn get_note_files_sorted(dir_path: &str) -> Vec<FileInfo> {
         }
     }
     fileinfovec.sort_by(|a: &FileInfo, b: &FileInfo| b.modified.cmp(&a.modified));
-    return fileinfovec
+    return fileinfovec;
 }
 
 #[derive(serde::Serialize)]

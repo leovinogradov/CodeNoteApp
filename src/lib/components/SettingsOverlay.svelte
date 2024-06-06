@@ -1,6 +1,17 @@
 <script lang="ts">
   import { Settings } from 'lucide-svelte';
-  import { invoke } from "@tauri-apps/api/core"
+  import { invoke } from "@tauri-apps/api/core";
+  import { settingsStore } from '../../store';
+  import { createEventDispatcher } from 'svelte';
+	const dispatch = createEventDispatcher();
+
+
+  let theme;
+  settingsStore.subscribe((val: any) => {
+		if (val && val.theme) {
+      theme = val.theme;
+    }
+	})
 
 	let menuOpen = false;
   let overlayEl;
@@ -26,6 +37,10 @@
   function openInFS() {
     invoke("show_item_in_filesystem")
   }
+
+  function emitAction(name, value:any = null) {
+    dispatch('action', { name, value })
+  }
 </script>
 
 <svelte:window on:click={onDocumentClick} />
@@ -35,16 +50,32 @@
 <!-- svelte-ignore a11y-missing-attribute -->
 <div class="setting-overlay" bind:this={overlayEl}>
   <button on:click={onButtonClick} class="settings-button">
-    <Settings size=26 color="#333" />
+    <Settings size=26 color="{theme == 'dark' ? '#fff' : '#333'}" />
   </button>
   <div class:show={menuOpen} class="settings-content">
     <div class="settings-actions">
-      <a on:click={openInFS} role="button" tabindex="0">
-        Open notes in file system
-      </a>
+      <div class="action">
+        <span style="margin-right: 4px;">Theme</span>
+        <select tabindex="0" bind:value={theme} on:change="{(e) => emitAction('themeChanged', theme)}">
+          <option value="light">Light</option>
+          <option value="dark">Dark</option>
+          <!-- detecting system theme does not work yet! It is always dark for some reason -->
+          <!-- <option value="auto">System Default</option> -->
+        </select>
+      </div>
+      <div class="action">
+        <a on:click={openInFS} role="button" tabindex="0">
+          Open notes in file system
+        </a>
+      </div>
+      <div class="action">
+        <a on:click={() => emitAction('toggleShowFilenames')} role="button" tabindex="0">
+          Toggle filenames
+        </a>
+      </div>
     </div>
     <div>
-      <p class="small">Version: 0.0.5</p>
+      <p class="small">Version: 0.0.6</p>
       <p class="small">New releases and source code at: https://github.com/leovinogradov/CodeNoteApp</p>
     </div>
   </div>
@@ -66,24 +97,32 @@
   width: 26px;
   height: 26px;
   border-radius: 13px;
-  background-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.5);
 }
 .settings-content {
   display: none;
   position: absolute;
   padding: 8px;
   // background-color: #f6f6f6;
-  background-color: rgba(255, 255, 255, 1);
+  // background-color: rgba(255, 255, 255, 1);
+  background-color: var(--background-color);
+  border: 1px solid var(--splitter-color);
   width: 260px;
-  border: 1px solid #ddd;
   border-radius: 3px;
   z-index: 10;
   bottom: 36px;
   left: 0;
 
+  -webkit-box-shadow: var(--overlay-box-shadow);
+	-moz-box-shadow: var(--overlay-box-shadow);
+	box-shadow: var(--overlay-box-shadow);
+
   .settings-actions {
     padding-bottom: 6px;
     border-bottom: 1px solid rgba(0,0,0,0.1);
+    .action {
+      margin-bottom: 4px;
+    }
   }
 
   a {

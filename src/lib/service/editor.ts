@@ -5,10 +5,14 @@ import { SaveManager, createNewNote } from "./save-manager";
 import { isWhitespace, readFile } from "./utils";
 
 import Searcher from "./search-highlight/Searcher";
-
 import Syntax from "./syntax-highlight/syntax";
+import CustomLinkBlot from "./custom-link-format/custom-link";
+import CustomSnowTheme from "./custom-theme/custom-theme";
 
 import { languages } from "./constants";
+
+// @ts-ignore
+Quill.register('themes/custom-theme', CustomSnowTheme, true)
 
 const ColorStyle = Quill.import("attributors/style/color");
 const BackgroundStyle = Quill.import("attributors/style/background");
@@ -17,13 +21,18 @@ ColorStyle.whitelist = []; // remove pasted colors
 // @ts-ignore
 BackgroundStyle.whitelist = []; // remove pasted bg colors
 // @ts-ignore
-Quill.register(ColorStyle);
+// Quill.register(ColorStyle);
 // @ts-ignore
-Quill.register(BackgroundStyle);
+// Quill.register(BackgroundStyle);
 
-// @ts-ignore
-Quill.register("modules/Searcher", Searcher);
-Quill.register({ "modules/syntax": Syntax }, true);
+Quill.register({ "modules/Searcher": Searcher });
+Quill.register({ 
+	"modules/syntax": Syntax,
+	"formats/link": CustomLinkBlot,
+	"attributors/style/color": ColorStyle,
+	"attributors/style/background": BackgroundStyle
+}, true);
+// Quill.register({ }, true);
 
 
 export interface ExitResult {
@@ -68,8 +77,10 @@ export class Editor {
 				// 	}
 				// }
             },
+			bounds: editorEl,
             placeholder: "Type something...",
-            theme: "snow", // or 'bubble'
+			// theme: "snow",
+            theme: "custom-theme" // "snow", // or 'bubble'
             // ...options
         });
 		this.searcher = new Searcher(this.quill, editorEl)

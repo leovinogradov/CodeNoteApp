@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { XIcon, ChevronRight, ChevronDown, ArrowUp, ArrowDown, Replace, ReplaceAll } from "lucide-svelte";
 	import { Editor } from "../service/editor";
-	import { platform } from '@tauri-apps/plugin-os';
+	import { alternateFunctionKeyStore, settingsStore } from "../../store";
 
 
 	let searchValue = "";
@@ -12,9 +12,29 @@
 	let currentIndex = 0;
 	let numResults = 0;
 
+	let iconColor = "#444"
+	let iconColorDisabled = "#ccc"
+
+	let theme;
+  settingsStore.subscribe((val: any) => {
+		if (val && val.theme) {
+      theme = val.theme;
+			if (theme == 'dark') {
+				iconColor = "var(--text-color)"
+				iconColorDisabled = "#444"
+			} else {
+				iconColor = "#444"
+				iconColorDisabled = "#ccc"
+			}
+    }
+	})
+
 	// property of KeyboardEvent for detecting ctrl + f on Windows and CMD + f on mac
 	// use e.ctrlKey for Windows and e.metaKey for Mac
 	let _alternateFunctionProperty: string = "ctrlKey";
+	alternateFunctionKeyStore.subscribe(val => {
+		_alternateFunctionProperty = val
+	})
 
 	// DOM elements
 	let searchInputEl;
@@ -102,18 +122,6 @@
 	   isReplacing = !isReplacing
 	}
 
-	// tauri api call to get platform
-	platform().then(platformName => {
-      if (platformName && typeof platformName == 'string') {
-        console.log('current platform is', platformName);
-		if (platformName == 'macos') {
-			_alternateFunctionProperty = "metaKey"
-		} else {
-			_alternateFunctionProperty = "ctrlKey"
-		}
-      }
-    })
-
 	function onKeyDown(e) {
 		if (e[_alternateFunctionProperty]) {
 			if ((e.key === 'f' || e.key === 'F')) {
@@ -126,14 +134,6 @@
 					openFind()
 				}
 			}
-			// else if ((e.key === 'z' || e.key === 'Z') && !_isInputFocused()) {
-			// 	_editor.undo()
-			// 	e.preventDefault()
-			// }
-			// else if ((e.key === 'y' || e.key === 'Y') && !_isInputFocused()) {
-			// 	_editor.redo()
-			// 	e.preventDefault()
-			// }
 		}
 		else if (show) {
 			if (e.key === "Enter" && searchValue && numResults) {
@@ -162,11 +162,11 @@
     <div class="replace-toggle-container">
         {#if isReplacing}
             <button on:click={toggleReplace}>
-                <span><ChevronDown size="16" color="#444" /></span>
+                <span><ChevronDown size="16" color="{iconColor}" /></span>
             </button>
         {:else}
 			<button on:click={toggleReplace}>
-				<span><ChevronRight size="16" color="#444" /></span>
+				<span><ChevronRight size="16" color="{iconColor}" /></span>
 			</button>
         {/if}
     </div>
@@ -186,13 +186,13 @@
 
 			<div class="action-buttons">
 				<button on:click={findPrev} disabled="{!searchValue}" tabindex="-1">
-					<span><ArrowUp size="16" color="{ searchValue ? '#444' : '#ccc' }" /></span>
+					<span><ArrowUp size="16" color="{ searchValue ? iconColor : iconColorDisabled }" /></span>
 				</button>
 				<button on:click={findNext} disabled="{!searchValue}" tabindex="-1">
-					<span><ArrowDown size="16" color="{ searchValue ? '#444' : '#ccc' }" /></span>
+					<span><ArrowDown size="16" color="{ searchValue ? iconColor : iconColorDisabled }" /></span>
 				</button>
 				<button on:click={close} tabindex="-1">			
-					<span><XIcon size="16" color="#444" /></span>
+					<span><XIcon size="16" color="{iconColor}" /></span>
 				</button>
 			</div>
 		</div>
@@ -202,11 +202,11 @@
 				<input bind:value={replaceWithValue} bind:this={replaceInputEl} placeholder="Replace" tabindex="0" />
 				
 				<div class="action-buttons">
-					<button on:click={replaceNext} disabled="{!replaceWithValue || numResults == 0}">
-						<span><Replace size="16" color="{ (!replaceWithValue || numResults == 0) ? '#ccc' : '#444' }" /></span>
+					<button on:click={replaceNext} disabled="{numResults == 0}">
+						<span><Replace size="16" color="{ numResults > 0 ? iconColor : iconColorDisabled }" /></span>
 					</button>
-					<button on:click={replaceAll} disabled="{!replaceWithValue || numResults == 0}">
-						<span><ReplaceAll size="16" color="{ (!replaceWithValue || numResults == 0) ? '#ccc' : '#444' }" /></span>
+					<button on:click={replaceAll} disabled="{numResults == 0}">
+						<span><ReplaceAll size="16" color="{ numResults > 0 ? iconColor : iconColorDisabled }" /></span>
 					</button>
 				</div>
 			</div>
@@ -227,14 +227,18 @@
 		right: 23px;
 		// width: 310px;
 		line-height: 1;
-		background-color: white;
+		background-color: var(--background-secondary);
 		border-radius: 4px;
-		border: 1px solid rgba(0,0,0,0.1);
+		border: 1px solid var(--splitter-color);
 		display: none;
-		// height: 28px;
-		// &.replacing {
-		//     height: 53px;
-		// }
+
+		-webkit-box-shadow: var(--overlay-box-shadow);
+		-moz-box-shadow: var(--overlay-box-shadow);
+		box-shadow: var(--overlay-box-shadow);
+
+		input, button {
+			background-color: var(--background-secondary);
+		}
 		.replace-toggle-container {
 			padding: 4px;
 			button {
@@ -301,7 +305,8 @@
 			}
 		}
 		button:not(:disabled):hover {
-			background-color: #f4f4f4;
+			// background-color: #f4f4f4;
+			background-color: rgb(var(--black-or-white-rgb), 0.05)
 		}
 	}
 	.find-and-replace.show {

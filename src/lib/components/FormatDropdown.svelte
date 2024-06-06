@@ -34,9 +34,16 @@
       }
       menuOpen = false;
     }
+
+    // if (e.srcElement?.localName == "a") {
+    //   // e.preventDefault()
+    //   // e.stopPropagation()
+    //   // onLinkFormatClick()
+    // }
   }
 
   function onLinkFormatClick() {
+    /*
     // Adjust postion of tooltip, because it can sometimes be out of bounds
     setTimeout(() => {
       const containerEl = editor.quill.container;
@@ -55,6 +62,7 @@
         }
       }
     }, 0)
+    */
   }
 </script>
 
@@ -131,14 +139,14 @@
 
     &.selected {
       p, h1, h2, h3 {
-        background-color: rgba(0,0,0,0.05);
+        background-color: rgba(var(--black-or-white-rgb), 0.07);
       }
     }
 
     &:hover {
       p, h1, h2, h3 {
         background-color: var(--text-color);
-        color: white !important;
+        color: var(--background-color);
       }
     }
   }
@@ -154,7 +162,7 @@
         display: flex;
       }
       margin-bottom: 6px;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+      border-bottom: 1px solid rgba(var(--black-or-white-rgb), 0.07);
     }
 
     button {
@@ -171,13 +179,15 @@
 .dropdown-content {
   position: absolute;
   padding: 8px;
-  background-color: rgba(255, 255, 255, 1);
+  background-color: var(--background-color);
+  border: 1px solid var(--splitter-color);
+  -webkit-box-shadow: var(--overlay-box-shadow);
+	-moz-box-shadow: var(--overlay-box-shadow);
+	box-shadow: var(--overlay-box-shadow);
   min-width: 150px;
-  border: 1px solid #ddd;
   border-radius: 3px;
   z-index: 99;
   top: 32px;
-  
   // Holy shit I can center a div?
   left: 50%;
   transform: translateX(-50%);
