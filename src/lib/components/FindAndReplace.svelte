@@ -202,11 +202,11 @@
 				<input bind:value={replaceWithValue} bind:this={replaceInputEl} placeholder="Replace" tabindex="0" />
 				
 				<div class="action-buttons">
-					<button on:click={replaceNext} disabled="{!replaceWithValue || numResults == 0}">
-						<span><Replace size="16" color="{ (!replaceWithValue || numResults == 0) ? iconColor : iconColorDisabled }" /></span>
+					<button on:click={replaceNext} disabled="{numResults == 0}">
+						<span><Replace size="16" color="{ numResults > 0 ? iconColor : iconColorDisabled }" /></span>
 					</button>
-					<button on:click={replaceAll} disabled="{!replaceWithValue || numResults == 0}">
-						<span><ReplaceAll size="16" color="{ (!replaceWithValue || numResults == 0) ? iconColor : iconColorDisabled }" /></span>
+					<button on:click={replaceAll} disabled="{numResults == 0}">
+						<span><ReplaceAll size="16" color="{ numResults > 0 ? iconColor : iconColorDisabled }" /></span>
 					</button>
 				</div>
 			</div>
