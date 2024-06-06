@@ -7,7 +7,6 @@
 
 
   let theme;
-
   settingsStore.subscribe((val: any) => {
 		if (val && val.theme) {
       theme = val.theme;
@@ -51,7 +50,7 @@
 <!-- svelte-ignore a11y-missing-attribute -->
 <div class="setting-overlay" bind:this={overlayEl}>
   <button on:click={onButtonClick} class="settings-button">
-    <Settings size=26 color="#333" />
+    <Settings size=26 color="{theme == 'dark' ? '#fff' : '#333'}" />
   </button>
   <div class:show={menuOpen} class="settings-content">
     <div class="settings-actions">
@@ -76,7 +75,7 @@
       </div>
     </div>
     <div>
-      <p class="small">Version: 0.0.5</p>
+      <p class="small">Version: 0.0.6</p>
       <p class="small">New releases and source code at: https://github.com/leovinogradov/CodeNoteApp</p>
     </div>
   </div>
@@ -98,7 +97,7 @@
   width: 26px;
   height: 26px;
   border-radius: 13px;
-  background-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.5);
 }
 .settings-content {
   display: none;
@@ -113,6 +112,10 @@
   z-index: 10;
   bottom: 36px;
   left: 0;
+
+  -webkit-box-shadow: var(--overlay-box-shadow);
+	-moz-box-shadow: var(--overlay-box-shadow);
+	box-shadow: var(--overlay-box-shadow);
 
   .settings-actions {
     padding-bottom: 6px;

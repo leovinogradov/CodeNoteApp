@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { XIcon, ChevronRight, ChevronDown, ArrowUp, ArrowDown, Replace, ReplaceAll } from "lucide-svelte";
 	import { Editor } from "../service/editor";
-	import { alternateFunctionKeyStore } from "../../store";
+	import { alternateFunctionKeyStore, settingsStore } from "../../store";
 
 
 	let searchValue = "";
@@ -11,6 +11,23 @@
 
 	let currentIndex = 0;
 	let numResults = 0;
+
+	let iconColor = "#444"
+	let iconColorDisabled = "#ccc"
+
+	let theme;
+  settingsStore.subscribe((val: any) => {
+		if (val && val.theme) {
+      theme = val.theme;
+			if (theme == 'dark') {
+				iconColor = "var(--text-color)"
+				iconColorDisabled = "#444"
+			} else {
+				iconColor = "#444"
+				iconColorDisabled = "#ccc"
+			}
+    }
+	})
 
 	// property of KeyboardEvent for detecting ctrl + f on Windows and CMD + f on mac
 	// use e.ctrlKey for Windows and e.metaKey for Mac
@@ -145,11 +162,11 @@
     <div class="replace-toggle-container">
         {#if isReplacing}
             <button on:click={toggleReplace}>
-                <span><ChevronDown size="16" color="#444" /></span>
+                <span><ChevronDown size="16" color="{iconColor}" /></span>
             </button>
         {:else}
 			<button on:click={toggleReplace}>
-				<span><ChevronRight size="16" color="#444" /></span>
+				<span><ChevronRight size="16" color="{iconColor}" /></span>
 			</button>
         {/if}
     </div>
@@ -169,13 +186,13 @@
 
 			<div class="action-buttons">
 				<button on:click={findPrev} disabled="{!searchValue}" tabindex="-1">
-					<span><ArrowUp size="16" color="{ searchValue ? '#444' : '#ccc' }" /></span>
+					<span><ArrowUp size="16" color="{ searchValue ? iconColor : iconColorDisabled }" /></span>
 				</button>
 				<button on:click={findNext} disabled="{!searchValue}" tabindex="-1">
-					<span><ArrowDown size="16" color="{ searchValue ? '#444' : '#ccc' }" /></span>
+					<span><ArrowDown size="16" color="{ searchValue ? iconColor : iconColorDisabled }" /></span>
 				</button>
 				<button on:click={close} tabindex="-1">			
-					<span><XIcon size="16" color="#444" /></span>
+					<span><XIcon size="16" color="{iconColor}" /></span>
 				</button>
 			</div>
 		</div>
@@ -186,10 +203,10 @@
 				
 				<div class="action-buttons">
 					<button on:click={replaceNext} disabled="{!replaceWithValue || numResults == 0}">
-						<span><Replace size="16" color="{ (!replaceWithValue || numResults == 0) ? '#ccc' : '#444' }" /></span>
+						<span><Replace size="16" color="{ (!replaceWithValue || numResults == 0) ? iconColor : iconColorDisabled }" /></span>
 					</button>
 					<button on:click={replaceAll} disabled="{!replaceWithValue || numResults == 0}">
-						<span><ReplaceAll size="16" color="{ (!replaceWithValue || numResults == 0) ? '#ccc' : '#444' }" /></span>
+						<span><ReplaceAll size="16" color="{ (!replaceWithValue || numResults == 0) ? iconColor : iconColorDisabled }" /></span>
 					</button>
 				</div>
 			</div>
@@ -210,14 +227,18 @@
 		right: 23px;
 		// width: 310px;
 		line-height: 1;
-		background-color: var(--background-color);
+		background-color: var(--background-secondary);
 		border-radius: 4px;
 		border: 1px solid var(--splitter-color);
 		display: none;
-		// height: 28px;
-		// &.replacing {
-		//     height: 53px;
-		// }
+
+		-webkit-box-shadow: var(--overlay-box-shadow);
+		-moz-box-shadow: var(--overlay-box-shadow);
+		box-shadow: var(--overlay-box-shadow);
+
+		input, button {
+			background-color: var(--background-secondary);
+		}
 		.replace-toggle-container {
 			padding: 4px;
 			button {
@@ -284,7 +305,8 @@
 			}
 		}
 		button:not(:disabled):hover {
-			background-color: #f4f4f4;
+			// background-color: #f4f4f4;
+			background-color: rgb(var(--black-or-white-rgb), 0.05)
 		}
 	}
 	.find-and-replace.show {

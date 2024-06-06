@@ -5,7 +5,7 @@
   import Svg from './lib/components/Svg.svelte';
   import Searchbar from './lib/components/Searchbar.svelte';
   import SettingsOverlay from './lib/components/SettingsOverlay.svelte';
-  import SearchInNote from './lib/components/SearchInNote.svelte';
+  import FindAndReplace from './lib/components/FindAndReplace.svelte';
   import { Square, XIcon, MinusIcon, RemoveFormatting } from 'lucide-svelte'
 
   import { onMount } from 'svelte';
@@ -661,5 +661,5 @@
 
   <!-- fixed elements -->
   <SettingsOverlay on:action={handleSettingsAction} />
-  <SearchInNote bind:this={searchInNoteElement} editor={editor} />
+  <FindAndReplace bind:this={searchInNoteElement} editor={editor} />
 </main>

@@ -4,7 +4,9 @@
 
 :root {
   // DEFAULT VARS
+  --black-or-white-rgb: 0, 0, 0; 
   --background-color: #fff;
+  --background-secondary: #fff;
   --text-color: #121416d8;
   --note-search-color: #ffcc03;
   --note-search-color-rgb: 255, 204, 3; // rgb values for above color
@@ -12,11 +14,9 @@
   --splitter-color-dragging: rgba(0, 0, 0, 0.25);
   --button-color: #444;
   --button-disabled-color: #ccc;
-  // --button-highlight-color: #396cd8;
   --button-highlight-color: #06c;
-  // --button-highlight-color: #24c8db;
-  // --button-highlight-color: #444;
-  // --button-highlight-color: #202020;
+
+  --overlay-box-shadow: 0px 1px 3px -1px rgba(0,0,0,0.15);
 
   // root/html styling
   background: var(--background-color);
@@ -107,28 +107,30 @@
 
 @mixin darktheme() {
   // DARK MODE
-  // --background-color: #fff;
-  // --text-color: #121416d8;
-  --background-color: #2f2f2f;
+  // --background-color: #2f2f2f;
+  --black-or-white-rgb: 255, 255, 255; 
+  --background-color: #121212;
+  --background-secondary: #1e1e1e;
   --text-color: #F7F8F8;
   --splitter-color: #202020;
   --splitter-color-dragging: #202020;
   --button-highlight-color: var(--note-search-color);
   --button-color: #F7F8F8;
+  --overlay-box-shadow: 0px 1px 4px 0px rgba(0,0,0,0.55);
 
   ::selection {
     background-color: #606060;
   }
 
   .searchbar {
-    background-color: #202020;
+    background-color: var(--background-secondary);
     border-color: var(--background-color) !important;
     input {
       color: var(--text-color);
-      background-color: #202020;
+      background-color: var(--background-secondary);
     }
     button.clear-search {
-      background-color: #202020;
+      background-color: var(--background-secondary);
       svg {
         stroke: #fff !important;
       }
@@ -136,14 +138,19 @@
   }
   
   #text-editor .ql-code-block-container {
-    background-color: #202020;
+    background-color: var(--background-secondary);
   }
 
-  select {
-    background-color: #444;
+  select, select.ql-ui, select.ql-ui option {
+    background-color: var(--background-secondary);
   }
-  select.ql-ui, select.ql-ui option {
-    background-color: var(--background-color);
+
+  .dropdown-content, .settings-content {
+    background-color: var(--background-secondary) !important;
+  }
+
+  .settings-button {
+    background-color: rgba(0, 0, 0, 0.15) !important;
   }
 
   // a:hover {
@@ -159,25 +166,21 @@
   // }
 }
 
-// @media (prefers-color-scheme: light) {
-// @media (prefers-color-scheme: dark) {
-
-
-// @import url('./styles/highlight/default.css');
-// TODO: load highlightjs styles properly 
 
 main.theme-dark,
 html[data-theme='dark'] {
   @include darktheme();
 }
-@media (prefers-color-scheme: dark) {
-  main.theme-auto,
-  html[data-theme='auto'] {
-    @include darktheme();
-  }
-}
+// Uncomment this when auto theme selection works:
+// @media (prefers-color-scheme: dark) {
+//   main.theme-auto,
+//   html[data-theme='auto'] {
+//     @include darktheme();
+//   }
+// }
 
-
+// TODO: load highlightjs styles properly 
+// @import url('./styles/highlight/default.css');
 
 .dropdown-formats {
   margin-right: 0;
