@@ -1,4 +1,3 @@
-![CodeNoteApp on Windows](./CodeNoteApp_on_Windows.png?raw=true)
 
 # CodeNoteApp
 
@@ -8,6 +7,8 @@ A lightweight app inspired by Apple Notes made for jotting down notes about code
 * 100% locally stored notes
 * Lightweight footprint thanks to Tauri and Svelte
 
+
+![CodeNoteApp on Windows](./CodeNoteApp_on_Windows.png?raw=true "Windows Example")
 
 Powered by Tauri, Svelte, and Quill Editor
 
