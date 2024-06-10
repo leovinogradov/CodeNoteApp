@@ -1,3 +1,5 @@
+![CodeNoteApp on Windows](./CodeNoteApp_on_Windows.png?raw=true)
+
 # CodeNoteApp
 
 A lightweight app inspired by Apple Notes made for jotting down notes about code
