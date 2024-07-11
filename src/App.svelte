@@ -60,6 +60,7 @@
   let formatvalue = -1;  // representation of current format selected
   let showFilenames = false;  // TODO: add setting to toggle this 
   let appSettings: AppSettings = null;
+  let isDeleting = false;
   let _alternateFunctionProperty: string = "ctrlKey";
 	alternateFunctionKeyStore.subscribe(val => {
 		_alternateFunctionProperty = val
@@ -253,8 +254,8 @@
     return { title, subtitle, modifiedTime }
   }
 
-  async function onNoteClick(note: Note) {
-    const exitResult = await editor.open(note.filename)
+  async function onNoteClick(note: Note, saveOnExit=true) {
+    const exitResult = await editor.open(note.filename, saveOnExit)
     currentFilename = editor.getFilename()
     console.log('onNoteClick(): exitResult:', exitResult)
 
@@ -273,8 +274,8 @@
     }
   }
 
-  async function onNewNoteClick() {
-    const { exitResult, newNote } = await editor.openNew()
+  async function onNewNoteClick(saveOnExit=true) {
+    const { exitResult, newNote } = await editor.openNew(saveOnExit)
     currentFilename = editor.getFilename()
 
     console.log('Opened new note:', exitResult, newNote)
@@ -301,19 +302,31 @@
   }
 
   async function onDeleteNoteClick() {
-    const filename = await editor.deleteNote()
+    const filename = editor.saveManager?.filename
+    if (!filename || isDeleting) return
     const index = notes.findIndex(x => x.filename == filename)  // should be first note, most of the time
-    if (index > -1) {
-      notes.splice(index, 1);
-      notes = notes;
+    if (index < 0) {
+      console.error(`${filename} not in notes list?`)
+      return
     }
+    isDeleting = true
+    try {
+      await editor.deleteNote()
+    } catch(err) {
+      console.error(err)
+      isDeleting = false
+      return
+    }
+    isDeleting = false
+    notes.splice(index, 1)
+    notes = notes
     if (notes.length > 0) {
       // Other notes exist; open top one
-      onNoteClick(notes[0])
+      await onNoteClick(notes[0], false)
     }
     else {
       // All notes have been deleted; open new one
-      await onNewNoteClick()
+      await onNewNoteClick(false)
     }
   }
 
@@ -460,7 +473,8 @@
     const bottom = notesListElement.scrollTop + notesListElement.offsetHeight
     for (let i=notes.length-1; i >= 0; i--) {
       const note = notes[i]
-      if (!note.el) {
+      const noteSummaryEl = notesListElement.children[i]
+      if (!noteSummaryEl) {
         console.error("could not find note summary el")
         break
       }
@@ -468,7 +482,7 @@
         // reached notes that have content. No more needs to be done
         break
       }
-      if (note.el.offsetTop - bottom < 200) {
+      if (noteSummaryEl.offsetTop - bottom < 200) {
         // note is close to visible bottom
         loadNoteContent(note)
       }
@@ -548,7 +562,6 @@
           {#each matchingNotes as note, i (note.filename) }
             <div animate:myflip 
                 class="note-summary"
-                bind:this={note.el}
                 on:click={() => onNoteClick(note)}> 
               <h4>
                 {#each note.note_meta.search_title_as_tokens as token}
@@ -583,7 +596,6 @@
           {#each notes as note, i (note.filename) }
             <div animate:myflip
                 class="note-summary"
-                bind:this={note.el}
                 class:selected={currentFilename == note.filename}
                 on:click={() => onNoteClick(note)}> 
               <h4>{note.note_meta.title}</h4>
@@ -627,7 +639,7 @@
 
         <!-- not part of quill toolbar: delete note -->
         <div>
-          <button on:click={onDeleteNoteClick} class="custom-icon-btn">
+          <button on:click={onDeleteNoteClick} class="custom-icon-btn" disabled={isDeleting}>
             <Svg src="/img/Trash.svg" height="20px"></Svg>
           </button>
         </div>

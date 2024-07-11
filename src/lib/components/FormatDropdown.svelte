@@ -139,7 +139,7 @@
 
     &.selected {
       p, h1, h2, h3 {
-        background-color: rgba(var(--black-or-white-rgb), 0.07);
+        background-color: rgba(var(--black-or-white-rgb), 0.06);
       }
     }
 
@@ -162,12 +162,19 @@
         display: flex;
       }
       margin-bottom: 6px;
-      border-bottom: 1px solid rgba(var(--black-or-white-rgb), 0.07);
+      border-bottom: 1px solid rgba(var(--black-or-white-rgb), 0.08);
     }
 
     button {
       margin: 0 auto;
     }
+  }
+}
+
+// Dark mode override, mainly for blue tint
+html[data-theme='dark'] .dropdown-content button.dropdown-item.selected:not(:hover) {
+  p, h1, h2, h3 {
+    background-color: var(--background-color);
   }
 }
 
