@@ -144,9 +144,9 @@ export class Editor {
 		}
 	}
 
-	async openNew() {
+	async openNew(saveOnExit=true) {
 		console.log('opening new')
-		let exitResult = await this.exit();
+		let exitResult = await this.exit(saveOnExit);
 		const note = await createNewNote();
 
 		this.quill.setContents([], 'silent')
@@ -161,14 +161,14 @@ export class Editor {
 		};
 	}
 
-	async open(filename) {
+	async open(filename, saveOnExit=true) {
 		console.log('opening', filename)
 		if (this.saveManager && this.saveManager.filename == filename && Date.now() - this._timeOpened < 500) {
 			// Prevent opening twice in rapid succession, but allow re-opening the same file just in case
 			console.log('already opened recently; doing nothing')
 			return null
 		}
-		const exitResult = await this.exit();
+		const exitResult = await this.exit(saveOnExit);
 
 		await this._setContentsFromFile(filename)
 		this.quill.history.clear()
@@ -179,7 +179,7 @@ export class Editor {
 		return exitResult;
 	}
 
-	async exit(): Promise<ExitResult> {
+	async exit(saveOnExit=true): Promise<ExitResult> {
 		let ret = {
 			deleted: false,
 			filename: '',
@@ -194,10 +194,11 @@ export class Editor {
 			console.log('deleting on exit due to no content');
 			await this.saveManager.delete();
 			ret.deleted = true
-			
 		} else {
-            // save and exit
-			await this.saveManager.saveIfHasChanges();
+      // save and exit
+			if (saveOnExit) {
+				await this.saveManager.saveIfHasChanges();
+			}
 			ret.deleted = false
 		}
 		return ret;
