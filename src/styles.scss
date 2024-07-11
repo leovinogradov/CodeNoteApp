@@ -107,17 +107,29 @@
 
 @mixin darktheme() {
   // DARK MODE
-  // --background-color: #2f2f2f;
   --black-or-white-rgb: 255, 255, 255; 
-  --background-color: #121212;
-  --background-secondary: #1e1e1e;
+
+  // Windows notepad colors:
+  // --background-color: #272727;
+  // --background-secondary: #1e1e1e;
+
+  // Original:
+  // --background-color: #121212;
+  // --splitter-color: #202020;
+  // --splitter-color-dragging: #202020;
+
+  // Slight blue tint:
+  --background-color: #242527;
+  --background-secondary: #1b1c1e;
+
   --text-color: #F7F8F8;
-  --splitter-color: #202020;
-  --splitter-color-dragging: #202020;
+  --splitter-color: rgba(255, 255, 255, 0.08); // #181818;
+  --splitter-color-dragging: rgba(255, 255, 255, 0.08);
+
   --button-highlight-color: var(--note-search-color);
   --button-color: #F7F8F8;
   --overlay-box-shadow: 0px 1px 4px 0px rgba(0,0,0,0.55);
-  
+
   // Important for things like scrollbar
   color-scheme: dark;
 
