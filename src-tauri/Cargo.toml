@@ -1,6 +1,6 @@
 [package]
 name = "codenoteapp"
-version = "0.0.7"
+version = "0.0.8"
 description = "CodeNoteApp"
 authors = ["Leo Vinogradov"]
 edition = "2021"
