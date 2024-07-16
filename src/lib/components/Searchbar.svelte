@@ -7,7 +7,7 @@
 </script>
 
 <div class="searchbar">
-	<input bind:value on:input placeholder="Search" />
+	<input bind:value on:input placeholder="Search" type="text" spellcheck="false" />
 	<button hidden={!value} class="clear-search" on:click={() => dispatch('clear')}>
 		<XIcon size="14" strokeWidth="2" color="#444"  />
 	</button>
