@@ -30,7 +30,7 @@ export class SaveManager {
 
   constructor(quill, filename) {
     this.quill = quill;
-    this.minTimeBetweenSavesMs = 1500;
+    this.minTimeBetweenSavesMs = 1000;
 
     this._hasUnsavedInput = false;
     this._delayTimeoutId = null;
@@ -38,14 +38,14 @@ export class SaveManager {
     this.filename = filename;
     this._filepath = null;
 
-    this.isDeleted = false
+    this.isDeleted = false;
   }
 
 
   async _save() {
     try {
       if (this.isDeleted) {
-        console.warn(`${this.filename} is deleted`)
+        console.error(`_save(): ${this.filename} is deleted`)
         return
       }
       this._hasUnsavedInput = false;
@@ -83,7 +83,7 @@ export class SaveManager {
 
   saveNow() {
     if (this.isDeleted) {
-      console.warn(`${this.filename} is deleted`)
+      console.warn(`saveNow(): ${this.filename} is deleted`)
       return
     }
     if (this._delayTimeoutId) {
@@ -101,7 +101,7 @@ export class SaveManager {
 
   saveAfterDelay() {
     if (this.isDeleted) {
-      console.warn(`${this.filename} is deleted`)
+      console.warn(`saveAfterDelay(): ${this.filename} is deleted`)
       return
     }
     this._hasUnsavedInput = true;
@@ -112,10 +112,11 @@ export class SaveManager {
 
   async delete() {
     if (this.isDeleted) {
-      console.warn(`${this.filename} is already deleted`)
+      console.warn(`delete(): ${this.filename} is already deleted`)
       return
     }
     this.isDeleted = true;
+
     this._hasUnsavedInput = false;
     if (this._delayTimeoutId) {
       clearTimeout(this._delayTimeoutId)
