@@ -14,6 +14,9 @@ use read_notes::FileSummaryResponse;
 mod search;
 use search::SearchResult;
 
+#[cfg(target_os = "linux")]
+pub struct DbusState(Mutex<Option<dbus::blocking::SyncConnection>>);
+
 mod open_in_filesystem;
 
 #[derive(serde::Serialize)]
@@ -99,7 +102,9 @@ fn main() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_fs::init())
-        .setup(|_app| {
+        .setup(|app| {
+            #[cfg(target_os = "linux")]
+            app.manage(DbusState(Mutex::new(dbus::blocking::SyncConnection::new_session().ok())));
             // let submenu = SubmenuBuilder::new(app, "Submenu")
             //     .text("test1", "Test1")
             //     .build()?;
