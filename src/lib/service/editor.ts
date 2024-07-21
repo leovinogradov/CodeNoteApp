@@ -14,8 +14,8 @@ import { languages } from "./constants";
 // @ts-ignore
 Quill.register('themes/custom-theme', CustomSnowTheme, true)
 
-const ColorStyle = Quill.import("attributors/style/color");
-const BackgroundStyle = Quill.import("attributors/style/background");
+const ColorStyle: any = Quill.import("attributors/style/color");
+const BackgroundStyle: any = Quill.import("attributors/style/background");
 // @ts-ignore
 ColorStyle.whitelist = []; // remove pasted colors
 // @ts-ignore
@@ -173,11 +173,9 @@ export class Editor {
 		console.log('opening', filename)
 		if (this.saveManager && this.saveManager.filename == filename) {
 			console.log('already opened recently; doing nothing')
-			if (Date.now() - this._timeOpened > 50) {
-				if (this.saveManager.isDeleted) {
-					console.error('Active file was somehow deleted; reopening')
-					this.saveManager = new SaveManager(this.quill, filename)
-				}
+			if (this.saveManager.isDeleted) {
+				console.error('Active file was somehow deleted; reopening')
+				this.saveManager = new SaveManager(this.quill, filename)
 			}
 			return null
 		}
