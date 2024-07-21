@@ -256,6 +256,7 @@
 
   async function onNoteClick(note: Note, saveOnExit=true) {
     const exitResult = await editor.open(note.filename, saveOnExit)
+    if (!exitResult) return;
     currentFilename = editor.getFilename()
     console.log('onNoteClick(): exitResult:', exitResult)
 
@@ -276,13 +277,16 @@
 
   async function onNewNoteClick(saveOnExit=true) {
     const { exitResult, newNote } = await editor.openNew(saveOnExit)
-    currentFilename = editor.getFilename()
-
     console.log('Opened new note:', exitResult, newNote)
-
+    
     if (exitResult && exitResult.deleted && exitResult.filename) {
       notes = notes.filter((note) => note.filename != exitResult.filename)
     }
+
+    if (!newNote) return;
+
+    currentFilename = editor.getFilename()
+    
     newNote.note_meta = _getNoteMeta(newNote)
 
     notes.unshift(newNote);  // push to front

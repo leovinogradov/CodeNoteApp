@@ -14,8 +14,8 @@ import { languages } from "./constants";
 // @ts-ignore
 Quill.register('themes/custom-theme', CustomSnowTheme, true)
 
-const ColorStyle = Quill.import("attributors/style/color");
-const BackgroundStyle = Quill.import("attributors/style/background");
+const ColorStyle: any = Quill.import("attributors/style/color");
+const BackgroundStyle: any = Quill.import("attributors/style/background");
 // @ts-ignore
 ColorStyle.whitelist = []; // remove pasted colors
 // @ts-ignore
@@ -144,16 +144,23 @@ export class Editor {
 		}
 	}
 
+
 	async openNew(saveOnExit=true) {
 		console.log('opening new')
-		let exitResult = await this.exit(saveOnExit);
-		const note = await createNewNote();
-
+		if (this.saveManager && this.saveManager.filename && Date.now() - this._timeOpened < 50) {
+			console.log('open new debounce')
+			return {
+				exitResult: null,
+				newNote: null,
+			};
+		}
+		this._timeOpened = Date.now()
+		let exitResult = await this.exit(saveOnExit)
+		const note = await createNewNote()
 		this.quill.setContents([], 'silent')
 		this.quill.history.clear()
-		this.saveManager = new SaveManager(this.quill, note.filename);
+		this.saveManager = new SaveManager(this.quill, note.filename)
 		this.searcher.lastCursorIndex = null
-		this._timeOpened = Date.now();
 		console.log('opened new')
 		return {
 			exitResult,
@@ -161,23 +168,27 @@ export class Editor {
 		};
 	}
 
+
 	async open(filename, saveOnExit=true) {
 		console.log('opening', filename)
-		if (this.saveManager && this.saveManager.filename == filename && Date.now() - this._timeOpened < 500) {
-			// Prevent opening twice in rapid succession, but allow re-opening the same file just in case
+		if (this.saveManager && this.saveManager.filename == filename) {
 			console.log('already opened recently; doing nothing')
+			if (this.saveManager.isDeleted) {
+				console.error('Active file was somehow deleted; reopening')
+				this.saveManager = new SaveManager(this.quill, filename)
+			}
 			return null
 		}
-		const exitResult = await this.exit(saveOnExit);
-
+		this._timeOpened = Date.now();
+		const exitResult = await this.exit(saveOnExit)
 		await this._setContentsFromFile(filename)
 		this.quill.history.clear()
 		this.saveManager = new SaveManager(this.quill, filename)
 		this.searcher.lastCursorIndex = null
-		this._timeOpened = Date.now();
 		console.log('opened', filename)
-		return exitResult;
+		return exitResult
 	}
+
 
 	async exit(saveOnExit=true): Promise<ExitResult> {
 		let ret = {
@@ -204,10 +215,12 @@ export class Editor {
 		return ret;
 	}
 
+
 	getFilename() {
 		if (!this.saveManager) return null;
 		return this.saveManager.filename;
 	}
+
 
 	deleteNote() {
 		if (!this.saveManager) return;
@@ -216,10 +229,12 @@ export class Editor {
 		return filename;
 	}
 
+
 	setContentFromHtml(html) {
 		const delta = this.quill.clipboard.convert(html)
 		this.quill.setContents(delta, 'silent')
 	}
+
 
 	private async _setContentsFromFile(filename) {
 		const content = await readFile(filename);
@@ -232,6 +247,7 @@ export class Editor {
 			this.quill.setContents(delta, 'silent')
 		}
 	}
+
 
 	static getLinesFromDeltas(obj, lineLimit=2, charLimit=100) {
 		/* get first {lineLimit} not empty lines */
@@ -269,6 +285,7 @@ export class Editor {
 		}
 		return lines
 	}
+
 
 	undo() {
 		return this.quill.history.undo()

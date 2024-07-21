@@ -378,6 +378,7 @@ button.toggle-on {
   }
   .ql-editor {
     overflow: hidden;
+    min-height: 90vh; // little hack to make editor clickable everywhere when there is no text
   }
 }
 

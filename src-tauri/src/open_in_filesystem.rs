@@ -23,7 +23,8 @@ pub fn show_item_in_filesystem(
 ) -> Result<(), String> {
     let app = window.app_handle();
     let dir_path = app.path().resolve("notes", BaseDirectory::AppData).unwrap();
-    let path = dir_path.to_str().unwrap();
+    let path = dir_path.into_os_string().into_string().unwrap();
+    println!("Opening {} in filesystem", path);
 
     let dbus_guard = dbus_state.0.lock().map_err(|e| e.to_string())?;
 
@@ -66,8 +67,8 @@ pub fn show_item_in_filesystem(window: tauri::Window) -> Result<(), String> {
     // Future: open specific note in filesystem
     let app = window.app_handle();
     let dir_path = app.path().resolve("notes", BaseDirectory::AppData).unwrap();
-    let path = dir_path.to_str().unwrap();
-    println!("opening {} in filesystem", path);
+    let path = dir_path.into_os_string().into_string().unwrap();
+    println!("Opening {} in filesystem", path);
 
     #[cfg(target_os = "windows")]
     {
