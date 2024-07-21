@@ -4,12 +4,12 @@ use std::process::Command;
 use tauri::Manager;
 // State is used by linux
 use tauri::path::BaseDirectory;
-#[cfg(target_os = "linux")]
-use tauri::State;
 
 #[cfg(not(target_os = "windows"))]
 use std::path::PathBuf;
 
+#[cfg(target_os = "linux")]
+use tauri::State;
 #[cfg(target_os = "linux")]
 use crate::DbusState;
 #[cfg(target_os = "linux")]
