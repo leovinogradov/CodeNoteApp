@@ -15,6 +15,8 @@ mod search;
 use search::SearchResult;
 
 #[cfg(target_os = "linux")]
+use std::sync::Mutex;
+#[cfg(target_os = "linux")]
 pub struct DbusState(Mutex<Option<dbus::blocking::SyncConnection>>);
 
 mod open_in_filesystem;
