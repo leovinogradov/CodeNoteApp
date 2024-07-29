@@ -100,6 +100,7 @@ async fn search_handler(
 // });
 
 fn main() {
+    #[allow(unused)]
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_os::init())
