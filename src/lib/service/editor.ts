@@ -20,10 +20,6 @@ const BackgroundStyle: any = Quill.import("attributors/style/background");
 ColorStyle.whitelist = []; // remove pasted colors
 // @ts-ignore
 BackgroundStyle.whitelist = []; // remove pasted bg colors
-// @ts-ignore
-// Quill.register(ColorStyle);
-// @ts-ignore
-// Quill.register(BackgroundStyle);
 
 Quill.register({ "modules/Searcher": Searcher });
 Quill.register({ 
@@ -32,7 +28,6 @@ Quill.register({
 	"attributors/style/color": ColorStyle,
 	"attributors/style/background": BackgroundStyle
 }, true);
-// Quill.register({ }, true);
 
 
 export interface ExitResult {
@@ -43,7 +38,7 @@ export interface ExitResult {
 	
 export class Editor {
 	// @ts-ignore
-    saveManager: SaveManager;
+  saveManager: SaveManager;
 	quill;
 	searcher;
 	editorEl;
@@ -52,11 +47,11 @@ export class Editor {
 	private _timeOpened: number = 0;
 	// private _clean: Function;
 
-    constructor(editorEl, onModified: Function|null) {
+  constructor(editorEl, onModified: Function|null) {
 		this.editorEl = editorEl
-	    this.quill = new Quill(editorEl, {
-            modules: {
-                syntax: {
+	  this.quill = new Quill(editorEl, {
+			modules: {
+				syntax: {
 					languages: languages
 				},
 				history: {
@@ -64,25 +59,13 @@ export class Editor {
 					maxStack: 100,
 					userOnly: false
 				},
-                toolbar: '#toolbar',
-				// keyboard: {
-				// 	bindings: {
-				// 		undo: {
-				// 			key: ['z', 'Z', 's', 'S'],
-				// 			shortKey: true,
-				// 			handler: function(range, context) {
-				// 				console.log('TEST', context)
-				// 			}
-				// 		},
-				// 	}
-				// }
-            },
+				toolbar: '#toolbar',
+			},
 			bounds: editorEl,
-            placeholder: "Type something...",
-			// theme: "snow",
-            theme: "custom-theme" // "snow", // or 'bubble'
-            // ...options
-        });
+			placeholder: "Type something...",
+			theme: "custom-theme" // "snow", // or 'bubble'
+			// ...options
+    });
 		this.searcher = new Searcher(this.quill, editorEl)
 		
 		// Note: use this for for external format remove functionality if needed
@@ -93,10 +76,10 @@ export class Editor {
 		// 	console.error('Could not bind quill clean function')
 		// }
 
-        this.quill.on("text-change", this._quillOnChange.bind(this))
+    this.quill.on("text-change", this._quillOnChange.bind(this))
 		this.onModified = onModified
 
-		// Hack to register easily quill format buttons without replacing the html inside them
+		// Hack to easily register quill format buttons without replacing the html inside them
 		setTimeout(() => {
 			const toolbar = this.quill.getModule('toolbar')
 			const toolbarEl = document.getElementById('toolbar') as HTMLElement
@@ -109,7 +92,7 @@ export class Editor {
 				}
 			});
 		}, 0)
-    }
+  }
 
 
 	attachToToolbar(elements: HTMLElement[]) {

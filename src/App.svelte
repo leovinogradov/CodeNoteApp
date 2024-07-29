@@ -152,7 +152,8 @@
       console.log('Failed to load notes; result was:', data)
       return
     }
-    console.log('Successfully loaded notes:', loadedNotesData)
+    // console.log('Successfully loaded notes:', loadedNotesData)
+    console.log(`loaded ${loadedNotesData.length} notes`)
     
     let notesFormatted = []
     for (let x of loadedNotesData) {
