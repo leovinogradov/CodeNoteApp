@@ -71,6 +71,10 @@ export const languages = [
   //     label: 'PHP'
   // }, 
   {
+    key: 'lua',
+    label: 'Lua'
+  },
+  {
     key: 'python',
     label: 'Python'
   },
@@ -79,7 +83,19 @@ export const languages = [
     label: 'Rust'
   },
   {
+    key: 'scss',
+    label: 'SCSS'
+  },
+  {
     key: 'sql',
     label: 'SQL'
+  },
+  {
+    key: 'typescript',
+    label: 'TypeScript'
+  },
+  {
+    key: 'yaml',
+    label: 'YAML'  
   }
 ]
