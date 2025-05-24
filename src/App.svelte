@@ -17,7 +17,7 @@
 
   import { alternateFunctionKeyStore } from "./store";
   import { isWhitespace, isInputFocused, readFile } from './lib/service/utils';
-  import { searchNote, type SearchResult } from './lib/service/search.ts';
+  import { searchNote, type SearchResult } from './lib/service/search';
   import { Editor } from './lib/service/editor';
   import { createNewNote, SaveManager } from './lib/service/save-manager';
   import { runInitialSizeFix } from './initial-size-fix';
@@ -59,7 +59,7 @@
   let _searchTimeoutId;  // for timeout between searchString changed and actual search
   let formatvalue = -1;  // representation of current format selected
   let showFilenames = false;  // TODO: add setting to toggle this 
-  let appSettings: AppSettings = null;
+  let appSettings: AppSettings;
   let isDeleting = false;
   let _alternateFunctionProperty: string = "ctrlKey";
 	alternateFunctionKeyStore.subscribe(val => {
@@ -145,17 +145,17 @@
   }
 
   async function loadNotes(): Promise<Note[]> {
-    const data = await invoke("read_notes_dir")
+    const data: any = await invoke("read_notes_dir")
     const loadedNotesData = data["data"]
 
     if (!loadedNotesData || !Array.isArray(loadedNotesData)) {
       console.log('Failed to load notes; result was:', data)
-      return
+      return []
     }
     // console.log('Successfully loaded notes:', loadedNotesData)
     console.log(`loaded ${loadedNotesData.length} notes`)
     
-    let notesFormatted = []
+    let notesFormatted: Note[] = []
     for (let x of loadedNotesData) {
       let meta;
       try {
@@ -191,7 +191,8 @@
       // default, more than one day ago
       let datestring = d.toDateString()
       const year: string = datestring.slice(datestring.length-4)
-      // string to number comparison, hell yeah
+      // string to number comparison, hell yeah JavaScript
+      // @ts-ignore
       if (year == now.getFullYear()) {
         // shortened date string, 'Sun Apr 21'
         return datestring.slice(0, datestring.length-5)
@@ -396,7 +397,7 @@
       return
     }
     const searchStringLocked = searchString
-    invoke("search_handler", { searchString: searchStringLocked }).then(data => {
+    invoke("search_handler", { searchString: searchStringLocked }).then((data: any) => {
       lastSearchString = searchStringLocked;
       // console.log("SEARCH RESULT for", searchStringLocked, data)
       if (data && data.data) {
@@ -405,7 +406,7 @@
         for (let match of matches) {
           matches_as_obj[match.filename] = match
         }
-        const newMatchingNotes = []
+        const newMatchingNotes: Note[] = []
         const searchStrLowercase = searchStringLocked.toLowerCase()
         const activeFilename = editor.getFilename()
         let matchInActiveFile = false

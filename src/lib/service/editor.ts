@@ -254,6 +254,7 @@ export class Editor {
 					}
 				} 
 				else if (count < charLimit){
+					// very tiny optimization: use Array.join instead of +=
 					currentLine += char
 				}
 				else if (count == charLimit) {

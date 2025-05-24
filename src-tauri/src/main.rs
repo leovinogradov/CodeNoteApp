@@ -99,9 +99,11 @@ async fn search_handler(
 //     println!("event triggered!");
 // });
 
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn main() {
     #[allow(unused)]
     tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_fs::init())

@@ -6,19 +6,28 @@
     "main"
   ],
   "permissions": [
-    "path:default",
-    "event:default",
-    "window:default",
-    "app:default",
-    "resources:default",
-    "menu:default",
-    "tray:default",
-    "fs:read-all",
-    "fs:allow-mkdir",
-    "fs:write-all",
-    "fs:scope-appdata-recursive",
-    "window:allow-start-dragging",
+    "core:default",
+    "opener:default",
+    "core:app:default",
+    "core:event:default",
+    "core:menu:default",
+    "core:path:default",
+    "core:resources:default",
+    "core:tray:default",
+    "core:window:default",
+    "core:window:allow-start-dragging",
+    "fs:allow-app-write-recursive",
+    "fs:allow-app-read-recursive",
     "os:allow-platform",
-    "shell:allow-open"
+    "shell:allow-open",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        { "path": "$APPDATA/*" },
+        { "path": "$APPDATA\\*" },
+        { "path": "$APPDATA/notes/*" },
+        { "path": "$APPDATA\\notes\\*" }
+      ]
+    }
   ]
 }
