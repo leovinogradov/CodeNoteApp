@@ -32,12 +32,21 @@
     search_subtitle_as_tokens?: any[]
   }
 
+  interface SearchNoteMeta extends NoteMeta {
+    search_title_as_tokens: any[],
+    search_subtitle_as_tokens: any[]
+  }
+
   interface Note {
     filename: string,
     content: string,
     modified: number,
     note_meta: NoteMeta,
     el?: HTMLElement
+  }
+
+  interface SearchNote extends Note {
+    note_meta: SearchNoteMeta
   }
 
 
@@ -52,7 +61,7 @@
   let currentPlatform: string = '';
   
   let notes: Note[] = []
-  let matchingNotes: Note[] = []
+  let matchingNotes: SearchNote[] = []
   // let openNoteIndex: number = 0;
   let searchString: string = '';
   let lastSearchString: string = '';  // string for which results are shown
@@ -406,7 +415,7 @@
         for (let match of matches) {
           matches_as_obj[match.filename] = match
         }
-        const newMatchingNotes: Note[] = []
+        const newMatchingNotes: SearchNote[] = []
         const searchStrLowercase = searchStringLocked.toLowerCase()
         const activeFilename = editor.getFilename()
         let matchInActiveFile = false
@@ -418,7 +427,7 @@
             const second_line = isWhitespace(match.second_line) ? "" : "..."+match.second_line;
             note.note_meta.search_subtitle_as_tokens = _searchResultAsTokensV2(second_line, searchStrLowercase, match.second_line_matches)
             
-            newMatchingNotes.push(note)
+            newMatchingNotes.push(note as SearchNote)
 
             if (note.filename == activeFilename) {
               matchInActiveFile = true
