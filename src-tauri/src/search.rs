@@ -1,4 +1,5 @@
 use regex::Regex;
+use regex::RegexBuilder;
 use serde::{Deserialize, Serialize};
 use serde_json::Result;
 // use regex::RegexBuilder;
@@ -83,14 +84,50 @@ pub fn search(
 
     match line_search_re.find(rest_of_content) {
         Some(m) => {
-            // Ok(String::from(m.as_str()))
             second_line = String::from(m.as_str());
             second_line.pop(); // remove the last /n character
             second_line_matches = true;
         }
         None => {
-            // Ok(String::new())
-            second_line = String::new();
+            println!("TEST1");
+            // second_line = String::new();
+            // No second line match, just read second like
+            // second_line = String::new();
+
+            // for c in rest_of_content.chars() {
+            //     second_line.push_str((&str) c);
+            // }
+            // let search_for_line_regex_string = format!(r".*{}.*\n?", needle);
+            let search_for_second_line_re = RegexBuilder::new("[A-z -_]+\n")
+                .build()
+                .unwrap();
+            match search_for_second_line_re.find(rest_of_content) {
+                Some(m) => {
+                    println!("TEST2 {}", m.as_str());
+                    second_line = String::from(m.as_str());
+                    second_line.pop(); // remove the last /n character
+                    // second_line_matches = true;
+                }
+                None => {
+                    println!("TEST3");
+                    // if rest_of_content
+                    // second_line = String::new();
+                    second_line = (&rest_of_content).to_string();
+                }
+            }
+            // match rest_of_content.find(".\n") {
+            //     Some(idx) => {
+            //         println!("TEST2 {}", idx);
+            //         second_line = (&rest_of_content[..idx]).to_string();
+            //         println!("TEST2 {}", idx);
+            //     }
+            //     None => {
+            //         println!("TEST3");
+            //         // if rest_of_content
+            //         // second_line = String::new();
+            //         second_line = (&rest_of_content).to_string();
+            //     }
+            // }
             second_line_matches = false;
         }
     }

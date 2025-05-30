@@ -47,9 +47,9 @@ export class Editor {
 	private _timeOpened: number = 0;
 	// private _clean: Function;
 
-  constructor(editorEl, onModified: Function|null) {
+  	constructor(editorEl, onModified: Function|null) {
 		this.editorEl = editorEl
-	  this.quill = new Quill(editorEl, {
+	  	this.quill = new Quill(editorEl, {
 			modules: {
 				syntax: {
 					languages: languages
@@ -65,7 +65,7 @@ export class Editor {
 			placeholder: "Type something...",
 			theme: "custom-theme" // "snow", // or 'bubble'
 			// ...options
-    });
+    	});
 		this.searcher = new Searcher(this.quill, editorEl)
 		
 		// Note: use this for for external format remove functionality if needed
@@ -76,7 +76,8 @@ export class Editor {
 		// 	console.error('Could not bind quill clean function')
 		// }
 
-    this.quill.on("text-change", this._quillOnChange.bind(this))
+		this.quill.on("text-change", this._quillOnChange.bind(this))
+
 		this.onModified = onModified
 
 		// Hack to easily register quill format buttons without replacing the html inside them
@@ -92,7 +93,7 @@ export class Editor {
 				}
 			});
 		}, 0)
-  }
+	}
 
 
 	attachToToolbar(elements: HTMLElement[]) {

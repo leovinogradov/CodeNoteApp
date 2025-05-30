@@ -347,6 +347,7 @@
 
   // let _noteModifiedTimeout = null
   function onActiveNoteModified(filename, delta, oldDelta, source) {
+    console.log(delta, oldDelta, source)
     /* Recompute meta when note is modified (but not necessarily saved) */
     _updateNoteTitle(filename)
     // Version with debounce: seems to not be needed because compute is super fast
