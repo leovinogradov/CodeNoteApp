@@ -201,7 +201,7 @@ export class Editor {
 
 
 	getFilename() {
-		if (!this.saveManager) return null;
+		if (!this.saveManager) return '';
 		return this.saveManager.filename;
 	}
 

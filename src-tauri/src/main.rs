@@ -93,6 +93,14 @@ async fn search_handler(
     Ok(SearchResponse { data: result_list })
 }
 
+// #[tauri::command]
+// async fn create_window(app: tauri::AppHandle) -> Result<tauri::WebviewWindow, String> {
+//     let webview_window = tauri::WebviewWindowBuilder::new(&app, "label", tauri::WebviewUrl::App("index.html".into()))
+//         .build()
+//         .unwrap();
+//     Ok(webview_window)
+// }
+
 // Menu testing that didn't work
 // use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 // app.on_menu_event(move |app, event| {
