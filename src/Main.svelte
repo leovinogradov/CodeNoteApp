@@ -479,10 +479,11 @@ async function onNoteClick(note: Note, saveOnExit=true) {
     openStandaloneWindow(filename, (e) => {
       // console.log('Event received in main window:', e)
       const payload = e.payload;
-      if (payload.type == 'noteModified' && payload.filename == currentFilename) {
-        console.log('TEST')
+      if (payload.type == 'noteModified' && payload.filename) {
         updateNoteTitle(payload.filename, payload.editorContent);
-        editor.setContents(payload.editorContent);
+        if (payload.filename == currentFilename) {
+          editor.setContents(payload.editorContent);
+        }
       }
     })
   }
