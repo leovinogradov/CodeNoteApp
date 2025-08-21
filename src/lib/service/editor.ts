@@ -205,6 +205,10 @@ export class Editor {
 		return this.saveManager.filename;
 	}
 
+	getContent() {
+		return this.quill.getContents();
+	}
+
 
 	deleteNote() {
 		if (!this.saveManager) return;
@@ -220,6 +224,15 @@ export class Editor {
 	}
 
 
+	setContents(deltas) {
+		if (!deltas || !deltas.ops || deltas.ops.length == 0) {
+			this.quill.setContents([], 'silent')
+		} else {
+			this.quill.setContents(deltas, 'silent')
+		}
+	}
+
+
 	private async _setContentsFromFile(filename) {
 		const content = await readFile(filename);
 		if (!content) {
@@ -231,7 +244,6 @@ export class Editor {
 			this.quill.setContents(delta, 'silent')
 		}
 	}
-
 
 	static getLinesFromDeltas(obj, lineLimit=2, charLimit=100) {
 		/* get first {lineLimit} not empty lines */

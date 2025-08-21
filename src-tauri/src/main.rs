@@ -118,6 +118,8 @@ fn main() {
         .setup(|app| {
             #[cfg(target_os = "linux")]
             app.manage(DbusState(Mutex::new(dbus::blocking::SyncConnection::new_session().ok())));
+
+            // Submenu and menu testing
             // let submenu = SubmenuBuilder::new(app, "Submenu")
             //     .text("test1", "Test1")
             //     .build()?;
@@ -127,6 +129,23 @@ fn main() {
             // app.app_handle().set_menu(menu)?;
             // let window = app.get_webview_window("main").unwrap();
             // window.set_menu(menu)?;
+
+            // Listen for main window close and close all other windows
+            let app_handle = app.app_handle().clone(); // <-- clone to get a 'static handle
+            tauri::async_runtime::spawn(async move {
+                let main_window = app_handle.get_webview_window("main").unwrap();
+                let _ = main_window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { .. } = event {
+                        // Close all other windows
+                        for (label, window) in app_handle.webview_windows() {
+                            if label != "main" {
+                                let _ = window.close();
+                            }
+                        }
+                    }
+                });
+            });
+
             Ok(())
         })
         // .menu(menu)

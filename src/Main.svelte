@@ -16,7 +16,7 @@ import { event } from '@tauri-apps/api';
 // import { getCurrent } from "@tauri-apps/api/window";
 
 import { alternateFunctionKeyStore } from "./store";
-import { isWhitespace, isInputFocused, readFile } from './lib/service/utils';
+import { isWhitespace, isInputFocused, readFile, getFirstTwoLinesFromContents } from './lib/service/utils';
 import { searchNote, type SearchResult } from './lib/service/search';
 import { Editor } from './lib/service/editor';
 import { createNewNote, SaveManager } from './lib/service/save-manager';
@@ -26,36 +26,12 @@ import { loadSettings, saveSettings, loadPlatformIntoStore, type AppSettings } f
 // import { WebviewWindow, getCurrentWindow } from '@tauri-apps/api/window';
 import { Window } from "@tauri-apps/api/window"
 
-import { openInNewWindow } from './lib/util/window';
+import { openStandaloneWindow } from './lib/util/window';
 
 
-interface NoteMeta {
-  title: string,
-  subtitle: string,
-  modifiedTime: string,
-  search_title_as_tokens?: any[],
-  search_subtitle_as_tokens?: any[]
-}
-
-interface SearchNoteMeta extends NoteMeta {
-  search_title_as_tokens: any[],
-  search_subtitle_as_tokens: any[]
-}
-
-interface Note {
-  filename: string,
-  content: string,
-  modified: number,
-  note_meta: NoteMeta,
-  el?: HTMLElement
-}
-
-interface SearchNote extends Note {
-  note_meta: SearchNoteMeta
-}
-
-
-const ONE_DAY = 24 * 60 * 60 * 1000;
+// Add import for interfaces
+import type { NoteMeta, SearchNoteMeta, Note, SearchNote } from './types';
+    import { on } from 'svelte/events';
 
 let isMainWindow = $state(true);
 
@@ -163,7 +139,7 @@ async function initNotes() {
 }
 
 async function _initEditor() {
-  editor = new Editor(editorElement, onActiveNoteModified)
+  editor = new Editor(editorElement, onModified)
 
   if (notes.length > 0) {
     console.log('Main init: notes found. Opening first note')
@@ -206,10 +182,13 @@ async function loadNotes(): Promise<Note[]> {
   return notesFormatted
 }
 
+const ONE_DAY = 24 * 60 * 60 * 1000; // milliseconds in a day
+
 function _getModifiedAtStr(modified: number) {
   try {
     const now = new Date()
     const d = new Date(modified)
+
     if ((now.getTime() - d.getTime()) < ONE_DAY) {
       // less than a day ago
       // get am/pm
@@ -235,15 +214,6 @@ function _getModifiedAtStr(modified: number) {
     console.error(err)
   }
   return ''
-}
-
-function _getFirst2LinesFromContent(obj) {
-  if (typeof obj == "string") {
-    obj = JSON.parse(obj)
-  }
-  const lines = Editor.getLinesFromDeltas(obj, 2, 60)
-  while (lines.length < 2) lines.push("")
-  return lines
 }
 
 function _searchResultAsTokensV1(str, idx, strLength) {
@@ -277,7 +247,7 @@ function _getNoteMeta(note) {
   let subtitle = ''
   let modifiedTime = _getModifiedAtStr(note.modified)
   if (note.content) {
-    [title, subtitle] = _getFirst2LinesFromContent(note.content)
+    [title, subtitle] = getFirstTwoLinesFromContents(note.content)
     if (isWhitespace(title)) {
       title = "Untitled"
     }
@@ -370,20 +340,19 @@ async function onNoteClick(note: Note, saveOnExit=true) {
     }
   }
 
-  // let _noteModifiedTimeout = null
-  function onActiveNoteModified(filename, delta, oldDelta, source) {
-    console.log(delta, oldDelta, source)
+  function onModified(filename, delta, oldDelta, source) {
+    // console.log(delta, oldDelta, source)
+
     /* Recompute meta when note is modified (but not necessarily saved) */
-    _updateNoteTitle(filename)
+    updateNoteTitle(filename, editor.getContent())
+
     // Version with debounce: seems to not be needed because compute is super fast
     // if (_noteModifiedTimeout) clearTimeout(_noteModifiedTimeout)
     // _noteModifiedTimeout = setTimeout(_updateNoteTitle, 50)
   }
 
-  function _updateNoteTitle(filename) {
-    // const filename = editor.getFilename()
-    // if (!filename) return
-    const first2Lines: string[] = _getFirst2LinesFromContent(editor.quill.getContents())
+  function updateNoteTitle(filename, content) {
+    const first2Lines: string[] = getFirstTwoLinesFromContents(content)
     if (searchString) {
       // When something is searched
       const matchingNoteIdx = matchingNotes.findIndex((note) => note.filename == filename)
@@ -501,6 +470,21 @@ async function onNoteClick(note: Note, saveOnExit=true) {
       appSettings = appSettings;
       saveSettings(appSettings)
     }
+  }
+
+  
+  function openInNewWindow(filename: string) {
+    // Open note in a new window
+    // @ts-ignore
+    openStandaloneWindow(filename, (e) => {
+      // console.log('Event received in main window:', e)
+      const payload = e.payload;
+      if (payload.type == 'noteModified' && payload.filename == currentFilename) {
+        console.log('TEST')
+        updateNoteTitle(payload.filename, payload.editorContent);
+        editor.setContents(payload.editorContent);
+      }
+    })
   }
 
   function onNoteListScroll() {

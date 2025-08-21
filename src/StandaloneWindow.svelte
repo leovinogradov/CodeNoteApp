@@ -26,8 +26,9 @@ import { loadSettings, saveSettings, loadPlatformIntoStore, type AppSettings } f
 // import { WebviewWindow, getCurrentWindow } from '@tauri-apps/api/window';
 import { Window } from "@tauri-apps/api/window"
 
+// Add import for interfaces
+import type { NoteMeta, SearchNoteMeta, Note, SearchNote } from './types';
 
-const ONE_DAY = 24 * 60 * 60 * 1000;
 
 let isMainWindow = $state(true);
 
@@ -95,6 +96,8 @@ async function initSettings() {
   // });
 }
 
+const ONE_DAY = 24 * 60 * 60 * 1000;
+
 function _getModifiedAtStr(modified: number) {
   try {
     const now = new Date()
@@ -126,156 +129,47 @@ function _getModifiedAtStr(modified: number) {
   return ''
 }
 
-function _getFirst2LinesFromContent(obj) {
-  if (typeof obj == "string") {
-    obj = JSON.parse(obj)
-  }
-  const lines = Editor.getLinesFromDeltas(obj, 2, 60)
-  while (lines.length < 2) lines.push("")
-  return lines
+
+async function onNewNoteClick(saveOnExit=true) {
 }
 
-function _searchResultAsTokensV1(str, idx, strLength) {
-  if (idx == -1) {
-    return [{ highlight: false, text: str }]
-  }
-  return [
-    { highlight: false, text: str.substring(0, idx) },
-    { highlight: true, text: str.substring(idx, idx + strLength) },
-    { highlight: false, text: str.substring(idx + strLength) },
-  ]
+async function onDeleteNoteClick() {
+  // TODO: this should delete the current node, close the window, and update the state in the main window
+  // const filename = editor.saveManager?.filename
+  // if (!filename || isDeleting) return
+  // const index = notes.findIndex(x => x.filename == filename)  // should be first note, most of the time
+  // if (index < 0) {
+  //   console.error(`${filename} not in notes list?`)
+  //   return
+  // }
+  // isDeleting = true
+  // try {
+  //   await editor.deleteNote()
+  // } catch(err) {
+  //   console.error(err)
+  //   isDeleting = false
+  //   return
+  // }
+  // isDeleting = false
+  // notes.splice(index, 1)
+  // notes = notes
+  // if (notes.length > 0) {
+  //   // Other notes exist; open top one
+  //   await onNoteClick(notes[0], false)
+  // }
+  // else {
+  //   // All notes have been deleted; open new one
+  //   await onNewNoteClick(false)
+  // }
 }
 
-function _searchResultAsTokensV2(line: string, searchStrLowercase: string, searchStrInLine: boolean = true) {
-  if (!searchStrInLine) {
-    return [{ highlight: false, text: line }] 
-  }
-  let idx = line.toLowerCase().indexOf(searchStrLowercase)
-  if (idx == -1) {
-    return [{ highlight: false, text: line }]
-  }
-  return [
-    { highlight: false, text: line.substring(0, idx) },
-    { highlight: true, text: line.substring(idx, idx + searchStrLowercase.length) },
-    { highlight: false, text: line.substring(idx + searchStrLowercase.length) },
-  ]
-}
-
-function _getNoteMeta(note) {
-  let title = ''
-  let subtitle = ''
-  let modifiedTime = _getModifiedAtStr(note.modified)
-  if (note.content) {
-    [title, subtitle] = _getFirst2LinesFromContent(note.content)
-    if (isWhitespace(title)) {
-      title = "Untitled"
-    }
-  } 
-  else {
-    title = "Loading..."
-  }
-  return { title, subtitle, modifiedTime }
-}
-
-async function onNoteClick(note: Note, saveOnExit=true) {
-  const exitResult = await editor.open(note.filename, saveOnExit)
-  if (!exitResult) return;
-
-  currentFilename = editor.getFilename() // Update state
-
-  console.log('onNoteClick(): exitResult:', exitResult)
-
-  if (exitResult && exitResult.deleted && exitResult.filename) {
-    notes = notes.filter((note) => note.filename != exitResult.filename)
-  }
-
-  editorElement.firstElementChild.focus()
-
-  // Close in-note search if it was open, but still search in note if in search mode
-  searchInNoteElement.close()
-  if (searchString) {
-    editor.searcher.search(searchString)
-  } else {
-    editor.searcher.clear()
-  }
-}
-
-  async function onNewNoteClick(saveOnExit=true) {
-    const { exitResult, newNote } = await editor.openNew(saveOnExit)
-    console.log('Opened new note:', exitResult, newNote)
-    
-    if (exitResult && exitResult.deleted && exitResult.filename) {
-      notes = notes.filter((note) => note.filename != exitResult.filename)
-    }
-
-    if (!newNote) return;
-
-    currentFilename = editor.getFilename() // Update state
-    
-    newNote.note_meta = _getNoteMeta(newNote)
-
-    notes.unshift(newNote);  // push to front
-    notes = notes;  // trigger change
-
-    // Clear all searching
-    searchInNoteElement.close()
-    searchString = ""
-    editor.searcher.clear()
-
-    try {
-      editorElement.firstElementChild.focus()
-      editor.quill.format('header', 1)
-    } catch(err) {
-      console.error('onNewNoteClick(): failed to set first line to title', err)
-    }
-  }
-
-  async function onDeleteNoteClick() {
-    const filename = editor.saveManager?.filename
-    if (!filename || isDeleting) return
-    const index = notes.findIndex(x => x.filename == filename)  // should be first note, most of the time
-    if (index < 0) {
-      console.error(`${filename} not in notes list?`)
-      return
-    }
-    isDeleting = true
-    try {
-      await editor.deleteNote()
-    } catch(err) {
-      console.error(err)
-      isDeleting = false
-      return
-    }
-    isDeleting = false
-    notes.splice(index, 1)
-    notes = notes
-    if (notes.length > 0) {
-      // Other notes exist; open top one
-      await onNoteClick(notes[0], false)
-    }
-    else {
-      // All notes have been deleted; open new one
-      await onNewNoteClick(false)
-    }
-  }
-
-// let _noteModifiedTimeout = null
-function onActiveNoteModified(filename, delta, oldDelta, source) {
-  // console.log(delta, oldDelta, source)
-}
-
-
-function handleSettingsAction(e) {
-  const name = e.detail?.name
-  const value = e.detail?.value
-  if (name == "toggleShowFilenames") {
-    showFilenames = !showFilenames
-  }
-  else if (name == 'themeChanged' && value && typeof value == 'string') {
-    appSettings.theme = value;
-    appSettings = appSettings;
-    saveSettings(appSettings)
-  }
+function onModified(filename, delta, oldDelta, source) {
+  // Emit notification to main window that node was modified
+  event.emit('event', {
+    type: 'noteModified',
+    filename,
+    editorContent: editor.getContent()
+  });
 }
 
 
@@ -332,14 +226,33 @@ onMount(() => {
 
 // Calling this here instead of in onMount saves like 20ms?
 
-function init() {
+async function init() {
   const w = Window.getCurrent();
   if (w.label == "main") {
     console.error('Should not be using StandaloneWindow component in main window!')
   } else {
     initSettings()
-    editor = new Editor(editorElement, onActiveNoteModified)
+    editor = new Editor(editorElement, onModified)
+    // Get filename from query params
+    const urlParams = new URLSearchParams(window.location.search)
+    const currentFilename = urlParams.get('filename');
+    console.log('StandaloneWindow init, filename:', currentFilename)
+    if (!currentFilename) {
+      console.error('No filename provided in query params!')
+      return
+    }
+    await editor.open(currentFilename, true)
   }
+  // Listen for main window close
+  // const mainWindow = await Window.getByLabel("main")
+  // if (!mainWindow) {
+  //   console.error('Main window not found!')
+  //   return
+  // }
+  // mainWindow.onCloseRequested((e) => {
+  //   console.log('Main window closed, closing this window too')
+  //   Window.getCurrent().close()
+  // })
 }
   
 </script>

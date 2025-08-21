@@ -1,7 +1,7 @@
 import { Window } from "@tauri-apps/api/window"
 import { Webview } from "@tauri-apps/api/webview"
 
-export async function openInNewWindow(filename: string) {
+export async function openStandaloneWindow(filename: string, eventCallback = null) {
   // const test: any = await invoke("create_window");
   // Webview.
   console.log('test', filename)
@@ -13,10 +13,11 @@ export async function openInNewWindow(filename: string) {
     // url: '/#/preview',  // hash route or use `/preview` depending on your routing
     width: 800,
     height: 600,
-    title: 'CodeNodeApp -' + filename,
+    title: 'CodeNodeApp | ' + filename,
     resizable: true,
     fullscreen: false,
-    backgroundColor: "#000000"
+    backgroundColor: "#000000",
+    
   });
 
   newWindow.once('tauri://error', (e) => {
@@ -27,7 +28,7 @@ export async function openInNewWindow(filename: string) {
     console.log('New window created');
 
     const newWebview = new Webview(newWindow, label, {
-      url: 'index.html',
+      url: `index.html?filename=${encodeURIComponent(filename)}`,
       // url: 'https://github.com/tauri-apps/tauri',
       // create a webview with specific logical position and size
       x: 0,
@@ -35,7 +36,7 @@ export async function openInNewWindow(filename: string) {
       width: 800,
       height: 600,
       devtools: true,
-      backgroundColor: "#000000"
+      backgroundColor: "#000000",
     });
 
     newWebview.once('tauri://error', (e) => {
@@ -43,21 +44,30 @@ export async function openInNewWindow(filename: string) {
     });
 
     newWebview.once('tauri://created', async () => {
+      // Webview was created successfully in the new window.
+      // New we can set up listeners for the new window.
       const unlistenFns: any[] = [];
 
-      // Necessary for resize to work
+      // Resize event - necessary for resize to work
       const resizeUnlisten = await newWindow.onResized(({ payload: size }) => {
         newWebview.setSize(size)
       });
       unlistenFns.push(resizeUnlisten);
+      
+      // Custom event listener, if callback is provided
+      // This allows the main window to listen for events from the new window.
+      if (eventCallback) {
+        const eventUnlisten = await newWindow.listen("event", eventCallback);
+        unlistenFns.push(eventUnlisten);
+      }
 
       const unlistenClose = newWindow.onCloseRequested(() => {
-        try {
-          for (const unlisten of unlistenFns) {
+        for (const unlisten of unlistenFns) {
+          try {
             unlisten(); // Call to remove event listener
+          } catch (e) {
+            console.error(e)
           }
-        } catch (e) {
-          console.error(e)
         }
       })
       unlistenFns.push(unlistenClose);
