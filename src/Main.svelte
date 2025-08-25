@@ -6,7 +6,6 @@ import Svg from './lib/components/Svg.svelte';
 import Searchbar from './lib/components/Searchbar.svelte';
 import SettingsOverlay from './lib/components/SettingsOverlay.svelte';
 import FindAndReplace from './lib/components/FindAndReplace.svelte';
-import { Square, XIcon, MinusIcon, RemoveFormatting } from 'lucide-svelte'
 
 import { onMount } from 'svelte';
 import { myflip } from './lib/service/my-flip/my-flip';
@@ -22,16 +21,14 @@ import { Editor } from './lib/service/editor';
 import { createNewNote, SaveManager } from './lib/service/save-manager';
 import { runInitialSizeFix } from './lib/util/initial-size-fix';
 import { loadSettings, saveSettings, loadPlatformIntoStore, type AppSettings } from './lib/util/app-settings';
+import { Menu, MenuItem } from '@tauri-apps/api/menu';
 
-// import { WebviewWindow, getCurrentWindow } from '@tauri-apps/api/window';
-import { Window } from "@tauri-apps/api/window"
+import { LogicalPosition } from "@tauri-apps/api/window"
 
 import { openStandaloneWindow } from './lib/util/window';
 
-
-// Add import for interfaces
 import type { NoteMeta, SearchNoteMeta, Note, SearchNote } from './types';
-    import { on } from 'svelte/events';
+
 
 let isMainWindow = $state(true);
 
@@ -59,14 +56,17 @@ alternateFunctionKeyStore.subscribe(val => {
 })
 
 // DOM elements
-let editorElement = $state<HTMLElement>()
-let searchInNoteElement = $state<HTMLElement>()
-let notesListElement = $state<HTMLElement>()
-let mainElement = $state<HTMLElement>()
+let editorElement = $state<HTMLElement>() as HTMLElement
+let searchInNoteElement: FindAndReplace = $state<FindAndReplace>() as FindAndReplace
+let notesListElement = $state<HTMLElement>() as HTMLElement
+let mainElement = $state<HTMLElement>() as HTMLElement
 
 // $: hasMatchingNotes = searchString && (lastSearchString || matchingNotes.length > 0);
 
 const hasMatchingNotes = $derived(searchString && (lastSearchString || matchingNotes.length > 0));
+
+let myContextMenu: Menu;
+let contextNoteFilename = '';
 
 // const hasMatchingNotes = $derived(
 //   [searchString, lastSearchString, matchingNotes],
@@ -270,6 +270,7 @@ async function onNoteClick(note: Note, saveOnExit=true) {
     notes = notes.filter((note) => note.filename != exitResult.filename)
   }
 
+  // @ts-ignore
   editorElement.firstElementChild.focus()
 
   // Close in-note search if it was open, but still search in note if in search mode
@@ -304,6 +305,7 @@ async function onNoteClick(note: Note, saveOnExit=true) {
     editor.searcher.clear()
 
     try {
+      // @ts-ignore
       editorElement.firstElementChild.focus()
       editor.quill.format('header', 1)
     } catch(err) {
@@ -473,10 +475,14 @@ async function onNoteClick(note: Note, saveOnExit=true) {
   }
 
   
-  function openInNewWindow(filename: string) {
+  function openInNewWindow() {
+    if (!contextNoteFilename) {
+      console.error('No context note filename set')
+      return;
+    }
     // Open note in a new window
     // @ts-ignore
-    openStandaloneWindow(filename, (e) => {
+    openStandaloneWindow(contextNoteFilename, (e) => {
       // console.log('Event received in main window:', e)
       const payload = e.payload;
       if (payload.type == 'noteModified' && payload.filename) {
@@ -499,7 +505,7 @@ async function onNoteClick(note: Note, saveOnExit=true) {
     const bottom = notesListElement.scrollTop + notesListElement.offsetHeight
     for (let i=notes.length-1; i >= 0; i--) {
       const note = notes[i]
-      const noteSummaryEl = notesListElement.children[i]
+      const noteSummaryEl = notesListElement.children[i] as HTMLElement
       if (!noteSummaryEl) {
         console.error("could not find note summary el")
         break
@@ -561,10 +567,6 @@ async function onNoteClick(note: Note, saveOnExit=true) {
 		}
   }
 
-  // onMount(() => {
-  //   console.log('App onMount')
-  // })
-
   // Calling this here instead of in onMount saves like 20ms?
   initNotes()
   initSettings()
@@ -584,9 +586,31 @@ async function onNoteClick(note: Note, saveOnExit=true) {
   //   }
   // }
   // init()
+
+  onMount(async () => {
+    myContextMenu = await Menu.new({
+      items: [
+        await MenuItem.new({ 
+          id: 'open_in_new_window', 
+          text: 'Open in New Window',
+          action: () => {
+            openInNewWindow();
+          }
+        }),
+      ],
+    });
+  })
+
+  function onContextMenu(event: MouseEvent, note: Note) {
+    console.log('onContextMenu', event, note);
+    if (!myContextMenu || !note?.filename) return;
+    contextNoteFilename = note.filename;
+    myContextMenu.popup(new LogicalPosition({ x: event.clientX, y: event.clientY }));
+    event.preventDefault(); // Prevents the browser context menu
+  }
 </script>
 
-
+<svelte:window onresize={onWindowResize} onkeydown={onKeyDown} />
 <!-- <svelte:window on:beforeinput={onBeforeInput} on:resize={onWindowResize} on:keydown={onKeyDown} /> -->
 
 <main bind:this={mainElement} hidden={!isMainWindow}>
@@ -594,7 +618,6 @@ async function onNoteClick(note: Note, saveOnExit=true) {
     <div slot="primary">
       <div class="header" style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;">
         <Searchbar bind:value={searchString} on:input={onSearchInput} on:clear={clearSearch}></Searchbar>
-        <button onclick={() => openInNewWindow(currentFilename)}>Test</button>
       </div>
       <div class="notes-list" bind:this={notesListElement} onscroll="{onNoteListScroll}">
         {#if hasMatchingNotes}
@@ -602,7 +625,8 @@ async function onNoteClick(note: Note, saveOnExit=true) {
           {#each matchingNotes as note, i (note.filename) }
             <div animate:myflip 
                 class="note-summary"
-                onclick={() => onNoteClick(note)}> 
+                onclick={() => onNoteClick(note)}
+                oncontextmenu={(e) => onContextMenu(e, note)}> 
               <h4>
                 {#each note.note_meta.search_title_as_tokens as token}
                   {#if token.highlight}
@@ -637,7 +661,8 @@ async function onNoteClick(note: Note, saveOnExit=true) {
             <div animate:myflip
                 class="note-summary"
                 class:selected={currentFilename == note.filename}
-                onclick={() => onNoteClick(note)}> 
+                onclick={() => onNoteClick(note)}
+                oncontextmenu={(e) => onContextMenu(e, note)}> 
               <h4>{note.note_meta.title}</h4>
               <p><span class="modified-time">{note.note_meta.modifiedTime}</span><span class="subtitle">{note.note_meta.subtitle}</span></p>
               {#if showFilenames}

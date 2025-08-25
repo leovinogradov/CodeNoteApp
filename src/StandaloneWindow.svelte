@@ -16,7 +16,7 @@ import { event } from '@tauri-apps/api';
 // import { getCurrent } from "@tauri-apps/api/window";
 
 import { alternateFunctionKeyStore } from "./store";
-import { isWhitespace, isInputFocused, readFile } from './lib/service/utils';
+import { isWhitespace, isInputFocused, readFile, debouncify } from './lib/service/utils';
 import { searchNote, type SearchResult } from './lib/service/search';
 import { Editor } from './lib/service/editor';
 import { createNewNote, SaveManager } from './lib/service/save-manager';
@@ -163,14 +163,25 @@ async function onDeleteNoteClick() {
   // }
 }
 
-function onModified(filename, delta, oldDelta, source) {
-  // Emit notification to main window that node was modified
+// function onModified(filename, delta, oldDelta, source) {
+//   // Emit notification to main window that node was modified
+//   event.emit('event', {
+//     type: 'noteModified',
+//     filename,
+//     editorContent: editor.getContent()
+//   });
+// }
+
+/** Special onModified handler: 
+ * Emit notification to main window that node was modified
+ * Can be debounced since we don't need main window to update instantly */
+const onModified = debouncify((filename, delta, oldDelta, source) => {
   event.emit('event', {
     type: 'noteModified',
     filename,
     editorContent: editor.getContent()
-  });
-}
+  })
+}, 100);
 
 
 function onWindowResize(e) {

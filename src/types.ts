@@ -1,7 +1,7 @@
 export interface NoteMeta {
-  title: string,
-  subtitle: string,
-  modifiedTime: string,
+  title?: string,
+  subtitle?: string,
+  modifiedTime?: string,
   search_title_as_tokens?: any[],
   search_subtitle_as_tokens?: any[]
 }
