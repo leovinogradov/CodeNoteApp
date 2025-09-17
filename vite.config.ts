@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
-import sveltePreprocess from "svelte-preprocess";
+import { sveltePreprocess } from 'svelte-preprocess';
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
@@ -14,13 +14,12 @@ export default defineConfig(async () => ({
       ],
       onwarn: (warning, handler) => {
         // disable a11y warnings
-        // @ts-ignore
         if (warning.code.startsWith('a11y-')) return;
+        if (warning.code.includes('Unused CSS selector')) return;
         handler(warning);
       },
     }),
   ],
-
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent vite from obscuring rust errors

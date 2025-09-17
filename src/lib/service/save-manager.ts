@@ -1,6 +1,7 @@
 import { join } from '@tauri-apps/api/path';
 import { writeTextFile, remove, BaseDirectory } from "@tauri-apps/plugin-fs";
 import { saveStatus } from '../../store';
+import type { Note } from '../../types';
 
 
 /*
@@ -134,22 +135,15 @@ export class SaveManager {
 }
 
 
-export async function createNewNote() {
+export async function createNewNote(): Promise<Note> {
   const now = Date.now();
   const filename = `${now}.json`
   const path = await join('notes', filename);
   await writeTextFile(path, '', { baseDir: BaseDirectory.AppData });
-  // try {
-  //   await writeTextFile(path, '', { dir: BaseDirectory.AppData });
-  // } catch(err) {
-  //   console.error('createNew error:', err)
-  //   return null
-  // }
-  
   return {
-    first_lines: '',
     filename: filename,
     modified: now,
+    content: '',
     note_meta: {}
   }
 }

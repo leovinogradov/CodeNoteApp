@@ -1,7 +1,7 @@
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { BaseDirectory } from "@tauri-apps/api/path";
 import { platform } from '@tauri-apps/plugin-os';
-import { settingsStore, platformNameStore, alternateFunctionKeyStore } from "./store";
+import { settingsStore, platformNameStore, alternateFunctionKeyStore } from "../../store";
 
 
 const SettingsFilename = "settings.json";

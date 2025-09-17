@@ -2,6 +2,7 @@
 	import { XIcon, ChevronRight, ChevronDown, ArrowUp, ArrowDown, Replace, ReplaceAll } from "lucide-svelte";
 	import { Editor } from "../service/editor";
 	import { alternateFunctionKeyStore, settingsStore } from "../../store";
+    import { debouncify } from "../service/utils";
 
 
 	let searchValue = "";
@@ -55,15 +56,16 @@
 	}
 
 	
-	let _timer;
-	function debounce(func, timeout=50){
-		clearTimeout(_timer);
-		_timer = setTimeout(func, timeout);
-	}
+	// let _timer;
+	// function debounce(func, timeout=50){
+	// 	clearTimeout(_timer);
+	// 	_timer = setTimeout(func, timeout);
+	// }
 
-	function onSearchInput() {
-		debounce(doSearch, 50)
-	}
+	// function onSearchInput() {
+	// 	// debounce(doSearch, 50)
+	// 	doSearch()
+	// }
 
 	function onSearchCB(newNumResults, newCurrentIndex) {
 		/* on search callback; triggered by Searcher */
@@ -71,7 +73,8 @@
 		currentIndex = newCurrentIndex + 1
 	}
 
-	function doSearch() {
+	/** Triggers on search input */
+	const doSearch = debouncify(() => {
 		if (searchValue) {
 			editor.searcher.search(searchValue)
 			// numResults and currentIndex will be updated in onSearchCB()
@@ -80,7 +83,18 @@
 			numResults = 0
 			currentIndex = 0
 		}
-	}
+	}, 50);
+
+	// function doSearch() {
+	// 	if (searchValue) {
+	// 		editor.searcher.search(searchValue)
+	// 		// numResults and currentIndex will be updated in onSearchCB()
+	// 	} else {
+	// 		editor.searcher.clear()
+	// 		numResults = 0
+	// 		currentIndex = 0
+	// 	}
+	// }
 
 	function openFind() {
 		show = true;
@@ -122,6 +136,17 @@
 	   isReplacing = !isReplacing
 	}
 
+	function onBeforeInput(e) {
+		/* Handler for Ctrl+Z
+		 * This makes sure Ctrl+Z fires even when editor is not in focus (useful for undoing a recent find+replace)
+		 * TODO: make this even more targeted by firing only when replace is focused or replace button has been clicked? */
+		if (e.inputType == "historyUndo") {
+			e.preventDefault()
+			e.stopPropagation()
+			editor.undo()
+		}
+	}
+
 	function onKeyDown(e) {
 		if (e[_alternateFunctionProperty]) {
 			if ((e.key === 'f' || e.key === 'F')) {
@@ -158,25 +183,25 @@
 </script>
 
 
-<div class="find-and-replace" class:show={show} class:replacing={isReplacing}>
-    <div class="replace-toggle-container">
-        {#if isReplacing}
-            <button on:click={toggleReplace}>
-                <span><ChevronDown size="16" color="{iconColor}" /></span>
-            </button>
-        {:else}
-			<button on:click={toggleReplace}>
-				<span><ChevronRight size="16" color="{iconColor}" /></span>
-			</button>
-        {/if}
-    </div>
-    <div class="input-container">
+<div class="find-and-replace" class:show={show} class:replacing={isReplacing} onbeforeinput={onBeforeInput}>
+	<div class="replace-toggle-container">
+			{#if isReplacing}
+					<button onclick={toggleReplace}>
+							<span><ChevronDown size="16" color="{iconColor}" /></span>
+					</button>
+			{:else}
+		<button onclick={toggleReplace}>
+			<span><ChevronRight size="16" color="{iconColor}" /></span>
+		</button>
+			{/if}
+	</div>
+	<div class="input-container">
 		<div class="row1">
-			<input bind:value={searchValue} bind:this={searchInputEl} on:input={onSearchInput} placeholder="Find" tabindex="0" />
+			<input bind:value={searchValue} bind:this={searchInputEl} oninput={doSearch} placeholder="Find" tabindex="0" />
 
 			<div class="results-text-container">
 				{#if numResults}
-			    	<span class="results">{currentIndex} of {numResults}</span>
+						<span class="results">{currentIndex} of {numResults}</span>
 				{:else}
 					<span class="results">No results</span>
 					<!-- <span class="results">0 of 0</span> -->
@@ -185,13 +210,13 @@
 			
 
 			<div class="action-buttons">
-				<button on:click={findPrev} disabled="{!searchValue}" tabindex="-1">
+				<button onclick={findPrev} disabled="{!searchValue}" tabindex="-1">
 					<span><ArrowUp size="16" color="{ searchValue ? iconColor : iconColorDisabled }" /></span>
 				</button>
-				<button on:click={findNext} disabled="{!searchValue}" tabindex="-1">
+				<button onclick={findNext} disabled="{!searchValue}" tabindex="-1">
 					<span><ArrowDown size="16" color="{ searchValue ? iconColor : iconColorDisabled }" /></span>
 				</button>
-				<button on:click={close} tabindex="-1">			
+				<button onclick={close} tabindex="-1">			
 					<span><XIcon size="16" color="{iconColor}" /></span>
 				</button>
 			</div>
@@ -202,10 +227,10 @@
 				<input bind:value={replaceWithValue} bind:this={replaceInputEl} placeholder="Replace" tabindex="0" />
 				
 				<div class="action-buttons">
-					<button on:click={replaceNext} disabled="{numResults == 0}">
+					<button onclick={replaceNext} disabled="{numResults == 0}">
 						<span><Replace size="16" color="{ numResults > 0 ? iconColor : iconColorDisabled }" /></span>
 					</button>
-					<button on:click={replaceAll} disabled="{numResults == 0}">
+					<button onclick={replaceAll} disabled="{numResults == 0}">
 						<span><ReplaceAll size="16" color="{ numResults > 0 ? iconColor : iconColorDisabled }" /></span>
 					</button>
 				</div>
@@ -217,7 +242,7 @@
 	</div>
 </div>
 
-<svelte:window on:keydown={onKeyDown} />
+<svelte:window onkeydown={onKeyDown} />
 
 <style lang="scss">
 	.find-and-replace {

@@ -1,4 +1,5 @@
 use regex::Regex;
+use regex::RegexBuilder;
 use serde::{Deserialize, Serialize};
 use serde_json::Result;
 // use regex::RegexBuilder;
@@ -60,7 +61,6 @@ pub fn search(
         Some(idx) => {
             first_line = &content[..idx];
             rest_of_content = &content[idx..];
-            // println!("TEST1 idx: {} first line: '{}'", idx, first_line);
         }
         None => {
             first_line = &content;
@@ -70,7 +70,6 @@ pub fn search(
 
     match simple_re.find(first_line) {
         Some(_m) => {
-            // println!("TEST2 match in first line");
             first_line_matches = true;
         }
         None => {
@@ -83,14 +82,29 @@ pub fn search(
 
     match line_search_re.find(rest_of_content) {
         Some(m) => {
-            // Ok(String::from(m.as_str()))
+            // Match for search string in rest of content
+            // This match will be the second_line
             second_line = String::from(m.as_str());
             second_line.pop(); // remove the last /n character
             second_line_matches = true;
         }
         None => {
-            // Ok(String::new())
-            second_line = String::new();
+            // No match for search string in rest of content
+            // Just get the first line of rest_of_content as the second_line
+            // Note: this might be possible with a simple for loop?
+            let search_for_second_line_re = RegexBuilder::new("[A-z -_]+\n")
+                .build()
+                .unwrap();
+            match search_for_second_line_re.find(rest_of_content) {
+                Some(m) => {
+                    second_line = String::from(m.as_str());
+                    second_line.pop(); // remove the last /n character
+                    // second_line_matches = true;
+                }
+                None => {
+                    second_line = (&rest_of_content).to_string();
+                }
+            }
             second_line_matches = false;
         }
     }
