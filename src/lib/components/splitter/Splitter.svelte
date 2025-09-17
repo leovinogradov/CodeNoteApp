@@ -224,7 +224,7 @@
   </div>
 
   <div
-    class="splitter"
+    class="splitter splitter-main"
     bind:clientWidth={splitterClientWidth}
     bind:clientHeight={splitterClientHeight}
     on:pointerdown={onPointerDown}
@@ -242,7 +242,7 @@
   </div>
 </div>
   
-<style>
+<style lang="scss">
   .split {
     width: 100%;
     height: 100%;
@@ -250,6 +250,20 @@
     outline: none;
     overflow: hidden;
     display: grid;
+  }
+
+  .splitter-main {
+    z-index: 1;
+    // padding: 8px 0;
+    // width: 1px;
+    // height: 100%;
+    // cursor: ns-resize;
+    // &::after {
+    //   left: 8px;
+    //   top: 0;
+    //   width: 1px;
+    //   height: 100%;
+    // }
   }
 
   .split.vertical {

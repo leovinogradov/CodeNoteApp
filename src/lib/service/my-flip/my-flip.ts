@@ -1,7 +1,7 @@
 /* Adapted from svelte's built-in flip animation */
 import { cubicOut } from 'svelte/easing';
 import { type FlipParams, type AnimationConfig } from 'svelte/animate';
-import { is_function } from 'svelte/internal'
+// import { is_function } from 'svelte/internal'
 // import { is_function } from 'svelte/internal/index.js';
 
 // function is_function(thing) {

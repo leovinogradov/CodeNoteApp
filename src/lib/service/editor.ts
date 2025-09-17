@@ -47,9 +47,9 @@ export class Editor {
 	private _timeOpened: number = 0;
 	// private _clean: Function;
 
-  constructor(editorEl, onModified: Function|null) {
+  	constructor(editorEl, onModified: Function|null) {
 		this.editorEl = editorEl
-	  this.quill = new Quill(editorEl, {
+	  	this.quill = new Quill(editorEl, {
 			modules: {
 				syntax: {
 					languages: languages
@@ -65,7 +65,7 @@ export class Editor {
 			placeholder: "Type something...",
 			theme: "custom-theme" // "snow", // or 'bubble'
 			// ...options
-    });
+    	});
 		this.searcher = new Searcher(this.quill, editorEl)
 		
 		// Note: use this for for external format remove functionality if needed
@@ -76,7 +76,8 @@ export class Editor {
 		// 	console.error('Could not bind quill clean function')
 		// }
 
-    this.quill.on("text-change", this._quillOnChange.bind(this))
+		this.quill.on("text-change", this._quillOnChange.bind(this))
+
 		this.onModified = onModified
 
 		// Hack to easily register quill format buttons without replacing the html inside them
@@ -92,7 +93,7 @@ export class Editor {
 				}
 			});
 		}, 0)
-  }
+	}
 
 
 	attachToToolbar(elements: HTMLElement[]) {
@@ -200,8 +201,12 @@ export class Editor {
 
 
 	getFilename() {
-		if (!this.saveManager) return null;
+		if (!this.saveManager) return '';
 		return this.saveManager.filename;
+	}
+
+	getContent() {
+		return this.quill.getContents();
 	}
 
 
@@ -219,6 +224,15 @@ export class Editor {
 	}
 
 
+	setContents(deltas) {
+		if (!deltas || !deltas.ops || deltas.ops.length == 0) {
+			this.quill.setContents([], 'silent')
+		} else {
+			this.quill.setContents(deltas, 'silent')
+		}
+	}
+
+
 	private async _setContentsFromFile(filename) {
 		const content = await readFile(filename);
 		if (!content) {
@@ -230,7 +244,6 @@ export class Editor {
 			this.quill.setContents(delta, 'silent')
 		}
 	}
-
 
 	static getLinesFromDeltas(obj, lineLimit=2, charLimit=100) {
 		/* get first {lineLimit} not empty lines */
@@ -254,6 +267,7 @@ export class Editor {
 					}
 				} 
 				else if (count < charLimit){
+					// very tiny optimization: use Array.join instead of +=
 					currentLine += char
 				}
 				else if (count == charLimit) {

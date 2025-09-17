@@ -153,8 +153,21 @@
     }
   }
   
-  #text-editor .ql-code-block-container {
-    background-color: var(--background-secondary);
+  #text-editor {
+    .ql-tooltip {
+      background-color: var(--background-color);
+      color: var(--text-color);
+      -webkit-box-shadow: var(--overlay-box-shadow);
+      -moz-box-shadow: var(--overlay-box-shadow);
+      box-shadow: var(--overlay-box-shadow);
+      border: 1px solid var(--splitter-color);
+      .ql-picker-label, .ql-picker-item {
+        color: var(--text-color);
+      }
+    }
+    .ql-code-block-container {
+      background-color: var(--background-secondary);
+    }
   }
 
   select, select.ql-ui, select.ql-ui option {

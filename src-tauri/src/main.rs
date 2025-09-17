@@ -93,21 +93,33 @@ async fn search_handler(
     Ok(SearchResponse { data: result_list })
 }
 
+// #[tauri::command]
+// async fn create_window(app: tauri::AppHandle) -> Result<tauri::WebviewWindow, String> {
+//     let webview_window = tauri::WebviewWindowBuilder::new(&app, "label", tauri::WebviewUrl::App("index.html".into()))
+//         .build()
+//         .unwrap();
+//     Ok(webview_window)
+// }
+
 // Menu testing that didn't work
 // use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder, SubmenuBuilder};
 // app.on_menu_event(move |app, event| {
 //     println!("event triggered!");
 // });
 
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn main() {
     #[allow(unused)]
     tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_fs::init())
         .setup(|app| {
             #[cfg(target_os = "linux")]
             app.manage(DbusState(Mutex::new(dbus::blocking::SyncConnection::new_session().ok())));
+
+            // Submenu and menu testing
             // let submenu = SubmenuBuilder::new(app, "Submenu")
             //     .text("test1", "Test1")
             //     .build()?;
@@ -117,6 +129,24 @@ fn main() {
             // app.app_handle().set_menu(menu)?;
             // let window = app.get_webview_window("main").unwrap();
             // window.set_menu(menu)?;
+
+            // Listen for main window close and close all other windows
+            let app_handle = app.app_handle().clone(); // <-- clone to get a 'static handle
+            tauri::async_runtime::spawn(async move {
+                let main_window = app_handle.get_webview_window("main").unwrap();
+                let _ = main_window.on_window_event(move |event| {
+                    if let tauri::WindowEvent::CloseRequested { .. } = event {
+                        // Close all other windows
+                        for (label, window) in app_handle.webview_windows() {
+                            if label != "main" {
+                                println!("Closing other window with label {}", label);
+                                window.destroy();
+                            }
+                        }
+                    }
+                });
+            });
+
             Ok(())
         })
         // .menu(menu)
