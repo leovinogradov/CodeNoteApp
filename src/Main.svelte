@@ -63,7 +63,7 @@ let mainElement = $state<HTMLElement>() as HTMLElement
 
 // $: hasMatchingNotes = searchString && (lastSearchString || matchingNotes.length > 0);
 
-const hasMatchingNotes = $derived(searchString && (lastSearchString || matchingNotes.length > 0));
+let hasMatchingNotes = $derived(searchString && (lastSearchString || matchingNotes.length > 0));
 
 let myContextMenu: Menu;
 let contextNoteFilename = '';
@@ -77,11 +77,7 @@ let contextNoteFilename = '';
 $effect(() => {
   // Handle appSettings
   if (mainElement && appSettings) {
-    // Remove existing classes
-    // let classList = mainElement.classList;
-    // while (classList.length > 0) {
-    //   classList.remove(classList.item(0));
-    // }
+    // Remove existing zoom classes
     for (let c of Array.from(mainElement.classList)) {
       if (c.startsWith('zoom')) mainElement.classList.remove(c)
     }
@@ -216,22 +212,12 @@ function _getModifiedAtStr(modified: number) {
   return ''
 }
 
-function _searchResultAsTokensV1(str, idx, strLength) {
-  if (idx == -1) {
-    return [{ highlight: false, text: str }]
-  }
-  return [
-    { highlight: false, text: str.substring(0, idx) },
-    { highlight: true, text: str.substring(idx, idx + strLength) },
-    { highlight: false, text: str.substring(idx + strLength) },
-  ]
-}
-
-function _searchResultAsTokensV2(line: string, searchStrLowercase: string, searchStrInLine: boolean = true) {
-  if (!searchStrInLine) {
-    return [{ highlight: false, text: line }] 
-  }
-  let idx = line.toLowerCase().indexOf(searchStrLowercase)
+/** Function to make representation of string with the searchStr highlighted.
+ * line: string to search in
+ * searchStrLowercase: search string as lowercase
+ * searchForStrInLine: shortcircuit to not search in line if we don't expect the line to contain it */
+function _searchResultAsTokensV2(line: string, searchStrLowercase: string, searchForStrInLine: boolean = true) {
+  let idx = searchForStrInLine ? line.toLowerCase().indexOf(searchStrLowercase) : -1;
   if (idx == -1) {
     return [{ highlight: false, text: line }]
   }
@@ -346,44 +332,58 @@ async function onNoteClick(note: Note, saveOnExit=true) {
     // console.log(delta, oldDelta, source)
 
     /* Recompute meta when note is modified (but not necessarily saved) */
-    updateNoteTitle(filename, editor.getContent())
+    noteWasModified(filename, editor.getContent());
+
+    // updateNoteTitle(filename, editor.getContent())
 
     // Version with debounce: seems to not be needed because compute is super fast
     // if (_noteModifiedTimeout) clearTimeout(_noteModifiedTimeout)
     // _noteModifiedTimeout = setTimeout(_updateNoteTitle, 50)
   }
 
-  function updateNoteTitle(filename, content) {
-    const first2Lines: string[] = getFirstTwoLinesFromContents(content)
-    if (searchString) {
-      // When something is searched
-      const matchingNoteIdx = matchingNotes.findIndex((note) => note.filename == filename)
-      if (matchingNoteIdx < 0 || !matchingNotes) return
-      const newTitle = first2Lines[0]
-      if (!newTitle) {
-        matchingNotes[matchingNoteIdx].note_meta.title = 'Untitled'
-        matchingNotes[matchingNoteIdx].note_meta.search_title_as_tokens = [{ highlight: false, text: 'Untitled'}]
-      }
-      else if (newTitle != matchingNotes[matchingNoteIdx].note_meta.title) {
-        // If there's a change in title, update it
-        matchingNotes[matchingNoteIdx].note_meta.title = first2Lines[0]
-        let idxOfSearchStr = first2Lines[0].toLowerCase().indexOf(searchString.toLowerCase())
-        matchingNotes[matchingNoteIdx].note_meta.search_title_as_tokens = _searchResultAsTokensV1(first2Lines[0], idxOfSearchStr, searchString.length)
-      }
-      // TODO: also update subtitle, like the title above
+  function noteWasModified(filename, noteContent) {
+    const first2Lines: string[] = getFirstTwoLinesFromContents(noteContent)
+    if (hasMatchingNotes) {
+      updateMatchingNoteMeta(filename, first2Lines)
     }
-    else {
-      // Normal operation
-      if (notes[0].filename != filename) {
-        const idx = notes.findIndex((note) => note.filename == filename)
-        const note = notes.splice(idx, 1)[0]
-        notes.unshift(note)
-      }
-      notes[0].note_meta.title = first2Lines[0] || 'Untitled'
-      notes[0].note_meta.subtitle = first2Lines[1]
-      notes[0].modified = Date.now()
-      notes[0].note_meta.modifiedTime = _getModifiedAtStr(notes[0].modified)
+    updateNoteMeta(filename, first2Lines)
+  }
+
+  function updateMatchingNoteMeta(filename: string, first2Lines: string[]) {
+    const matchingNoteIdx = matchingNotes.findIndex((note) => note.filename == filename)
+    if (matchingNoteIdx < 0) return
+    if (matchingNoteIdx > 0) {
+      const note = matchingNotes.splice(matchingNoteIdx, 1)[0]
+      matchingNotes.unshift(note)
     }
+
+    const newTitle = first2Lines[0]
+    if (!newTitle) {
+      matchingNotes[0].note_meta.title = 'Untitled'
+      matchingNotes[0].note_meta.search_title_as_tokens = [{ highlight: false, text: 'Untitled'}]
+    }
+    else if (newTitle != matchingNotes[0].note_meta.title) {
+      // If there's a change in title, update it
+      matchingNotes[0].note_meta.title = newTitle
+      matchingNotes[0].note_meta.search_title_as_tokens = _searchResultAsTokensV2(newTitle, searchString.toLowerCase())
+    }
+    // TODO: also update subtitle, like the title above
+
+    matchingNotes[0].modified = Date.now()
+    matchingNotes[0].note_meta.modifiedTime = _getModifiedAtStr(notes[0].modified)
+  }
+
+  function updateNoteMeta(filename: string, first2Lines: string[]) {
+    const idx = notes.findIndex((note) => note.filename == filename)
+    if (idx < 0) return;
+    if (idx > 0) {
+      const note = notes.splice(idx, 1)[0]
+      notes.unshift(note)
+    }
+    notes[0].note_meta.title = first2Lines[0] || 'Untitled'
+    notes[0].note_meta.subtitle = first2Lines[1]
+    notes[0].modified = Date.now()
+    notes[0].note_meta.modifiedTime = _getModifiedAtStr(notes[0].modified)
   }
 
   function onSearchInput() {
@@ -486,7 +486,7 @@ async function onNoteClick(note: Note, saveOnExit=true) {
       // console.log('Event received in main window:', e)
       const payload = e.payload;
       if (payload.type == 'noteModified' && payload.filename) {
-        updateNoteTitle(payload.filename, payload.editorContent);
+        noteWasModified(payload.filename, payload.editorContent);
         if (payload.filename == currentFilename) {
           editor.setContents(payload.editorContent);
         }
@@ -697,7 +697,7 @@ async function onNoteClick(note: Note, saveOnExit=true) {
               </button>
               <button class="ql-list toolbar-button" value="ordered" />
               <button class="ql-list toolbar-button" value="bullet" />
-              <button class="ql-clean toolbar-button"></button>
+              <button class="ql-clean toolbar-button" />
             </span>
           </div>
         </div>
