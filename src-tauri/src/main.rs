@@ -139,7 +139,8 @@ fn main() {
                         // Close all other windows
                         for (label, window) in app_handle.webview_windows() {
                             if label != "main" {
-                                let _ = window.close();
+                                println!("Closing other window with label {}", label);
+                                window.destroy();
                             }
                         }
                     }

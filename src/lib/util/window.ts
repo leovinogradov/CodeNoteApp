@@ -2,13 +2,19 @@ import { Window } from "@tauri-apps/api/window"
 import { Webview } from "@tauri-apps/api/webview"
 
 export async function openStandaloneWindow(filename: string, eventCallback = null) {
-  // const test: any = await invoke("create_window");
-  // Webview.
-  console.log('test', filename)
-  if (!filename) {
+  if (!filename) { return; }
+
+  // Make window label based on filename
+  const label = filename.split('.')[0]
+
+  // Check if a window with this label already exists
+  const existingWindow = await Window.getByLabel(label);
+  if (existingWindow) {
+    // Focus the existing window and return
+    await existingWindow.setFocus();
     return;
   }
-  const label = filename.split('.')[0]
+
   const newWindow = new Window(label, {
     // url: '/#/preview',  // hash route or use `/preview` depending on your routing
     width: 800,
@@ -17,7 +23,6 @@ export async function openStandaloneWindow(filename: string, eventCallback = nul
     resizable: true,
     fullscreen: false,
     backgroundColor: "#000000",
-    
   });
 
   newWindow.once('tauri://error', (e) => {
@@ -61,7 +66,7 @@ export async function openStandaloneWindow(filename: string, eventCallback = nul
         unlistenFns.push(eventUnlisten);
       }
 
-      const unlistenClose = newWindow.onCloseRequested(() => {
+      newWindow.onCloseRequested(() => {
         for (const unlisten of unlistenFns) {
           try {
             unlisten(); // Call to remove event listener
@@ -69,8 +74,9 @@ export async function openStandaloneWindow(filename: string, eventCallback = nul
             console.error(e)
           }
         }
+      }).then(unlistenClose => {
+        unlistenFns.push(unlistenClose);
       })
-      unlistenFns.push(unlistenClose);
     });
   });
 }

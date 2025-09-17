@@ -1,27 +1,16 @@
 <script lang="ts">
-import Splitter from './lib/components/splitter/Splitter.svelte';
-import CustomSplitterBar from './lib/components/CustomSplitterBar.svelte';
 import FormatDropdown from './lib/components/FormatDropdown.svelte';
 import Svg from './lib/components/Svg.svelte';
-import Searchbar from './lib/components/Searchbar.svelte';
-import SettingsOverlay from './lib/components/SettingsOverlay.svelte';
 import FindAndReplace from './lib/components/FindAndReplace.svelte';
-import { Square, XIcon, MinusIcon, RemoveFormatting } from 'lucide-svelte'
 
 import { onMount } from 'svelte';
-import { myflip } from './lib/service/my-flip/my-flip';
-import { exists, mkdir, BaseDirectory } from "@tauri-apps/plugin-fs";
-import { invoke } from "@tauri-apps/api/core";
 import { event } from '@tauri-apps/api';
 // import { getCurrent } from "@tauri-apps/api/window";
 
 import { alternateFunctionKeyStore } from "./store";
-import { isWhitespace, isInputFocused, readFile, debouncify } from './lib/service/utils';
-import { searchNote, type SearchResult } from './lib/service/search';
+import { isInputFocused, debouncify } from './lib/service/utils';
 import { Editor } from './lib/service/editor';
-import { createNewNote, SaveManager } from './lib/service/save-manager';
-import { runInitialSizeFix } from './lib/util/initial-size-fix';
-import { loadSettings, saveSettings, loadPlatformIntoStore, type AppSettings } from './lib/util/app-settings';
+import { loadSettings, saveSettings, type AppSettings } from './lib/util/app-settings';
 
 // import { WebviewWindow, getCurrentWindow } from '@tauri-apps/api/window';
 import { Window } from "@tauri-apps/api/window"
@@ -30,24 +19,9 @@ import { Window } from "@tauri-apps/api/window"
 import type { NoteMeta, SearchNoteMeta, Note, SearchNote } from './types';
 
 
-let isMainWindow = $state(true);
-
-// let _loadedNotesData = null;
-let _notesLoaded = false;
-let _loadNotesCalled = false;
-
 let editor = $state<Editor>() as Editor;
-let currentFilename: string = $state('')
-let currentPlatform: string = $state('')
 
-// let openNoteIndex: number = 0;
-let searchString: string = $state('')
-let lastSearchString: string = $state('') // string for which results are shown
-let _searchTimeoutId;  // for timeout between searchString changed and actual search
-// let formatvalue = -1;  // representation of current format selected
-let showFilenames = $state(false)  // TODO: add setting to toggle this 
 let appSettings = $state<AppSettings>() as AppSettings;
-let isDeleting = $state(false)
 let _alternateFunctionProperty: string = "ctrlKey";
 alternateFunctionKeyStore.subscribe(val => {
   _alternateFunctionProperty = val
@@ -55,7 +29,6 @@ alternateFunctionKeyStore.subscribe(val => {
 
 // DOM elements
 let editorElement = $state<HTMLElement>()
-let notesListElement = $state<HTMLElement>()
 let mainElement = $state<HTMLElement>()
 let searchInNoteElement: any = $state()  // SvelteComponent which you cannot import for some reason?
 
@@ -233,6 +206,22 @@ function onKeyDown(e) {
 onMount(() => {
   console.log('App onMount')
   init()
+
+  // Listen for events from Main window
+  event.listen('mainWindowEvent', (e) => {
+    const payload: any = e.payload;
+    if (!payload || typeof payload !== 'object') return;
+    // Only handle events from Main window (not self)
+    // You may want to check window label if needed
+    if (payload.type === 'noteModified' && payload.filename === editor.getFilename()) {
+      // If the note in this window was modified in Main, update contents
+      editor.setContents(payload.editorContent);
+    } else if (payload.type === 'noteDeleted' && payload.filename === editor.getFilename()) {
+      // If the note in this window was deleted in Main, close this window
+      Window.getCurrent().destroy();
+    }
+    // Add more event types as needed
+  });
 })
 
 // Calling this here instead of in onMount saves like 20ms?
@@ -254,16 +243,6 @@ async function init() {
     }
     await editor.open(currentFilename, true)
   }
-  // Listen for main window close
-  // const mainWindow = await Window.getByLabel("main")
-  // if (!mainWindow) {
-  //   console.error('Main window not found!')
-  //   return
-  // }
-  // mainWindow.onCloseRequested((e) => {
-  //   console.log('Main window closed, closing this window too')
-  //   Window.getCurrent().close()
-  // })
 }
   
 </script>
@@ -274,11 +253,7 @@ async function init() {
 <main bind:this={mainElement}>
 
   <div class="header" style="padding: 6px 10px 8px 12px; margin: 2px 2px 0 0;">
-    <div style="margin-left: -6px;">
-      <button onclick={() => onNewNoteClick()} class="custom-icon-btn">
-        <Svg src="/img/Edit.svg" height="18px"></Svg>
-      </button>
-    </div>
+    <!-- new note button would be here -->
 
     <div class="center-items">
       <div id="toolbar">
@@ -289,38 +264,14 @@ async function init() {
           <button data-ql-format="ql-code-block" class="custom-icon-btn toolbar-button">
             <Svg src="/img/Code-block.svg" height="20px"></Svg>
           </button>
-          <button class="ql-list toolbar-button" value="ordered" />
-          <button class="ql-list toolbar-button" value="bullet" />
-          <button class="ql-clean toolbar-button"></button>
+          <button class="ql-list toolbar-button" value="ordered" aria-label="ordered list"></button>
+          <button class="ql-list toolbar-button" value="bullet" aria-label="bullet list"></button>
+          <button class="ql-clean toolbar-button" aria-label="clear format"></button>
         </span>
       </div>
     </div>
 
-    <!-- not part of quill toolbar: delete note -->
-    <div>
-      <button onclick={onDeleteNoteClick} class="custom-icon-btn" disabled={isDeleting}>
-        <Svg src="/img/Trash.svg" height="20px"></Svg>
-      </button>
-    </div>
-
-    <!-- <div class="window-buttons-placeholder">
-    </div> -->
-
-    <!-- <div class="window-buttons">
-      <div class="titlebar-button" id="titlebar-minimize" on:click={() => appWindow.minimize()}>
-        <MinusIcon size="15" strokeWidth="1.5" />
-      </div>
-      <div class="titlebar-button" id="titlebar-maximize" on:click={() => appWindow.toggleMaximize()}>
-        <Square size="11" strokeWidth="2" />
-      </div>
-      <div class="titlebar-button" id="titlebar-close" on:click={() => appWindow.close()}>
-        <XIcon size="16" strokeWidth="1.5" />
-      </div>
-    </div>  -->
-    
-    <!-- <button on:click={toMarkdown}>
-      Markdown
-    </button> -->
+    <!-- delete note would be here -->
   </div>
 
   <div class="text-editor-outer">

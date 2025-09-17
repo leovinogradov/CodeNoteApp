@@ -12,13 +12,10 @@ import { myflip } from './lib/service/my-flip/my-flip';
 import { exists, mkdir, BaseDirectory } from "@tauri-apps/plugin-fs";
 import { invoke } from "@tauri-apps/api/core";
 import { event } from '@tauri-apps/api';
-// import { getCurrent } from "@tauri-apps/api/window";
 
 import { alternateFunctionKeyStore } from "./store";
 import { isWhitespace, isInputFocused, readFile, getFirstTwoLinesFromContents } from './lib/service/utils';
-import { searchNote, type SearchResult } from './lib/service/search';
 import { Editor } from './lib/service/editor';
-import { createNewNote, SaveManager } from './lib/service/save-manager';
 import { runInitialSizeFix } from './lib/util/initial-size-fix';
 import { loadSettings, saveSettings, loadPlatformIntoStore, type AppSettings } from './lib/util/app-settings';
 import { Menu, MenuItem } from '@tauri-apps/api/menu';
@@ -29,16 +26,9 @@ import { openStandaloneWindow } from './lib/util/window';
 
 import type { NoteMeta, SearchNoteMeta, Note, SearchNote } from './types';
 
-
-let isMainWindow = $state(true);
-
-// let _loadedNotesData = null;
-let _notesLoaded = false;
-let _loadNotesCalled = false;
-
 let editor = $state<Editor>() as Editor;
 let currentFilename: string = $state('')
-let currentPlatform: string = $state('')
+// let currentPlatform: string = $state('')
 
 let notes: Note[] = $state([])
 let matchingNotes: SearchNote[] = $state([])
@@ -127,6 +117,7 @@ async function initNotes() {
 
   // Component should be mounted and editorElement should be available at this point
   // but check anyway just in case.
+  // TODO: unlikely to be a problem but still mega jank!
   if (editorElement) {
     _initEditor()
   } else {
@@ -316,6 +307,11 @@ async function onNoteClick(note: Note, saveOnExit=true) {
       return
     }
     isDeleting = false
+    // Emit noteDeleted event for StandaloneWindow listeners
+    event.emit('mainWindowEvent', {
+      type: 'noteDeleted',
+      filename
+    });
     notes.splice(index, 1)
     notes = notes
     if (notes.length > 0) {
@@ -332,13 +328,15 @@ async function onNoteClick(note: Note, saveOnExit=true) {
     // console.log(delta, oldDelta, source)
 
     /* Recompute meta when note is modified (but not necessarily saved) */
-    noteWasModified(filename, editor.getContent());
+    const content = editor.getContent()
+    noteWasModified(filename, content);
 
-    // updateNoteTitle(filename, editor.getContent())
-
-    // Version with debounce: seems to not be needed because compute is super fast
-    // if (_noteModifiedTimeout) clearTimeout(_noteModifiedTimeout)
-    // _noteModifiedTimeout = setTimeout(_updateNoteTitle, 50)
+    // Emit event for StandaloneWindow listeners
+    event.emit('mainWindowEvent', {
+      type: 'noteModified',
+      filename,
+      editorContent: content
+    });
   }
 
   function noteWasModified(filename, noteContent) {
@@ -574,19 +572,6 @@ async function onNoteClick(note: Note, saveOnExit=true) {
 
   runInitialSizeFix()
 
-  // function init() {
-  //   const w = Window.getCurrent();
-  //   if (w.label == "main") {
-  //     initNotes()
-  //     initSettings()
-  //     loadPlatformIntoStore()
-
-  //     runInitialSizeFix()
-  //   } else {
-  //   }
-  // }
-  // init()
-
   onMount(async () => {
     myContextMenu = await Menu.new({
       items: [
@@ -602,7 +587,6 @@ async function onNoteClick(note: Note, saveOnExit=true) {
   })
 
   function onContextMenu(event: MouseEvent, note: Note) {
-    console.log('onContextMenu', event, note);
     if (!myContextMenu || !note?.filename) return;
     contextNoteFilename = note.filename;
     myContextMenu.popup(new LogicalPosition({ x: event.clientX, y: event.clientY }));
@@ -613,7 +597,7 @@ async function onNoteClick(note: Note, saveOnExit=true) {
 <svelte:window onresize={onWindowResize} onkeydown={onKeyDown} />
 <!-- <svelte:window on:beforeinput={onBeforeInput} on:resize={onWindowResize} on:keydown={onKeyDown} /> -->
 
-<main bind:this={mainElement} hidden={!isMainWindow}>
+<main bind:this={mainElement}>
   <Splitter initialPrimarySize='300px' minPrimarySize='180px' minSecondarySize='50%' splitterSize='9px'>
     <div slot="primary">
       <div class="header" style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;">
