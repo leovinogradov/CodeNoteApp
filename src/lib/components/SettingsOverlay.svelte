@@ -3,6 +3,7 @@
   import { invoke } from "@tauri-apps/api/core";
   import { settingsStore } from '../../store';
   import { createEventDispatcher } from 'svelte';
+    import IconButton from './IconButton.svelte';
 	const dispatch = createEventDispatcher();
 
 
@@ -49,9 +50,10 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-missing-attribute -->
 <div class="setting-overlay" bind:this={overlayEl}>
-  <button on:click={onButtonClick} class="settings-button">
+  <!-- <button on:click={onButtonClick} class="settings-button">
     <Settings size=26 color="{theme == 'dark' ? '#fff' : '#333'}" />
-  </button>
+  </button> -->
+  <IconButton onclick={onButtonClick} icon={Settings} color="{theme == 'dark' ? '#fff' : '#333'}"></IconButton>
   <div class:show={menuOpen} class="settings-content">
     <div class="settings-actions">
       <div class="action">
@@ -85,10 +87,11 @@
 <style lang="scss">
 .setting-overlay {
   position: fixed;
-  bottom: 16px;
+  // bottom: 16px;
+  bottom: 12px;
   left: 16px;
-  width: 26px;
-  height: 26px;
+  // width: 26px;
+  // height: 26px;
   z-index: 99;
 }
 .settings-button {

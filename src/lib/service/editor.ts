@@ -187,7 +187,7 @@ export class Editor {
 		if (!innerText || isWhitespace(innerText)) {
 			// delete
 			console.log('deleting on exit due to no content');
-			await this.saveManager.delete();
+			await this.saveManager.softDelete();
 			ret.deleted = true
 		} else {
       // save and exit
@@ -213,7 +213,7 @@ export class Editor {
 	deleteNote() {
 		if (!this.saveManager) return;
 		const filename = this.saveManager.filename;
-		this.saveManager.delete();
+		this.saveManager.softDelete();
 		return filename;
 	}
 

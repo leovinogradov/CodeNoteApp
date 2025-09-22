@@ -25,6 +25,7 @@ import { LogicalPosition } from "@tauri-apps/api/window"
 import { openStandaloneWindow } from './lib/util/window';
 
 import type { NoteMeta, SearchNoteMeta, Note, SearchNote } from './types';
+    import IconButton from './lib/components/IconButton.svelte';
 
 let editor = $state<Editor>() as Editor;
 let currentFilename: string = $state('')
@@ -122,6 +123,19 @@ async function initNotes() {
     _initEditor()
   } else {
     setTimeout(_initEditor, 100)
+  }
+
+  initRecentlyDeleted()
+}
+
+async function initRecentlyDeleted() {
+  try {
+    const notesDirExists = await exists('recently-deleted', { baseDir: BaseDirectory.AppData });
+    if (!notesDirExists) {
+      await mkdir('recently-deleted', { baseDir: BaseDirectory.AppData, recursive: true });
+    }
+  } catch (err) {
+    console.error(err)
   }
 }
 
@@ -723,4 +737,20 @@ async function onNoteClick(note: Note, saveOnExit=true) {
   <!-- fixed elements -->
   <SettingsOverlay on:action={handleSettingsAction} />
   <FindAndReplace bind:this={searchInNoteElement} editor={editor} />
+
+  <!-- <button style="position: fixed;bottom: 16px;
+  left: 52px;
+  width: 32px;
+  height: 32px; z-index: 99;
+  padding: 3px; 
+  background: rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);">
+    <Svg src="/img/Undelete.svg" height="26px" width="26px"></Svg>
+  </button> -->
+
+  <div style="position: fixed; bottom: 12px; left: 58px; z-index: 99;">
+    <IconButton icon={Svg} src="/img/Undelete.svg"></IconButton>
+  </div>
+
+  <!-- <IconButton icon={Svg} src="/img/Undelete.svg"></IconButton> -->
 </main>

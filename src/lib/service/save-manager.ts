@@ -1,5 +1,5 @@
 import { join } from '@tauri-apps/api/path';
-import { writeTextFile, remove, BaseDirectory } from "@tauri-apps/plugin-fs";
+import { writeTextFile, remove, readTextFile, copyFile, BaseDirectory } from "@tauri-apps/plugin-fs";
 import { saveStatus } from '../../store';
 import type { Note } from '../../types';
 
@@ -111,7 +111,9 @@ export class SaveManager {
     }
   }
 
-  async delete() {
+  // Moves file to recently deleted folder.
+  // Note: moves the recently 
+  async softDelete() {
     if (this.isDeleted) {
       console.warn(`delete(): ${this.filename} is already deleted`)
       return
@@ -127,13 +129,24 @@ export class SaveManager {
       this._filepath = await join('notes', this.filename);
     }
     try {
-      await remove(this._filepath, { baseDir: BaseDirectory.AppConfig });
+      // Move file to recently-deleted folder under AppData
+      const recentlyDeletedDir = await join('recently-deleted');
+      const targetPath = await join(recentlyDeletedDir, this.filename);
+      try {
+        await copyFile(this._filepath, targetPath, {
+          fromPathBaseDir: BaseDirectory.AppData,
+          toPathBaseDir: BaseDirectory.AppData
+        });
+      } catch(err) {
+        console.error("Failed to copy file to recently deleted folder", err);
+      }
+      // Remove original file
+      await remove(this._filepath, { baseDir: BaseDirectory.AppData });
     } catch(err) {
-      console.log('failed to delete note:', err)
+      console.log('failed to move note to recently-deleted:', err)
     }
   }
 }
-
 
 export async function createNewNote(): Promise<Note> {
   const now = Date.now();
