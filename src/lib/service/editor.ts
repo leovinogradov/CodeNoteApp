@@ -183,11 +183,10 @@ export class Editor {
 			return ret
 		}
 		ret.filename = this.saveManager.filename
-		const innerText = this.quill.getText()
-		if (!innerText || isWhitespace(innerText)) {
+		if (this.isEmpty()) {
 			// delete
 			console.log('deleting on exit due to no content');
-			await this.saveManager.softDelete();
+			await this.saveManager.delete(true);
 			ret.deleted = true
 		} else {
       // save and exit
@@ -199,6 +198,19 @@ export class Editor {
 		return ret;
 	}
 
+	deleteNote() {
+		if (!this.saveManager) return;
+		const filename = this.saveManager.filename;
+		const hardDelete = this.isEmpty();
+		this.saveManager.delete(hardDelete);
+		return filename;
+	}
+
+	/** Is editor empty? */
+	isEmpty() {
+		const innerText = this.quill.getText()
+		return !innerText || isWhitespace(innerText)
+	}
 
 	getFilename() {
 		if (!this.saveManager) return '';
@@ -209,20 +221,10 @@ export class Editor {
 		return this.quill.getContents();
 	}
 
-
-	deleteNote() {
-		if (!this.saveManager) return;
-		const filename = this.saveManager.filename;
-		this.saveManager.softDelete();
-		return filename;
-	}
-
-
 	setContentFromHtml(html) {
 		const delta = this.quill.clipboard.convert(html)
 		this.quill.setContents(delta, 'silent')
 	}
-
 
 	setContents(deltas) {
 		if (!deltas || !deltas.ops || deltas.ops.length == 0) {

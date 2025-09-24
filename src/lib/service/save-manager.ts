@@ -111,13 +111,19 @@ export class SaveManager {
     }
   }
 
-  // Moves file to recently deleted folder.
+  // If soft, moves file to recently deleted folder.
   // Note: moves the recently 
-  async softDelete() {
+  async delete(hard: boolean) {
     if (this.isDeleted) {
       console.warn(`delete(): ${this.filename} is already deleted`)
       return
     }
+    if (hard) {
+      console.log('Permanently deleting', this.filename);
+    } else {
+      console.log('Soft deleting', this.filename);
+    }
+    
     this.isDeleted = true;
 
     this._hasUnsavedInput = false;
@@ -129,16 +135,18 @@ export class SaveManager {
       this._filepath = await join('notes', this.filename);
     }
     try {
-      // Move file to recently-deleted folder under AppData
-      const recentlyDeletedDir = await join('recently-deleted');
-      const targetPath = await join(recentlyDeletedDir, this.filename);
-      try {
-        await copyFile(this._filepath, targetPath, {
-          fromPathBaseDir: BaseDirectory.AppData,
-          toPathBaseDir: BaseDirectory.AppData
-        });
-      } catch(err) {
-        console.error("Failed to copy file to recently deleted folder", err);
+      if (!hard) {
+        // Move file to recently-deleted folder under AppData
+        const recentlyDeletedDir = await join('recently-deleted');
+        const targetPath = await join(recentlyDeletedDir, this.filename);
+        try {
+          await copyFile(this._filepath, targetPath, {
+            fromPathBaseDir: BaseDirectory.AppData,
+            toPathBaseDir: BaseDirectory.AppData
+          });
+        } catch(err) {
+          console.error("Failed to copy file to recently deleted folder", err);
+        }
       }
       // Remove original file
       await remove(this._filepath, { baseDir: BaseDirectory.AppData });

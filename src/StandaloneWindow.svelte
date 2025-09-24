@@ -10,13 +10,13 @@ import { event } from '@tauri-apps/api';
 import { alternateFunctionKeyStore } from "./store";
 import { isInputFocused, debouncify } from './lib/service/utils';
 import { Editor } from './lib/service/editor';
-import { loadSettings, saveSettings, type AppSettings } from './lib/util/app-settings';
+import { loadSettings, saveSettings } from './lib/util/app-settings';
 
 // import { WebviewWindow, getCurrentWindow } from '@tauri-apps/api/window';
 import { Window } from "@tauri-apps/api/window"
 
 // Add import for interfaces
-import type { NoteMeta, SearchNoteMeta, Note, SearchNote } from './types';
+import type { AppSettings } from './types';
 
 
 let editor = $state<Editor>() as Editor;
@@ -257,7 +257,7 @@ async function init() {
 
     <div class="center-items">
       <div id="toolbar">
-        <span class="ql-formats" style="height: 24px;">
+        <span class="ql-formats">
           <FormatDropdown editor={editor}></FormatDropdown>
         </span>
         <span class="ql-formats">

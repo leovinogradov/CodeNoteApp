@@ -17,14 +17,15 @@ import { alternateFunctionKeyStore } from "./store";
 import { isWhitespace, isInputFocused, readFile, getFirstTwoLinesFromContents } from './lib/service/utils';
 import { Editor } from './lib/service/editor';
 import { runInitialSizeFix } from './lib/util/initial-size-fix';
-import { loadSettings, saveSettings, loadPlatformIntoStore, type AppSettings } from './lib/util/app-settings';
+import { loadSettings, saveSettings, loadPlatformIntoStore } from './lib/util/app-settings';
 import { Menu, MenuItem } from '@tauri-apps/api/menu';
 
 import { LogicalPosition } from "@tauri-apps/api/window"
 
 import { openStandaloneWindow } from './lib/util/window';
 
-import type { NoteMeta, SearchNoteMeta, Note, SearchNote } from './types';
+import type { AppSettings, Note, SearchNote } from './types';
+import CornerButtonGroup from './lib/components/CornerButtonGroup.svelte';
     import IconButton from './lib/components/IconButton.svelte';
 
 let editor = $state<Editor>() as Editor;
@@ -45,6 +46,9 @@ let _alternateFunctionProperty: string = "ctrlKey";
 alternateFunctionKeyStore.subscribe(val => {
   _alternateFunctionProperty = val
 })
+
+let settingsIsOpen = $state(false);
+let recentlyDeletedIsOpen = $state(false);
 
 // DOM elements
 let editorElement = $state<HTMLElement>() as HTMLElement
@@ -154,7 +158,7 @@ async function _initEditor() {
 }
 
 async function loadNotes(): Promise<Note[]> {
-  const data: any = await invoke("read_notes_dir")
+  const data: any = await invoke("read_notes_dir", { recentlyDeleted: false })
   const loadedNotesData = data["data"]
 
   if (!loadedNotesData || !Array.isArray(loadedNotesData)) {
@@ -473,9 +477,9 @@ async function onNoteClick(note: Note, saveOnExit=true) {
     loadingFilenames.delete(filename)
   }
 
-  function handleSettingsAction(e) {
-    const name = e.detail?.name
-    const value = e.detail?.value
+  function handleSettingsAction(name, value) {
+    // const name = e.detail?.name
+    // const value = e.detail?.value
     if (name == "toggleShowFilenames") {
       showFilenames = !showFilenames
     }
@@ -606,6 +610,8 @@ async function onNoteClick(note: Note, saveOnExit=true) {
     myContextMenu.popup(new LogicalPosition({ x: event.clientX, y: event.clientY }));
     event.preventDefault(); // Prevents the browser context menu
   }
+
+
 </script>
 
 <svelte:window onresize={onWindowResize} onkeydown={onKeyDown} />
@@ -617,7 +623,7 @@ async function onNoteClick(note: Note, saveOnExit=true) {
       <div class="header" style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;">
         <Searchbar bind:value={searchString} on:input={onSearchInput} on:clear={clearSearch}></Searchbar>
       </div>
-      <div class="notes-list" bind:this={notesListElement} onscroll="{onNoteListScroll}">
+      <div class="notes-list" hidden={recentlyDeletedIsOpen} bind:this={notesListElement} onscroll="{onNoteListScroll}">
         {#if hasMatchingNotes}
           <!-- list when searching -->
           {#each matchingNotes as note, i (note.filename) }
@@ -670,6 +676,11 @@ async function onNoteClick(note: Note, saveOnExit=true) {
           {/each}
         {/if}
       </div>
+      {#if recentlyDeletedIsOpen}
+        <div class="notes-list">
+          TEST
+        </div>
+      {/if}
     </div>
 
     <svelte:fragment slot="splitter">
@@ -677,16 +688,15 @@ async function onNoteClick(note: Note, saveOnExit=true) {
     </svelte:fragment>
 
     <div slot="secondary">
-      <div class="header" style="padding: 6px 10px 8px 12px; margin: 2px 2px 0 0;">
-        <div style="margin-left: -6px;">
-          <button onclick={() => onNewNoteClick()} class="custom-icon-btn">
-            <Svg src="/img/Edit.svg" height="18px"></Svg>
-          </button>
+      <!-- <div class="header" style="padding: 6px 10px 8px 12px; margin: 2px 2px 0 0;"> -->
+      <div class="header" style="padding: 8px 12px 8px 6px;">
+        <div>
+          <IconButton icon={Svg} src="/img/Edit.svg" height="18px" onclick={() => onNewNoteClick()}></IconButton>
         </div>
 
         <div class="center-items">
           <div id="toolbar">
-            <span class="ql-formats" style="height: 24px;">
+            <span class="ql-formats">
               <FormatDropdown editor={editor}></FormatDropdown>
             </span>
             <span class="ql-formats">
@@ -702,9 +712,7 @@ async function onNoteClick(note: Note, saveOnExit=true) {
 
         <!-- not part of quill toolbar: delete note -->
         <div>
-          <button onclick={onDeleteNoteClick} class="custom-icon-btn" disabled={isDeleting}>
-            <Svg src="/img/Trash.svg" height="20px"></Svg>
-          </button>
+          <IconButton icon={Svg} src="/img/Trash.svg" height="18px" onclick={onDeleteNoteClick} disabled={isDeleting}></IconButton>
         </div>
 
         <!-- <div class="window-buttons-placeholder">
@@ -735,8 +743,21 @@ async function onNoteClick(note: Note, saveOnExit=true) {
   </Splitter>
 
   <!-- fixed elements -->
-  <SettingsOverlay on:action={handleSettingsAction} />
   <FindAndReplace bind:this={searchInNoteElement} editor={editor} />
+
+  {#if settingsIsOpen}
+    <SettingsOverlay style="bottom: 50px;" 
+      action={handleSettingsAction} 
+      close={() => {settingsIsOpen = false}}>
+    </SettingsOverlay>
+  {/if}
+
+  <CornerButtonGroup style="position: fixed; bottom: 12px; left: 16px; z-index: 99;"
+    onSettingsClick={() => {settingsIsOpen = !settingsIsOpen}} 
+    onUndeleteClick={() => {recentlyDeletedIsOpen = !recentlyDeletedIsOpen}}>
+  </CornerButtonGroup>
+
+  
 
   <!-- <button style="position: fixed;bottom: 16px;
   left: 52px;
@@ -748,9 +769,11 @@ async function onNoteClick(note: Note, saveOnExit=true) {
     <Svg src="/img/Undelete.svg" height="26px" width="26px"></Svg>
   </button> -->
 
-  <div style="position: fixed; bottom: 12px; left: 58px; z-index: 99;">
+  <!-- <div style="position: fixed; bottom: 12px; left: 58px; z-index: 99;">
     <IconButton icon={Svg} src="/img/Undelete.svg"></IconButton>
-  </div>
+  </div> -->
+
+  
 
   <!-- <IconButton icon={Svg} src="/img/Undelete.svg"></IconButton> -->
 </main>

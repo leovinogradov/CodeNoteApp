@@ -630,8 +630,9 @@
     cursor: pointer;
     display: inline-block;
     float: left;
-    height: 24px;
-    padding: 3px 5px;
+    /* height: 24px; */
+    height: 28px;
+    padding: 5px 5px;
     width: 28px
 }
 
@@ -651,7 +652,7 @@
     display: none
 }
 
-.ql-snow.ql-toolbar button:hover,
+/* .ql-snow.ql-toolbar button:hover,
 .ql-snow .ql-toolbar button:hover,
 .ql-snow.ql-toolbar button:focus,
 .ql-snow .ql-toolbar button:focus,
@@ -666,9 +667,9 @@
 .ql-snow.ql-toolbar .ql-picker-item.ql-selected,
 .ql-snow .ql-toolbar .ql-picker-item.ql-selected {
     color: #06c
-}
+} */
 
-.ql-snow.ql-toolbar button:hover .ql-fill,
+/* .ql-snow.ql-toolbar button:hover .ql-fill,
 .ql-snow .ql-toolbar button:hover .ql-fill,
 .ql-snow.ql-toolbar button:focus .ql-fill,
 .ql-snow .ql-toolbar button:focus .ql-fill,
@@ -697,9 +698,9 @@
 .ql-snow.ql-toolbar .ql-picker-item.ql-selected .ql-stroke.ql-fill,
 .ql-snow .ql-toolbar .ql-picker-item.ql-selected .ql-stroke.ql-fill {
     fill: #06c
-}
+} */
 
-.ql-snow.ql-toolbar button:hover .ql-stroke,
+/* .ql-snow.ql-toolbar button:hover .ql-stroke,
 .ql-snow .ql-toolbar button:hover .ql-stroke,
 .ql-snow.ql-toolbar button:focus .ql-stroke,
 .ql-snow .ql-toolbar button:focus .ql-stroke,
@@ -728,7 +729,7 @@
 .ql-snow.ql-toolbar .ql-picker-item.ql-selected .ql-stroke-miter,
 .ql-snow .ql-toolbar .ql-picker-item.ql-selected .ql-stroke-miter {
     stroke: #06c
-}
+} */
 
 @media (pointer:coarse) {
 

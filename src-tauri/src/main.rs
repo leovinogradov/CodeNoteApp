@@ -32,9 +32,13 @@ struct SearchResponse {
 }
 
 #[tauri::command]
-async fn read_notes_dir(window: tauri::Window) -> Result<NotesResponse, String> {
+async fn read_notes_dir(window: tauri::Window, recently_deleted: bool) -> Result<NotesResponse, String> {
     let app = window.app_handle();
-    let path = app.path().resolve("notes", BaseDirectory::AppData).unwrap();
+    let dir_name = match recently_deleted {
+        true => "recently-deleted",
+        false => "notes",
+    };
+    let path = app.path().resolve(dir_name, BaseDirectory::AppData).unwrap();
     let path = path.to_str().unwrap();
     println!("Reading notes; path is {}", path);
 

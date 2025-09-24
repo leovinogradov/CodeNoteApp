@@ -1,3 +1,8 @@
+export interface AppSettings {
+  zoom: number,
+  theme: string
+}
+
 export interface NoteMeta {
   title?: string,
   subtitle?: string,

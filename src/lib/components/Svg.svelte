@@ -6,11 +6,17 @@
   export let src;
   export let height: string|null = null;
   export let width: string|null = null;
+  export let color: string|null = null;
+
+  // $: svgStyle = {
+  //   "color": color
+  // };
 
   function setSvgHtml(html) {
     containerEl.innerHTML = html;
     // may need to do all three of 'rect, polyline, path' later
     containerEl.querySelectorAll('path').forEach(el => {
+      // el.classList.clear();
       if (el.attributes && el.attributes.fill && el.attributes.fill.value == "none") {
         el.classList.add('nofill')
       }
@@ -25,6 +31,11 @@
       svgEl.style.width = width;
       containerEl.style.width = width;
     }
+    // if (color) {
+      
+    // }
+    // Color set from style on outer custom-svg
+    svgEl.style.color = "inherit";
   }
 
   onMount(() => {
@@ -45,5 +56,19 @@
   })
 </script>
 
-<div class="custom-svg" bind:this={containerEl}>
+<div class="custom-svg" bind:this={containerEl} style="{color}">
 </div>
+
+<style lang="scss">
+:global .custom-svg svg {
+  path:not(.nofill) {
+    fill: currentColor !important; // override any custom colors from the svg html
+  }
+  path.nofill {
+    stroke: currentColor !important; // override any custom colors from the svg html
+  }
+}
+.custom-svg {
+  display: flex;
+}
+</style>
