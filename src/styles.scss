@@ -147,6 +147,7 @@
     background-color: #606060;
   }
 
+  // Todo: move this to searchbar component?
   .searchbar {
     background-color: var(--background-secondary);
     border-color: var(--background-color) !important;
@@ -156,9 +157,10 @@
     }
     button.clear-search {
       background-color: var(--background-secondary);
-      svg {
-        stroke: #fff !important;
-      }
+      color: var(--text-color);
+      // svg {
+      //   stroke: #fff !important;
+      // }
     }
   }
   
@@ -216,7 +218,7 @@ html[data-theme='dark'] {
   }
 }
 
-// Global default button color
+// Global button styling
 button, .ql-snow button {
   color: var(--button-color);
 
@@ -228,6 +230,24 @@ button, .ql-snow button {
     color: var(--button-disabled-color);
   }
 }
+button:not(:disabled) {
+  // Button hover color
+  &:hover {
+    color: var(--button-highlight-color);
+    background-color: var(--hover-color);
+    svg {
+      color: var(--button-highlight-color);
+    }
+  }
+  // Button active color
+  &:active, &.active, &.ql-active {
+    color: var(--button-active-color);
+    svg {
+      color: var(--button-active-color);
+    }
+  }
+}
+
 
 .header {
   border-bottom: 1px solid var(--border-color);
@@ -257,23 +277,6 @@ button, .ql-snow button {
     // height: 36px;
     min-width: 28px;
   }
-
-  // Button hover color
-  button:hover:not(:disabled) {
-    color: var(--button-highlight-color);
-    background-color: var(--hover-color);
-    svg {
-      color: var(--button-highlight-color);
-    }
-  }
-
-  // Button active color
-  button:active:not(:disabled), button.ql-active:not(:disabled) {
-    color: var(--button-active-color);
-    svg {
-      color: var(--button-active-color);
-    }
-  }
  
   .center-items {
     display: flex;
@@ -289,6 +292,12 @@ button, .ql-snow button {
   justify-content: center;
   text-align: center;
 }
+
+// Util class to use secondary color
+.bg-secondary {
+  background-color: var(--background-secondary);
+}
+
 
 .logo {
   height: 6em;

@@ -1,8 +1,8 @@
 <script>
-  const props = $props();
+  const { disabled = false, onclick = null, mini = false, ...props } = $props();
 </script>
 
-<button class="icon-button" disabled={props.disabled} onclick={props.onclick}>
+<button class="icon-button" class.mini={mini} disabled={disabled} onclick={onclick}>
   <props.icon {...props} />
 </button>
 

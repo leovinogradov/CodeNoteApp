@@ -3,13 +3,13 @@
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	export let value = ''
-	// export let placeholder = 'Search'
+	export let disabled = false;
 </script>
 
 <div class="searchbar">
-	<input bind:value on:input placeholder="Search" type="text" spellcheck="false" />
-	<button hidden={!value} class="clear-search" on:click={() => dispatch('clear')}>
-		<XIcon size="14" strokeWidth="2" color="#444"  />
+	<input bind:value on:input placeholder="Search" type="text" spellcheck="false" disabled={disabled} />
+	<button hidden={!value} class="clear-search" on:click={() => dispatch('clear')} disabled={disabled}>
+		<XIcon size="14" strokeWidth="2" />
 	</button>
 </div>
 
@@ -33,6 +33,9 @@
 			margin: 0;
 			border: none;
 			vertical-align: middle;
+		}
+		button.clear-search, button.clear-search:hover {
+			background: none !important; // Override bg
 		}
 	}
 </style>

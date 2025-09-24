@@ -2,8 +2,9 @@ import { readTextFile } from "@tauri-apps/plugin-fs";
 import { BaseDirectory, join } from "@tauri-apps/api/path";
 import { Editor } from "./editor";
 
-export async function readFile(filename) {
-  const path = await join("notes", filename);
+export async function readFile(filename: string, isDeleted: boolean) {
+  const dir = isDeleted ? "recently-deleted" : "notes";
+  const path = await join(dir, filename);
 	const content = await readTextFile(path, { baseDir: BaseDirectory.AppData });
   return content;
 }

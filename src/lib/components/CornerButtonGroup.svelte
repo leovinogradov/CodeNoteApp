@@ -7,10 +7,11 @@
   type Props = {
     onSettingsClick: MouseEventHandler<any>;
     onUndeleteClick: MouseEventHandler<any>;
+    recentlyDeletedIsOpen: boolean,
     style?: string;
   };
 
-  const { onSettingsClick, onUndeleteClick, style } : Props = $props();
+  const { onSettingsClick, onUndeleteClick, recentlyDeletedIsOpen, style } : Props = $props();
 
 </script>
 
@@ -18,7 +19,7 @@
   <button class="icon-button" onclick={onSettingsClick}>
      <Settings size=26 style="display: block" />
   </button>
-  <button class="icon-button" onclick={onUndeleteClick}>
+  <button class="icon-button" onclick={onUndeleteClick} class:active={recentlyDeletedIsOpen}>
     <Svg src="/img/Undelete.svg" height="26px" width="26px"></Svg>
   </button>
 </div>

@@ -26,7 +26,7 @@ import { openStandaloneWindow } from './lib/util/window';
 
 import type { AppSettings, Note, SearchNote } from './types';
 import CornerButtonGroup from './lib/components/CornerButtonGroup.svelte';
-    import IconButton from './lib/components/IconButton.svelte';
+import IconButton from './lib/components/IconButton.svelte';
 
 let editor = $state<Editor>() as Editor;
 let currentFilename: string = $state('')
@@ -34,6 +34,8 @@ let currentFilename: string = $state('')
 
 let notes: Note[] = $state([])
 let matchingNotes: SearchNote[] = $state([])
+let deletedNotes: Note[] = $state([])
+
 // let openNoteIndex: number = 0;
 let searchString: string = $state('')
 let lastSearchString: string = $state('') // string for which results are shown
@@ -114,7 +116,7 @@ async function initNotes() {
   }
 
   try {
-    notes = await loadNotes()
+    notes = await _loadNotes()
   } catch (err) {
     console.error('Main init: Failed to load notes:', err)
     notes = []
@@ -157,8 +159,8 @@ async function _initEditor() {
   editor.searcher.clear()
 }
 
-async function loadNotes(): Promise<Note[]> {
-  const data: any = await invoke("read_notes_dir", { recentlyDeleted: false })
+async function _loadNotes(loadDeletedNotes = false): Promise<Note[]> {
+  const data: any = await invoke("read_notes_dir", { recentlyDeleted: loadDeletedNotes })
   const loadedNotesData = data["data"]
 
   if (!loadedNotesData || !Array.isArray(loadedNotesData)) {
@@ -185,6 +187,10 @@ async function loadNotes(): Promise<Note[]> {
     })
   }
   return notesFormatted
+}
+
+async function loadDeletedNotes() {
+  deletedNotes = await _loadNotes(true);
 }
 
 const ONE_DAY = 24 * 60 * 60 * 1000; // milliseconds in a day
@@ -253,8 +259,10 @@ function _getNoteMeta(note) {
   return { title, subtitle, modifiedTime }
 }
 
-async function onNoteClick(note: Note, saveOnExit=true) {
-  const exitResult = await editor.open(note.filename, saveOnExit)
+async function onNoteClick(note: Note, saveOnExit = true, isDeletedNote = false) {
+  const exitResult = isDeletedNote ? 
+    await editor.openDeletedFile(note.filename, saveOnExit) :
+    await editor.open(note.filename, saveOnExit)
   if (!exitResult) return;
 
   currentFilename = editor.getFilename() // Update state
@@ -470,7 +478,7 @@ async function onNoteClick(note: Note, saveOnExit=true) {
     const filename = note.filename
     if (loadingFilenames.has(filename)) { return }
     loadingFilenames.add(filename)
-    const content = await readFile(filename)
+    const content = await readFile(filename, false)
     note.content = content
     note.note_meta = _getNoteMeta(note)
     notes = notes
@@ -621,7 +629,7 @@ async function onNoteClick(note: Note, saveOnExit=true) {
   <Splitter initialPrimarySize='300px' minPrimarySize='180px' minSecondarySize='50%' splitterSize='9px'>
     <div slot="primary">
       <div class="header" style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;">
-        <Searchbar bind:value={searchString} on:input={onSearchInput} on:clear={clearSearch}></Searchbar>
+        <Searchbar bind:value={searchString} on:input={onSearchInput} on:clear={clearSearch} disabled={recentlyDeletedIsOpen}></Searchbar>
       </div>
       <div class="notes-list" hidden={recentlyDeletedIsOpen} bind:this={notesListElement} onscroll="{onNoteListScroll}">
         {#if hasMatchingNotes}
@@ -677,8 +685,24 @@ async function onNoteClick(note: Note, saveOnExit=true) {
         {/if}
       </div>
       {#if recentlyDeletedIsOpen}
+        <div class="bg-secondary" style="padding: 2px 12px;">
+          <span>Deleted</span>
+        </div>
         <div class="notes-list">
-          TEST
+          <!-- deleted notes list -->
+          {#each deletedNotes as note, i (note.filename) }
+            <div animate:myflip
+                class="note-summary"
+                class:selected={currentFilename == note.filename}
+                onclick={() => onNoteClick(note, true, true)}
+                oncontextmenu={(e) => onContextMenu(e, note)}> 
+              <h4>{note.note_meta.title}</h4>
+              <p><span class="modified-time">{note.note_meta.modifiedTime}</span><span class="subtitle">{note.note_meta.subtitle}</span></p>
+              {#if showFilenames}
+                <p class="filename">{note.filename}</p>
+              {/if}
+            </div>
+          {/each}
         </div>
       {/if}
     </div>
@@ -754,26 +778,22 @@ async function onNoteClick(note: Note, saveOnExit=true) {
 
   <CornerButtonGroup style="position: fixed; bottom: 12px; left: 16px; z-index: 99;"
     onSettingsClick={() => {settingsIsOpen = !settingsIsOpen}} 
-    onUndeleteClick={() => {recentlyDeletedIsOpen = !recentlyDeletedIsOpen}}>
-  </CornerButtonGroup>
-
-  
-
-  <!-- <button style="position: fixed;bottom: 16px;
-  left: 52px;
-  width: 32px;
-  height: 32px; z-index: 99;
-  padding: 3px; 
-  background: rgba(0,0,0,0.05);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.18);">
-    <Svg src="/img/Undelete.svg" height="26px" width="26px"></Svg>
-  </button> -->
-
-  <!-- <div style="position: fixed; bottom: 12px; left: 58px; z-index: 99;">
-    <IconButton icon={Svg} src="/img/Undelete.svg"></IconButton>
-  </div> -->
-
-  
-
-  <!-- <IconButton icon={Svg} src="/img/Undelete.svg"></IconButton> -->
+    onUndeleteClick={() => {
+      recentlyDeletedIsOpen = !recentlyDeletedIsOpen;
+      if (recentlyDeletedIsOpen) {
+        // Opening deleted notes.
+        loadDeletedNotes();
+      } 
+      else {
+        // Closing deleted notes. Open regular notes back up
+        if (notes?.length) {
+          onNoteClick(notes[0], false, false)
+        } 
+        else {
+          onNewNoteClick(false)
+        }
+      }
+    }}
+    recentlyDeletedIsOpen={recentlyDeletedIsOpen}
+  ></CornerButtonGroup>
 </main>

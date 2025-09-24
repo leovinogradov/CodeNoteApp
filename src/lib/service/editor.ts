@@ -38,7 +38,7 @@ export interface ExitResult {
 	
 export class Editor {
 	// @ts-ignore
-  saveManager: SaveManager;
+  saveManager: SaveManager|null = null;
 	quill;
 	searcher;
 	editorEl;
@@ -152,8 +152,13 @@ export class Editor {
 		};
 	}
 
+	async openDeletedFile(filename, saveOnExit = true) {
+		await this._setContentsFromFile(filename, true);
+		this.saveManager = null;
+		this.quill.disable();
+	}
 
-	async open(filename, saveOnExit=true) {
+	async open(filename, saveOnExit = true) {
 		console.log('opening', filename)
 		if (this.saveManager && this.saveManager.filename == filename) {
 			console.log('already opened recently; doing nothing')
@@ -166,6 +171,7 @@ export class Editor {
 		this._timeOpened = Date.now();
 		const exitResult = await this.exit(saveOnExit)
 		await this._setContentsFromFile(filename)
+		this.quill.enable();
 		this.quill.history.clear()
 		this.saveManager = new SaveManager(this.quill, filename)
 		this.searcher.lastCursorIndex = null
@@ -184,7 +190,7 @@ export class Editor {
 		}
 		ret.filename = this.saveManager.filename
 		if (this.isEmpty()) {
-			// delete
+			// hard delete
 			console.log('deleting on exit due to no content');
 			await this.saveManager.delete(true);
 			ret.deleted = true
@@ -235,8 +241,8 @@ export class Editor {
 	}
 
 
-	private async _setContentsFromFile(filename) {
-		const content = await readFile(filename);
+	private async _setContentsFromFile(filename, isDeleted = false) {
+		const content = await readFile(filename, isDeleted);
 		if (!content) {
 			console.log('setting from empty content')
 			this.quill.setContents([], 'silent')
