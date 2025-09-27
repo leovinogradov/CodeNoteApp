@@ -154,14 +154,15 @@ export class Editor {
 
 	async openDeletedFile(filename, saveOnExit = true) {
 		await this._setContentsFromFile(filename, true);
-		this.saveManager = null;
+		this.saveManager = new SaveManager(this.quill, filename, true); // Open with edits disabled
 		this.quill.disable();
 	}
 
 	async open(filename, saveOnExit = true) {
-		console.log('opening', filename)
+		console.log('Opening file in editor', filename)
+		this.quill.enable();
 		if (this.saveManager && this.saveManager.filename == filename) {
-			console.log('already opened recently; doing nothing')
+			console.log('Already opened in editor; doing nothing')
 			if (this.saveManager.isDeleted) {
 				console.error('Active file was somehow deleted; reopening')
 				this.saveManager = new SaveManager(this.quill, filename)
@@ -171,11 +172,10 @@ export class Editor {
 		this._timeOpened = Date.now();
 		const exitResult = await this.exit(saveOnExit)
 		await this._setContentsFromFile(filename)
-		this.quill.enable();
 		this.quill.history.clear()
 		this.saveManager = new SaveManager(this.quill, filename)
 		this.searcher.lastCursorIndex = null
-		console.log('opened', filename)
+		console.log('Opened', filename)
 		return exitResult
 	}
 

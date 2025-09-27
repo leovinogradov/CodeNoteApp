@@ -1,10 +1,9 @@
 import { join } from '@tauri-apps/api/path';
-import { writeTextFile, remove, readTextFile, copyFile, BaseDirectory } from "@tauri-apps/plugin-fs";
+import { writeTextFile, remove, rename, copyFile, BaseDirectory } from "@tauri-apps/plugin-fs";
 import { saveStatus } from '../../store';
 import type { Note } from '../../types';
 
-
-/*
+/**
   Desired functionality:
   1. save to file every x ms of typing. On input:
     a. start loop if not already started
@@ -15,31 +14,31 @@ import type { Note } from '../../types';
     a. have event loop that tells editor if all changes are saved
     b. increase / decrease time between saves based on how fast saves occur
 */
-
-
 export class SaveManager {
   quill: any;
   minTimeBetweenSavesMs: number;
-
-  private _hasUnsavedInput;
-  private _delayTimeoutId;
-
   filename: string;
-  private _filepath;
-
   isDeleted: boolean;
+  isInRecentlyDeleted: boolean;
 
-  constructor(quill, filename) {
+  private hasUnsavedInput;
+  private delayTimeoutId;
+
+  private filepath;
+  
+
+  constructor(quill, filename, isDeletedFile=false) {
     this.quill = quill;
     this.minTimeBetweenSavesMs = 1000;
 
-    this._hasUnsavedInput = false;
-    this._delayTimeoutId = null;
+    this.hasUnsavedInput = false;
+    this.delayTimeoutId = null;
 
     this.filename = filename;
-    this._filepath = null;
+    this.filepath = null;
 
     this.isDeleted = false;
+    this.isInRecentlyDeleted = isDeletedFile; // File that is in recently deleted
   }
 
 
@@ -49,15 +48,18 @@ export class SaveManager {
         console.error(`_save(): ${this.filename} is deleted`)
         return
       }
-      this._hasUnsavedInput = false;
+      this.hasUnsavedInput = false;
+      if (this.isInRecentlyDeleted) {
+        return;
+      }
 
-      if (!this._filepath) {
-        this._filepath = await join('notes', this.filename);
+      if (!this.filepath) {
+        this.filepath = await join('notes', this.filename);
       }
       // const content = [...this.editorEl.childNodes].map(node => node.outerHTML).join('\n');
       let content = this.quill.getContents()
       content = JSON.stringify(content)
-      await writeTextFile(this._filepath, content, { baseDir: BaseDirectory.AppData });
+      await writeTextFile(this.filepath, content, { baseDir: BaseDirectory.AppData });
       console.log('saved', this.filename)
       saveStatus.set({
         filename: this.filename,
@@ -69,14 +71,14 @@ export class SaveManager {
     }
   }
 
-  _triggerSaveTimeout() {
-    if (!this._delayTimeoutId) {
-      this._delayTimeoutId = setTimeout(async () => {
-        this._delayTimeoutId = null;
+  private triggerSaveTimeout() {
+    if (!this.delayTimeoutId) {
+      this.delayTimeoutId = setTimeout(async () => {
+        this.delayTimeoutId = null;
         // loop until no unsaved input
-        if (this._hasUnsavedInput) {
+        if (this.hasUnsavedInput) {
           await this._save();
-          this._triggerSaveTimeout();
+          this.triggerSaveTimeout();
         }
       }, this.minTimeBetweenSavesMs);
     }
@@ -87,27 +89,30 @@ export class SaveManager {
       console.warn(`saveNow(): ${this.filename} is deleted`)
       return
     }
-    if (this._delayTimeoutId) {
-      clearTimeout(this._delayTimeoutId)
-      this._delayTimeoutId = null
+    if (this.delayTimeoutId) {
+      clearTimeout(this.delayTimeoutId)
+      this.delayTimeoutId = null
     }
     this._save()
   }
 
   saveIfHasChanges() {
-    if (this._hasUnsavedInput) {
+    if (this.hasUnsavedInput) {
       this.saveNow()
     }
   }
 
   saveAfterDelay() {
+    if (this.isInRecentlyDeleted) {
+      return;
+    }
     if (this.isDeleted) {
       console.warn(`saveAfterDelay(): ${this.filename} is deleted`)
       return
     }
-    this._hasUnsavedInput = true;
-    if (!this._delayTimeoutId) {
-      this._triggerSaveTimeout() 
+    this.hasUnsavedInput = true;
+    if (!this.delayTimeoutId) {
+      this.triggerSaveTimeout() 
     }
   }
 
@@ -118,29 +123,40 @@ export class SaveManager {
       console.warn(`delete(): ${this.filename} is already deleted`)
       return
     }
-    if (hard) {
+    if (hard || this.isInRecentlyDeleted) {
       console.log('Permanently deleting', this.filename);
     } else {
       console.log('Soft deleting', this.filename);
     }
-    
+
+    // Marking this as deleted so that we don't try to save to it mid-delete
     this.isDeleted = true;
 
-    this._hasUnsavedInput = false;
-    if (this._delayTimeoutId) {
-      clearTimeout(this._delayTimeoutId)
-      this._delayTimeoutId = null
+    this.hasUnsavedInput = false;
+    if (this.delayTimeoutId) {
+      clearTimeout(this.delayTimeoutId)
+      this.delayTimeoutId = null
     }
-    if (!this._filepath) {
-      this._filepath = await join('notes', this.filename);
+
+    if (this.isInRecentlyDeleted) {
+      await this.recentlyDeletedFileDelete()
+    } else {
+      await this.normalFileDelete(hard);
+    }
+  }
+
+  private async normalFileDelete(hard: boolean) {
+    if (!this.filepath) {
+      this.filepath = await join('notes', this.filename);
     }
     try {
       if (!hard) {
         // Move file to recently-deleted folder under AppData
-        const recentlyDeletedDir = await join('recently-deleted');
-        const targetPath = await join(recentlyDeletedDir, this.filename);
+        const targetPath = await join('recently-deleted', this.filename);
         try {
-          await copyFile(this._filepath, targetPath, {
+          // Renaming instead of copying might be more correct, but it's useful
+          // That the created date is updated using copy
+          await copyFile(this.filepath, targetPath, {
             fromPathBaseDir: BaseDirectory.AppData,
             toPathBaseDir: BaseDirectory.AppData
           });
@@ -149,13 +165,42 @@ export class SaveManager {
         }
       }
       // Remove original file
-      await remove(this._filepath, { baseDir: BaseDirectory.AppData });
+      await remove(this.filepath, { baseDir: BaseDirectory.AppData });
     } catch(err) {
       console.log('failed to move note to recently-deleted:', err)
     }
   }
+
+  private async recentlyDeletedFileDelete() {
+    try {
+      const targetPath = await join('recently-deleted', this.filename);
+      await remove(targetPath, { baseDir: BaseDirectory.AppData });
+    } catch(err) {
+      console.log('failed to move note to recently-deleted:', err)
+    }
+  }
+
+  async restoreFile(): Promise<boolean> {
+    if (!this.isInRecentlyDeleted) {
+      console.error('Cannot restore file: not marked as isInRecentlyDeleted');
+      return false;
+    }
+    const currentPath = await join('recently-deleted', this.filename);
+    const targetPath = await join('notes', this.filename);
+    try {
+      await rename(currentPath, targetPath, {
+        oldPathBaseDir: BaseDirectory.AppData,
+        newPathBaseDir: BaseDirectory.AppData
+      })
+    } catch(err) {
+      console.log("failed to restore file")
+      return false;
+    }
+    return true;
+  }
 }
 
+/** Util to create an empty file as part of making a new note */
 export async function createNewNote(): Promise<Note> {
   const now = Date.now();
   const filename = `${now}.json`

@@ -5,10 +5,13 @@
 :root {
   // DEFAULT VARS
   --black-or-white-rgb: 0, 0, 0; // helper for making white or black rgba colors in other places
+
+  --text-color: #121416d8;
+  --text-color-secondary: color-mix(in srgb, var(--text-color) 80%, white);
+
   --background-color: #fff;
   --background-secondary: color-mix(in srgb, var(--background-color) 95%, black);
 
-  --text-color: #121416d8;
   --note-search-color: #ffcc03;
   --note-search-color-rgb: 255, 204, 3; // rgb values for above color
 
@@ -122,6 +125,7 @@
   // --splitter-color-dragging: #202020;
 
   --text-color: #F7F8F8;
+  --text-color-secondary: color-mix(in srgb, var(--text-color) 80%, black);
 
   --background-color: #242527;
   --background-secondary: #1b1c1e;
@@ -147,21 +151,12 @@
     background-color: #606060;
   }
 
-  // Todo: move this to searchbar component?
-  .searchbar {
-    background-color: var(--background-secondary);
-    border-color: var(--background-color) !important;
-    input {
-      color: var(--text-color);
-      background-color: var(--background-secondary);
-    }
-    button.clear-search {
-      background-color: var(--background-secondary);
-      color: var(--text-color);
-      // svg {
-      //   stroke: #fff !important;
-      // }
-    }
+  // Experimenting -- something doesnt feel right
+  button.regular {
+    // background-color: color-mix(in srgb, var(--background-secondary) 90%, black);
+    // transition-property: background-color, color;
+    // transition-duration: 0.1s;
+    // transition-timing-function: ease-in-out;
   }
   
   #text-editor {
@@ -247,15 +242,36 @@ button:not(:disabled) {
     }
   }
 }
-
+button.regular {
+  padding: 6px 12px;
+  background-color: var(--background-secondary);
+  // Longer transition for bigger button
+  transition-property: background-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease-in-out;
+}
 
 .header {
   border-bottom: 1px solid var(--border-color);
-  height: 36px; // 36px to line up with thick toolbar on Mac
+  // 36px to line up with thick toolbar on Mac?
+  // Idk anymore just make it fit I guess
+  height: 38px; 
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  line-height: 1;
+  & > .normal-toolbar, & > .restore-delete-toolbar {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+  & > .normal-toolbar {
+    line-height: 1;
+  }
+  & > .restore-delete-toolbar {
+    height: 38px;
+  }
+  & > .hidden {
+    display: none;
+  }
 
   #toolbar {
     height: 38px;
