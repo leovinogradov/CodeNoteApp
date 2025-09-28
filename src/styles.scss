@@ -252,6 +252,15 @@ button.regular {
 }
 
 .header {
+  &.header-right {
+    padding: 8px 12px 8px 6px;
+  }
+  &.header-left {
+    padding: 8px 12px;
+  }
+  &.header-fullwidth {
+    padding: 8px 12px;
+  }
   border-bottom: 1px solid var(--border-color);
   // 36px to line up with thick toolbar on Mac?
   // Idk anymore just make it fit I guess
@@ -380,60 +389,5 @@ button.toggle-on {
   .ql-editor {
     overflow: hidden;
     min-height: 90vh; // little hack to make editor clickable everywhere when there is no text
-  }
-}
-
-.notes-list {
-  position: relative;
-  overflow-y: scroll;
-  // Code to remove scrollbar:
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
-  scrollbar-width: none;  /* Firefox */
-  &::-webkit-scrollbar { 
-    display: none;  /* Safari and Chrome */
-    // width: 0;  /* Remove scrollbar space */
-    // background: transparent;  /* Optional: just make scrollbar invisible */
-  }
-}
-
-.note-summary {
-  // cursor: pointer; // doesn't work properly? wtf?
-  text-align: left;
-  padding: 8px 12px;
-  margin-right: 4px;
-  border-bottom: 1px solid var(--border-color);
-  position: relative;
-  // background-color: #fff;
-  background-color: var(--background-color);
-  
-  
-  &.selected {
-    z-index: 10 !important;  // for flip animation
-  }
-
-  h4, h5, p {
-    margin: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  h4, h5 {
-    white-space: nowrap;
-  }
-  p {
-    font-size: 0.9em;
-  }
-  .modified-time {
-    margin-right: 5px;
-  }
-  .subtitle {
-    color: #888;
-  }
-  .search-highlight {
-    color: var(--note-search-color);
-  }
-  .filename {
-    margin-top: 2px;
-    font-size: 0.73334em;
-    line-height: 1;
   }
 }

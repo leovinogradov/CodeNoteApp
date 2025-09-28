@@ -37,6 +37,7 @@
   import CornerButtonGroup from "./lib/components/CornerButtonGroup.svelte";
   import IconButton from "./lib/components/IconButton.svelte";
   import { XIcon } from "lucide-svelte";
+    import NoteList from "./lib/components/NoteList.svelte";
 
   let editor = $state<Editor>() as Editor;
   let currentFilename: string = $state("");
@@ -73,7 +74,7 @@
   // $: hasMatchingNotes = searchString && (lastSearchString || matchingNotes.length > 0);
 
   let hasMatchingNotes = $derived(
-    searchString && (lastSearchString || matchingNotes.length > 0),
+    Boolean(searchString && (lastSearchString || matchingNotes.length > 0)),
   );
 
   let myContextMenu: Menu;
@@ -602,6 +603,7 @@
     if (loadingFilenames.has(filename)) {
       return;
     }
+    // console.log('loading note content', filename)
     loadingFilenames.add(filename);
     const content = await readFile(filename, false);
     note.content = content;
@@ -777,10 +779,8 @@
     splitterSize="9px"
   >
     <div slot="primary">
-      <div
-        class="header"
-        style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;"
-      >
+      <!-- <div class="header" style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;" style="padding: 8px 12px 8px 6px;"> -->
+      <div class="header header-left">
         <Searchbar
           bind:value={searchString}
           oninput={onSearchInput}
@@ -788,72 +788,17 @@
           disabled={showingRecentlyDeleted}
         ></Searchbar>
       </div>
-      <div
-        class="notes-list"
-        hidden={showingRecentlyDeleted}
-        bind:this={notesListElement}
-        onscroll={onNoteListScroll}
-      >
-        {#if hasMatchingNotes}
-          <!-- list when searching -->
-          {#each matchingNotes as note, i (note.filename)}
-            <div
-              animate:myflip
-              class="note-summary"
-              onclick={() => onNoteClick(note)}
-              oncontextmenu={(e) => onContextMenu(e, note)}
-            >
-              <h4>
-                {#each note.note_meta.search_title_as_tokens as token}
-                  {#if token.highlight}
-                    <span class="search-highlight">{token.text}</span>
-                  {:else}
-                    {token.text}
-                  {/if}
-                {/each}
-              </h4>
-              <p>
-                <span class="modified-time">{note.note_meta.modifiedTime}</span>
-                <span class="subtitle">
-                  {#each note.note_meta.search_subtitle_as_tokens as token}
-                    {#if token.highlight}
-                      <span class="search-highlight">{token.text}</span>
-                    {:else}
-                      {token.text}
-                    {/if}
-                  {/each}
-                </span>
-              </p>
-            </div>
-          {/each}
-          {#if matchingNotes.length == 0}
-            <div class="note-summary">
-              <p>No results found</p>
-            </div>
-          {/if}
-        {:else}
-          <!-- normal list -->
-          {#each notes as note, i (note.filename)}
-            <div
-              animate:myflip
-              class="note-summary"
-              class:selected={currentFilename == note.filename}
-              onclick={() => onNoteClick(note)}
-              oncontextmenu={(e) => onContextMenu(e, note)}
-            >
-              <h4>{note.note_meta.title}</h4>
-              <p>
-                <span class="modified-time">{note.note_meta.modifiedTime}</span
-                ><span class="subtitle">{note.note_meta.subtitle}</span>
-              </p>
-              {#if showingFilenames}
-                <p class="filename">{note.filename}</p>
-              {/if}
-            </div>
-          {/each}
-        {/if}
-      </div>
-      {#if showingRecentlyDeleted}
+      {#if !showingRecentlyDeleted}
+        <NoteList
+          isSearchingNotes={hasMatchingNotes}
+          currentFilename={currentFilename}
+          showingFilenames={showingFilenames}
+          notes={hasMatchingNotes ? matchingNotes : notes}
+          onNoteClick={onNoteClick}
+          onContextMenu={onContextMenu}
+          loadNoteContent={loadNoteContent}
+        ></NoteList>
+      {:else}
         <div class="bg-secondary" style="padding: 4px 12px; display: flex;">
           <div style="flex-grow: 1;">Recently deleted</div>
           <div>
@@ -868,27 +813,15 @@
             ></IconButton>
           </div>
         </div>
-        <div class="notes-list">
-          <!-- deleted notes list -->
-          {#each deletedNotes as note, i (note.filename)}
-            <div
-              animate:myflip
-              class="note-summary"
-              class:selected={currentFilename == note.filename}
-              onclick={() => onNoteClick(note, { saveOnExit: true, isDeletedNote: true })}
-              oncontextmenu={(e) => onContextMenu(e, note)}
-            >
-              <h4>{note.note_meta.title}</h4>
-              <p>
-                <span class="modified-time">{note.note_meta.modifiedTime}</span
-                ><span class="subtitle">{note.note_meta.subtitle}</span>
-              </p>
-              {#if showingFilenames}
-                <p class="filename">{note.filename}</p>
-              {/if}
-            </div>
-          {/each}
-        </div>
+        <NoteList
+          isSearchingNotes={hasMatchingNotes}
+          currentFilename={currentFilename}
+          showingFilenames={showingFilenames}
+          notes={deletedNotes}
+          onNoteClick={(note) => onNoteClick(note, { saveOnExit: true, isDeletedNote: true })}
+          onContextMenu={(e, note) => {}}
+          loadNoteContent={loadNoteContent}
+        ></NoteList>
       {/if}
     </div>
 
@@ -898,7 +831,7 @@
 
     <div slot="secondary">
       <!-- <div class="header" style="padding: 6px 10px 8px 12px; margin: 2px 2px 0 0;"> -->
-      <div class="header" style="padding: 8px 12px 8px 6px;">
+      <div class="header header-right">
         <div class:hidden={showingRecentlyDeleted && viewingDeletedFile} class="normal-toolbar">
           <!-- normal toolbar -->
           <div>

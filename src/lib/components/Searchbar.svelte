@@ -25,6 +25,7 @@
 	.searchbar {
 		width: 100%;
 		height: 32px;
+		margin-top: 3px; // to be centered within 38px height of header
 		padding: 0 10px 0 12px;
 		background-color: var(--background-secondary);
 		border: 1px solid var(--background-color);

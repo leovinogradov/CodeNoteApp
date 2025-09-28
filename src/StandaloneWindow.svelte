@@ -176,7 +176,7 @@ async function init() {
 
 <main bind:this={mainElement}>
 
-  <div class="header" style="padding: 6px 10px 8px 12px; margin: 2px 2px 0 0;">
+  <div class="header header-fullwidth">
     <div class="normal-toolbar">
       <!-- new note button would be here -->
       <div class="center-items">
