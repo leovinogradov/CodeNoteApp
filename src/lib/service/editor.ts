@@ -1,7 +1,7 @@
 import Quill from "quill";
 // import Toolbar from "quill/modules/toolbar"
 
-import { SaveManager, createNewNote } from "./save-manager";
+import { FileManager, createNewNote } from "./file-manager";
 import { isWhitespace, readFile } from "./utils";
 
 import Searcher from "./search-highlight/Searcher";
@@ -38,18 +38,17 @@ export interface ExitResult {
 	
 export class Editor {
 	// @ts-ignore
-  saveManager: SaveManager|null = null;
+  fileManager: FileManager|null = null;
 	quill;
 	searcher;
 	editorEl;
 
 	onModified: Function|null;
 	private _timeOpened: number = 0;
-	// private _clean: Function;
 
-  	constructor(editorEl, onModified: Function|null) {
+  constructor(editorEl, onModified: Function|null) {
 		this.editorEl = editorEl
-	  	this.quill = new Quill(editorEl, {
+	  this.quill = new Quill(editorEl, {
 			modules: {
 				syntax: {
 					languages: languages
@@ -65,7 +64,7 @@ export class Editor {
 			placeholder: "Type something...",
 			theme: "custom-theme" // "snow", // or 'bubble'
 			// ...options
-    	});
+    });
 		this.searcher = new Searcher(this.quill, editorEl)
 		
 		// Note: use this for for external format remove functionality if needed
@@ -120,10 +119,10 @@ export class Editor {
 		// console.log(delta, source)
 		// console.log(delta, oldDelta, source)
 		// TODO: maybe do change only if source == user or source == api and last index has inserts
-		if (this.saveManager) {
-			this.saveManager.saveAfterDelay()
+		if (this.fileManager) {
+			this.fileManager.saveAfterDelay()
 			if (this.onModified) {
-				this.onModified(this.saveManager.filename, delta, oldDelta, source)
+				this.onModified(this.fileManager.filename, delta, oldDelta, source)
 			}
 		}
 	}
@@ -131,7 +130,7 @@ export class Editor {
 
 	async openNew(saveOnExit=true) {
 		console.log('opening new')
-		if (this.saveManager && this.saveManager.filename && Date.now() - this._timeOpened < 50) {
+		if (this.fileManager && this.fileManager.filename && Date.now() - this._timeOpened < 50) {
 			console.log('open new debounce')
 			return {
 				exitResult: null,
@@ -143,7 +142,7 @@ export class Editor {
 		const note = await createNewNote()
 		this.quill.setContents([], 'silent')
 		this.quill.history.clear()
-		this.saveManager = new SaveManager(this.quill, note.filename)
+		this.fileManager = new FileManager(this.quill, note.filename)
 		this.searcher.lastCursorIndex = null
 		console.log('opened new')
 		return {
@@ -154,18 +153,18 @@ export class Editor {
 
 	async openDeletedFile(filename, saveOnExit = true) {
 		await this._setContentsFromFile(filename, true);
-		this.saveManager = new SaveManager(this.quill, filename, true); // Open with edits disabled
+		this.fileManager = new FileManager(this.quill, filename, true); // Open with edits disabled
 		this.quill.disable();
 	}
 
 	async open(filename, saveOnExit = true) {
 		console.log('Opening file in editor', filename)
 		this.quill.enable();
-		if (this.saveManager && this.saveManager.filename == filename) {
+		if (this.fileManager && this.fileManager.filename == filename) {
 			console.log('Already opened in editor; doing nothing')
-			if (this.saveManager.isDeleted) {
+			if (this.fileManager.isDeleted) {
 				console.error('Active file was somehow deleted; reopening')
-				this.saveManager = new SaveManager(this.quill, filename)
+				this.fileManager = new FileManager(this.quill, filename)
 			}
 			return null
 		}
@@ -173,7 +172,7 @@ export class Editor {
 		const exitResult = await this.exit(saveOnExit)
 		await this._setContentsFromFile(filename)
 		this.quill.history.clear()
-		this.saveManager = new SaveManager(this.quill, filename)
+		this.fileManager = new FileManager(this.quill, filename)
 		this.searcher.lastCursorIndex = null
 		console.log('Opened', filename)
 		return exitResult
@@ -185,19 +184,19 @@ export class Editor {
 			deleted: false,
 			filename: '',
 		};
-		if (!this.saveManager || this.saveManager.isDeleted) {
+		if (!this.fileManager || this.fileManager.isDeleted) {
 			return ret
 		}
-		ret.filename = this.saveManager.filename
+		ret.filename = this.fileManager.filename
 		if (this.isEmpty()) {
 			// hard delete
 			console.log('deleting on exit due to no content');
-			await this.saveManager.delete(true);
+			await this.fileManager.delete(true);
 			ret.deleted = true
 		} else {
       // save and exit
 			if (saveOnExit) {
-				await this.saveManager.saveIfHasChanges();
+				await this.fileManager.saveIfHasChanges();
 			}
 			ret.deleted = false
 		}
@@ -205,10 +204,10 @@ export class Editor {
 	}
 
 	deleteNote() {
-		if (!this.saveManager) return;
-		const filename = this.saveManager.filename;
+		if (!this.fileManager) return;
+		const filename = this.fileManager.filename;
 		const hardDelete = this.isEmpty();
-		this.saveManager.delete(hardDelete);
+		this.fileManager.delete(hardDelete);
 		return filename;
 	}
 
@@ -219,8 +218,8 @@ export class Editor {
 	}
 
 	getFilename() {
-		if (!this.saveManager) return '';
-		return this.saveManager.filename;
+		if (!this.fileManager) return '';
+		return this.fileManager.filename;
 	}
 
 	getContent() {

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Result;
 // use regex::RegexBuilder;
 
-use crate::read_notes::read_file;
+use crate::note_handling::read_file;
 // use read_notes::read_file;
 
 #[derive(Serialize, Deserialize)]

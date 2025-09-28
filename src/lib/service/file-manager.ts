@@ -14,7 +14,7 @@ import type { Note } from '../../types';
     a. have event loop that tells editor if all changes are saved
     b. increase / decrease time between saves based on how fast saves occur
 */
-export class SaveManager {
+export class FileManager {
   quill: any;
   minTimeBetweenSavesMs: number;
   filename: string;
@@ -155,7 +155,9 @@ export class SaveManager {
         const targetPath = await join('recently-deleted', this.filename);
         try {
           // Renaming instead of copying might be more correct, but it's useful
-          // That the created date is updated using copy
+          // That the created date is updated using copy.
+          // Interestingly, the modified date is not updated, which is useful for the 
+          // notes list.
           await copyFile(this.filepath, targetPath, {
             fromPathBaseDir: BaseDirectory.AppData,
             toPathBaseDir: BaseDirectory.AppData

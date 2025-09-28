@@ -150,7 +150,7 @@
       setTimeout(_initEditor, 100);
     }
 
-    initRecentlyDeleted();
+    initRecentlyDeleted(); // Explicitly no await
   }
 
   async function initRecentlyDeleted() {
@@ -163,6 +163,10 @@
           baseDir: BaseDirectory.AppData,
           recursive: true,
         });
+      } 
+      else {
+        // recently-deleted dir exists. See if any old notes need to be deleted
+        await invoke("remove_old_deleted_notes");
       }
     } catch (err) {
       console.error(err);
@@ -300,7 +304,6 @@
     note: Note,
     { saveOnExit = true, isDeletedNote = false } = {}
   ) {
-    console.log('TEST', isDeletedNote)
     let exitResult;
     try {
       exitResult = isDeletedNote
@@ -366,16 +369,16 @@
   }
 
   async function onRestoreNoteClick() {
-    const filename = editor.saveManager?.filename;
+    const filename = editor.fileManager?.filename;
     if (!filename || isDeleting) return;
-    if (!editor.saveManager?.isInRecentlyDeleted) {
+    if (!editor.fileManager?.isInRecentlyDeleted) {
       console.error("Cannot restore a note that is not in recently deleted.")
       return;
     }
     const noteIndex = deletedNotes.findIndex((x) => x.filename == filename);
     if (noteIndex >= 0) {
       const note = deletedNotes[0];
-      const success = await editor.saveManager.restoreFile();
+      const success = await editor.fileManager.restoreFile();
       if (success) {
         notes.unshift(note);
         notes = notes;
@@ -388,9 +391,9 @@
 
   /** Clicking button to delete note */
   async function onDeleteNoteClick() {
-    const filename = editor.saveManager?.filename;
+    const filename = editor.fileManager?.filename;
     if (!filename || isDeleting) return;
-    if (editor.saveManager?.isInRecentlyDeleted) {
+    if (editor.fileManager?.isInRecentlyDeleted) {
       return deleteRecentlyDeletedNote(filename)
     }
     const index = notes.findIndex((x) => x.filename == filename); // should be first note, most of the time

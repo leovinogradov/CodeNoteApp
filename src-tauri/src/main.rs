@@ -8,8 +8,8 @@ use std::ffi::OsStr;
 use tauri::path::BaseDirectory;
 use tauri::Manager; // makes .setup(|app|) work
 
-mod read_notes;
-use read_notes::FileSummaryResponse;
+mod note_handling;
+use note_handling::FileSummaryResponse;
 
 mod search;
 use search::SearchResult;
@@ -45,7 +45,7 @@ async fn read_notes_dir(window: tauri::Window, recently_deleted: bool) -> Result
     let mut vec: Vec<FileSummaryResponse> = Vec::new();
     // Return all note filenames, most recent first
     // Read content of first 20 notes (the rest are lazy loaded when scrolled to)
-    read_notes::read_notes_in_dir(&mut vec, &path, 20);
+    note_handling::read_notes_in_dir(&mut vec, &path, 20);
 
     Ok(NotesResponse { data: vec })
 }
@@ -73,7 +73,7 @@ async fn search_handler(
         .build()
         .unwrap();
 
-    let fileinfovec = read_notes::get_note_files_sorted(&dir_path);
+    let fileinfovec = note_handling::get_note_files_sorted(&dir_path);
     for fileinfo in fileinfovec {
         let full_path_as_str: &str = fileinfo.path_buf.to_str().unwrap();
         if full_path_as_str.ends_with(".json") {
@@ -97,19 +97,18 @@ async fn search_handler(
     Ok(SearchResponse { data: result_list })
 }
 
-// #[tauri::command]
-// async fn create_window(app: tauri::AppHandle) -> Result<tauri::WebviewWindow, String> {
-//     let webview_window = tauri::WebviewWindowBuilder::new(&app, "label", tauri::WebviewUrl::App("index.html".into()))
-//         .build()
-//         .unwrap();
-//     Ok(webview_window)
-// }
+#[tauri::command]
+async fn remove_old_deleted_notes(window: tauri::Window) -> Result<bool, String> {
+    let app = window.app_handle();
+    let path = app.path().resolve("recently-deleted", BaseDirectory::AppData).unwrap();
+    let path = path.to_str().unwrap();
 
-// Menu testing that didn't work
-// use tauri::menu::{Menu, MenuBuilder, MenuItemBuilder, SubmenuBuilder};
-// app.on_menu_event(move |app, event| {
-//     println!("event triggered!");
-// });
+    match note_handling::delete_old_notes(&path) {
+        Ok(_) => Ok(true), // Success
+        Err(e) => Err(format!("{}", e)), // Failure, send back the error message
+    }
+}
+
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn main() {
@@ -157,7 +156,8 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             read_notes_dir,
             search_handler,
-            open_in_filesystem::show_item_in_filesystem
+            open_in_filesystem::show_item_in_filesystem,
+            remove_old_deleted_notes
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
