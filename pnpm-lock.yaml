@@ -21,8 +21,8 @@ importers:
         specifier: ^2.2
         version: 2.2.0
       lucide-svelte:
-        specifier: ^0.330.0
-        version: 0.330.0(svelte@5.22.6)
+        specifier: ^0.544.0
+        version: 0.544.0(svelte@5.22.6)
       parchment:
         specifier: ^3.0.0
         version: 3.0.0
@@ -559,8 +559,8 @@ packages:
   lodash.isequal@4.5.0:
     resolution: {integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==}
 
-  lucide-svelte@0.330.0:
-    resolution: {integrity: sha512-HDsc2a+MhCEtBUU6JTQMlqk2liukjR/bHS61EtYjP2dPx0fywP5rmr6y592MFx/o4xXzFM93ANrHDayxQKzSvQ==}
+  lucide-svelte@0.544.0:
+    resolution: {integrity: sha512-8kBxSivf8SJdEUJRHBpu9bRw0S/qfVK+Yfb92KQnRRBdP425RzT6aQfrIfZctG1oucPVTBQe1ZXgmth/3qVICg==}
     peerDependencies:
       svelte: ^3 || ^4 || ^5.0.0-next.42
 
@@ -1092,7 +1092,7 @@ snapshots:
 
   lodash.isequal@4.5.0: {}
 
-  lucide-svelte@0.330.0(svelte@5.22.6):
+  lucide-svelte@0.544.0(svelte@5.22.6):
     dependencies:
       svelte: 5.22.6
 

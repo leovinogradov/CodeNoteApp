@@ -4,19 +4,34 @@
 
 :root {
   // DEFAULT VARS
-  --black-or-white-rgb: 0, 0, 0; 
-  --background-color: #fff;
-  --background-secondary: #fff;
+  --black-or-white-rgb: 0, 0, 0; // helper for making white or black rgba colors in other places
+
   --text-color: #121416d8;
+  --text-color-secondary: color-mix(in srgb, var(--text-color) 80%, white);
+
+  --background-color: #fff;
+  --background-secondary: color-mix(in srgb, var(--background-color) 95%, black);
+
   --note-search-color: #ffcc03;
   --note-search-color-rgb: 255, 204, 3; // rgb values for above color
-  --splitter-color: rgba(0, 0, 0, 0.1); // similar to #ddd;
+
+  // Hover bg colors
+  --hover-color: color-mix(in srgb, var(--background-color) 96%, black);
+  --hover-secondary: color-mix(in srgb, var(--background-color) 92%, black);
+
+  // Borders
+  --border-color: rgba(0, 0, 0, 0.1);
+  --splitter-color: var(--border-color); // similar to #ddd;
   --splitter-color-dragging: rgba(0, 0, 0, 0.25);
+
+  // Button texts
   --button-color: #444;
+  --button-highlight-color: var(--text-color); // todo: rename this to button hover color
+  --button-active-color: #06c; // Comes from Quill
   --button-disabled-color: #ccc;
-  --button-highlight-color: #06c;
 
   --overlay-box-shadow: 0px 1px 3px -1px rgba(0,0,0,0.15);
+  --border-radius: 4px; // default border radius
 
   // root/html styling
   background: var(--background-color);
@@ -96,23 +111,9 @@
   }
 }
 
-// @mixin lighttheme() {
-//   // LIGHT MODE
-//   --background-color: #fff;
-//   --text-color: #0f0f0f;
-//   ::selection {
-//     background-color: #FFF9CD;
-//   }
-// }
-
 @mixin darktheme() {
   // DARK MODE
   --black-or-white-rgb: 255, 255, 255;
-
-  // TODO: blue tint might not look good on Mac; investigate
-  // Slight blue tint:
-  --background-color: #242527;
-  --background-secondary: #1b1c1e;
 
   // Windows notepad colors:
   // --background-color: #272727;
@@ -124,11 +125,23 @@
   // --splitter-color-dragging: #202020;
 
   --text-color: #F7F8F8;
-  --splitter-color: rgba(255, 255, 255, 0.08); // #181818;
-  --splitter-color-dragging: rgba(255, 255, 255, 0.08);
+  --text-color-secondary: color-mix(in srgb, var(--text-color) 80%, black);
 
-  --button-highlight-color: var(--note-search-color);
+  --background-color: #242527;
+  --background-secondary: #1b1c1e;
+
+  --hover-color: color-mix(in srgb, var(--background-color) 96%, white);
+  --hover-secondary: color-mix(in srgb, var(--background-color) 92%, white);
+
+  --border-color: rgba(255, 255, 255, 0.08); // #181818;
+  --splitter-color: var(--border-color);
+  --splitter-color-dragging: var(--border-color);
+
   --button-color: #F7F8F8;
+  --button-highlight-color: var(--note-search-color);
+  --button-active-color: var(--note-search-color);
+  --button-disabled-color: #6b6b6b;
+  
   --overlay-box-shadow: 0px 1px 4px 0px rgba(0,0,0,0.55);
 
   // Important for things like scrollbar
@@ -138,19 +151,12 @@
     background-color: #606060;
   }
 
-  .searchbar {
-    background-color: var(--background-secondary);
-    border-color: var(--background-color) !important;
-    input {
-      color: var(--text-color);
-      background-color: var(--background-secondary);
-    }
-    button.clear-search {
-      background-color: var(--background-secondary);
-      svg {
-        stroke: #fff !important;
-      }
-    }
+  // Experimenting -- something doesnt feel right
+  button.regular {
+    // background-color: color-mix(in srgb, var(--background-secondary) 90%, black);
+    // transition-property: background-color, color;
+    // transition-duration: 0.1s;
+    // transition-timing-function: ease-in-out;
   }
   
   #text-editor {
@@ -160,7 +166,7 @@
       -webkit-box-shadow: var(--overlay-box-shadow);
       -moz-box-shadow: var(--overlay-box-shadow);
       box-shadow: var(--overlay-box-shadow);
-      border: 1px solid var(--splitter-color);
+      border: 1px solid var(--border-color);
       .ql-picker-label, .ql-picker-item {
         color: var(--text-color);
       }
@@ -181,24 +187,13 @@
   .settings-button {
     background-color: rgba(0, 0, 0, 0.15) !important;
   }
-
-  // a:hover {
-  //   color: #24c8db;
-  // }
-  // input,
-  // button {
-  //   color: #ffffff;
-  //   background-color: #0f0f0f98;
-  // }
-  // button:active {
-  //   background-color: #0f0f0f69;
-  // }
 }
 
 
 html[data-theme='dark'] {
   @include darktheme();
 }
+
 // Uncomment this when auto theme selection works:
 // @media (prefers-color-scheme: dark) {
 //   main.theme-auto,
@@ -207,68 +202,90 @@ html[data-theme='dark'] {
 //   }
 // }
 
-// TODO: load highlightjs styles properly 
-// @import url('./styles/highlight/default.css');
 
-.dropdown-formats {
-  margin-right: 0;
-  width: 100%;
-  display: flex !important;
-  button {
-    margin-right: auto !important;
-    margin-left: auto !important;
+// Override Quill Stylesheet
+.ql-snow, svg {
+  .ql-fill {
+    fill: currentColor !important;
+  }
+  .ql-stroke {
+    stroke: currentColor !important;
   }
 }
 
-// @use "sass:meta";
-
-// html[data-theme="light"] {
-//   @include meta.load-css("highlight.js/styles/a11y-light");
-// }
-// html[data-theme="dark"] {
-//   @include meta.load-css("highlight.js/styles/a11y-dark");
-// }
-
-
-button.custom-icon-btn {
-  display: flex !important;
-  padding: 0 !important;
-  .custom-svg {
-    margin: auto;
-  }
-}
-
+// Global button styling
 button, .ql-snow button {
-  .custom-svg svg {
-    path:not(.nofill) {
-      fill: var(--button-color);
-    }
-    path.nofill {
-      stroke: var(--button-color);
+  color: var(--button-color);
+
+  transition-property: background-color, color;
+  transition-duration: 0.1s;
+  transition-timing-function: ease-in-out;
+
+  &:disabled {
+    color: var(--button-disabled-color);
+  }
+}
+button:not(:disabled) {
+  // Button hover color
+  &:hover {
+    color: var(--button-highlight-color);
+    background-color: var(--hover-color);
+    svg {
+      color: var(--button-highlight-color);
     }
   }
-  svg {
-    .ql-fill {
-      fill: var(--button-color);;
-    }
-    .ql-stroke {
-      stroke: var(--button-color);;
+  // Button active color
+  &:active, &.active, &.ql-active {
+    color: var(--button-active-color);
+    svg {
+      color: var(--button-active-color);
     }
   }
+}
+button.regular {
+  padding: 6px 12px;
+  background-color: var(--background-secondary);
+  // Longer transition for bigger button
+  transition-property: background-color, color;
+  transition-duration: 0.15s;
+  transition-timing-function: ease-in-out;
 }
 
 .header {
-  border-bottom: 1px solid var(--splitter-color);
-  height: 36px; // 36px to line up with thick toolbar on Mac
+  &.header-right {
+    padding: 8px 12px 8px 6px;
+  }
+  &.header-left {
+    padding: 8px 12px;
+  }
+  &.header-fullwidth {
+    padding: 8px 12px;
+  }
+  border-bottom: 1px solid var(--border-color);
+  // 36px to line up with thick toolbar on Mac?
+  // Idk anymore just make it fit I guess
+  height: 38px; 
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  line-height: 1;
+  & > .normal-toolbar, & > .restore-delete-toolbar {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+  }
+  & > .normal-toolbar {
+    line-height: 1;
+  }
+  & > .restore-delete-toolbar {
+    height: 38px;
+  }
+  & > .hidden {
+    display: none;
+  }
 
   #toolbar {
-    height: 36px;
-    padding-top: 6px;
-    padding-bottom: 6px;
+    height: 38px;
+    padding-top: 5px;
+    padding-bottom: 5px;
     // flex and display: block needed to avoid spacing shifting 
     // for some reason when changing zoom
     display: flex;
@@ -281,34 +298,9 @@ button, .ql-snow button {
   button {
     margin-right: 4px;
     margin-left: 4px;
-    padding: 0 6px;
-    height: 36px;
+    // padding: 0 6px;
+    // height: 36px;
     min-width: 28px;
-  }
-  // TODO: need to make buttons square for bg on hover to work
-  // button.toolbar-button:hover {
-  //   background-color: #f4f4f4;
-  // }
-
-  button:hover, button.ql-active {
-    color: var(--button-highlight-color) !important;
-    svg {
-      color: var(--button-highlight-color);
-      .ql-fill {
-        fill: var(--button-highlight-color) !important;
-      }
-      .ql-stroke {
-        stroke: var(--button-highlight-color) !important;
-      }
-    }
-    .custom-svg svg {
-      path:not(.nofill) {
-        fill: var(--button-highlight-color); // #396cd8;
-      }
-      path.nofill {
-        stroke: var(--button-highlight-color);
-      }
-    }
   }
  
   .center-items {
@@ -318,7 +310,6 @@ button, .ql-snow button {
   }
 }
 
-
 .container {
   margin: 0;
   display: flex;
@@ -326,6 +317,12 @@ button, .ql-snow button {
   justify-content: center;
   text-align: center;
 }
+
+// Util class to use secondary color
+.bg-secondary {
+  background-color: var(--background-secondary);
+}
+
 
 .logo {
   height: 6em;
@@ -392,60 +389,5 @@ button.toggle-on {
   .ql-editor {
     overflow: hidden;
     min-height: 90vh; // little hack to make editor clickable everywhere when there is no text
-  }
-}
-
-.notes-list {
-  position: relative;
-  overflow-y: scroll;
-  // Code to remove scrollbar:
-  -ms-overflow-style: none;  /* Internet Explorer 10+ */
-  scrollbar-width: none;  /* Firefox */
-  &::-webkit-scrollbar { 
-    display: none;  /* Safari and Chrome */
-    // width: 0;  /* Remove scrollbar space */
-    // background: transparent;  /* Optional: just make scrollbar invisible */
-  }
-}
-
-.note-summary {
-  // cursor: pointer; // doesn't work properly? wtf?
-  text-align: left;
-  padding: 8px 12px;
-  margin-right: 4px;
-  border-bottom: 1px solid var(--splitter-color);
-  position: relative;
-  // background-color: #fff;
-  background-color: var(--background-color);
-  
-  
-  &.selected {
-    z-index: 10 !important;  // for flip animation
-  }
-
-  h4, h5, p {
-    margin: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  h4, h5 {
-    white-space: nowrap;
-  }
-  p {
-    font-size: 0.9em;
-  }
-  .modified-time {
-    margin-right: 5px;
-  }
-  .subtitle {
-    color: #888;
-  }
-  .search-highlight {
-    color: var(--note-search-color);
-  }
-  .filename {
-    margin-top: 2px;
-    font-size: 0.73334em;
-    line-height: 1;
   }
 }

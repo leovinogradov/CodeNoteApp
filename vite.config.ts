@@ -14,8 +14,9 @@ export default defineConfig(async () => ({
       ],
       onwarn: (warning, handler) => {
         // disable a11y warnings
-        if (warning.code.startsWith('a11y-')) return;
-        if (warning.code.includes('Unused CSS selector')) return;
+        if (warning.code.startsWith('a11y')) return;
+        if (warning.code == "element_invalid_self_closing_tag") return;
+        if (warning.code == "css_unused_selector") return;
         handler(warning);
       },
     }),

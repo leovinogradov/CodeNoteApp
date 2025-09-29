@@ -2,21 +2,17 @@ import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { BaseDirectory } from "@tauri-apps/api/path";
 import { platform } from '@tauri-apps/plugin-os';
 import { settingsStore, platformNameStore, alternateFunctionKeyStore } from "../../store";
+import type { AppSettings } from "../../types";
 
 
 const SettingsFilename = "settings.json";
 
-const defaultSettings = {
+const defaultSettings: AppSettings = {
   zoom: 0,  // ranges -2 to 2
   theme: 'light'  // dark/light/auto not implemented yet
 }
 
-export interface AppSettings {
-  zoom: number,
-  theme: string
-}
-
-export async function loadSettings() {
+export async function loadSettings(): Promise<AppSettings> {
   try {
     let content = await readTextFile(SettingsFilename, { baseDir: BaseDirectory.AppData });
     if (content) {
@@ -36,7 +32,7 @@ export async function loadSettings() {
   return defaultSettings
 }
 
-export async function saveSettings(settings) {
+export async function saveSettings(settings: AppSettings) {
   console.log('saving settings')
   settingsStore.set(settings)
   const asStr = JSON.stringify(settings)

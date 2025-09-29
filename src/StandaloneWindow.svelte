@@ -10,13 +10,13 @@ import { event } from '@tauri-apps/api';
 import { alternateFunctionKeyStore } from "./store";
 import { isInputFocused, debouncify } from './lib/service/utils';
 import { Editor } from './lib/service/editor';
-import { loadSettings, saveSettings, type AppSettings } from './lib/util/app-settings';
+import { loadSettings, saveSettings } from './lib/util/app-settings';
 
 // import { WebviewWindow, getCurrentWindow } from '@tauri-apps/api/window';
 import { Window } from "@tauri-apps/api/window"
 
 // Add import for interfaces
-import type { NoteMeta, SearchNoteMeta, Note, SearchNote } from './types';
+import type { AppSettings } from './types';
 
 
 let editor = $state<Editor>() as Editor;
@@ -68,82 +68,6 @@ async function initSettings() {
   //   console.log('New theme: ' + theme);
   // });
 }
-
-const ONE_DAY = 24 * 60 * 60 * 1000;
-
-function _getModifiedAtStr(modified: number) {
-  try {
-    const now = new Date()
-    const d = new Date(modified)
-    if ((now.getTime() - d.getTime()) < ONE_DAY) {
-      // less than a day ago
-      // get am/pm
-      const ampm = d.getHours() >= 12 ? 'pm' : 'am'
-      const hours = d.getHours() % 12 || 12  // 0 is actually 12am
-      const minutes = d.getMinutes() < 10 ? '0' + d.getMinutes() : d.getMinutes()
-      return hours + ':' + minutes + ampm;
-      // return d.toLocaleTimeString([], {hour: "numeric", minute: "2-digit" })
-    }
-
-    // default, more than one day ago
-    let datestring = d.toDateString()
-    const year: string = datestring.slice(datestring.length-4)
-    // string to number comparison, hell yeah JavaScript
-    // @ts-ignore
-    if (year == now.getFullYear()) {
-      // shortened date string, 'Sun Apr 21'
-      return datestring.slice(0, datestring.length-5)
-    }
-    // full date string, 'Sun Apr 21 2024'
-    return datestring
-  } catch (err) {
-    console.error(err)
-  }
-  return ''
-}
-
-
-async function onNewNoteClick(saveOnExit=true) {
-}
-
-async function onDeleteNoteClick() {
-  // TODO: this should delete the current node, close the window, and update the state in the main window
-  // const filename = editor.saveManager?.filename
-  // if (!filename || isDeleting) return
-  // const index = notes.findIndex(x => x.filename == filename)  // should be first note, most of the time
-  // if (index < 0) {
-  //   console.error(`${filename} not in notes list?`)
-  //   return
-  // }
-  // isDeleting = true
-  // try {
-  //   await editor.deleteNote()
-  // } catch(err) {
-  //   console.error(err)
-  //   isDeleting = false
-  //   return
-  // }
-  // isDeleting = false
-  // notes.splice(index, 1)
-  // notes = notes
-  // if (notes.length > 0) {
-  //   // Other notes exist; open top one
-  //   await onNoteClick(notes[0], false)
-  // }
-  // else {
-  //   // All notes have been deleted; open new one
-  //   await onNewNoteClick(false)
-  // }
-}
-
-// function onModified(filename, delta, oldDelta, source) {
-//   // Emit notification to main window that node was modified
-//   event.emit('event', {
-//     type: 'noteModified',
-//     filename,
-//     editorContent: editor.getContent()
-//   });
-// }
 
 /** Special onModified handler: 
  * Emit notification to main window that node was modified
@@ -252,26 +176,26 @@ async function init() {
 
 <main bind:this={mainElement}>
 
-  <div class="header" style="padding: 6px 10px 8px 12px; margin: 2px 2px 0 0;">
-    <!-- new note button would be here -->
-
-    <div class="center-items">
-      <div id="toolbar">
-        <span class="ql-formats" style="height: 24px;">
-          <FormatDropdown editor={editor}></FormatDropdown>
-        </span>
-        <span class="ql-formats">
-          <button data-ql-format="ql-code-block" class="custom-icon-btn toolbar-button">
-            <Svg src="/img/Code-block.svg" height="20px"></Svg>
-          </button>
-          <button class="ql-list toolbar-button" value="ordered" aria-label="ordered list"></button>
-          <button class="ql-list toolbar-button" value="bullet" aria-label="bullet list"></button>
-          <button class="ql-clean toolbar-button" aria-label="clear format"></button>
-        </span>
+  <div class="header header-fullwidth">
+    <div class="normal-toolbar">
+      <!-- new note button would be here -->
+      <div class="center-items">
+        <div id="toolbar">
+          <span class="ql-formats">
+            <FormatDropdown editor={editor}></FormatDropdown>
+          </span>
+          <span class="ql-formats">
+            <button data-ql-format="ql-code-block" class="custom-icon-btn toolbar-button">
+              <Svg src="/img/Code-block.svg" height="20px"></Svg>
+            </button>
+            <button class="ql-list toolbar-button" value="ordered" aria-label="ordered list"></button>
+            <button class="ql-list toolbar-button" value="bullet" aria-label="bullet list"></button>
+            <button class="ql-clean toolbar-button" aria-label="clear format"></button>
+          </span>
+        </div>
       </div>
+      <!-- delete note would be here -->
     </div>
-
-    <!-- delete note would be here -->
   </div>
 
   <div class="text-editor-outer">
