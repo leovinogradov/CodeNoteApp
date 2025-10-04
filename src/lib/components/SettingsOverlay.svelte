@@ -68,7 +68,7 @@
       </div>
     </div>
     <div>
-      <p class="small">Version: 1.2.0</p>
+      <p class="small">Version: 1.2.1</p>
       <p class="small">New releases and source code at: https://github.com/leovinogradov/CodeNoteApp</p>
     </div>
   </div>

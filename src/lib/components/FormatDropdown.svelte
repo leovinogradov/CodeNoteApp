@@ -160,11 +160,12 @@
       transition-duration: 0.1s;
       transition-timing-function: ease-in-out;
     }
-    &:hover, &.selected {
+    
+    &:hover {
       background-color: var(--hover-color);
     }
-    &.selected:hover {
-      background-color: var(--hover-secondary);
+    &.selected, &.selected:hover {
+      background-color: var(--hover-color);
     }
   }
 
@@ -182,6 +183,7 @@
       }
       margin-bottom: 6px;
       border-bottom: 1px solid rgba(var(--black-or-white-rgb), 0.08);
+      padding-bottom: 6px;
     }
 
     button {
@@ -189,4 +191,14 @@
     }
   }
 }
+
+// Overrides for dark theme if needed:
+// :global([data-theme='dark']) .dropdown-content button.dropdown-item {
+//   &:hover {
+//     background-color: var(--hover-secondary);
+//   }
+//   &.selected, &.selected:hover {
+//     background-color: var(--hover-secondary);
+//   }
+// }
 </style>
