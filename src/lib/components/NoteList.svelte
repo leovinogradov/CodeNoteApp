@@ -133,6 +133,9 @@
   // background-color: #fff;
   background-color: var(--background-color);
   
+  &:last-child {
+    margin-bottom: 54px; // To make room for fixed buttons
+  }
   
   &.selected {
     z-index: 10 !important;  // for flip animation

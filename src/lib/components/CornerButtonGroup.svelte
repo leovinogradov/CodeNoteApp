@@ -29,6 +29,7 @@
   .icon-button-group {
     display: flex;
     // box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    border-radius: 6px;
     box-shadow: var(--overlay-box-shadow);
     line-height: 1; // Just in case
     .icon-button {
@@ -38,7 +39,7 @@
       // Light bg
       background: var(--background-color);
       &:hover {
-        background: var(--background-secondary);
+        background: var(--hover-color);
       }
 
       border: 1px solid var(--border-color);
@@ -61,7 +62,7 @@
       }
       .icon-button:hover {
         color: var(--button-highlight-color);
-        background: var(--background-color); // Instead of selected color, go back to primary bg color
+        background: var(--hover-secondary);
       }
     }
   }

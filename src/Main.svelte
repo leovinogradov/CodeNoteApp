@@ -779,7 +779,6 @@
     splitterSize="9px"
   >
     <div slot="primary">
-      <!-- <div class="header" style="padding: 6px 12px 8px 10px; margin: 2px 0 0 2px;" style="padding: 8px 12px 8px 6px;"> -->
       <div class="header header-left">
         <Searchbar
           bind:value={searchString}
@@ -820,7 +819,7 @@
           notes={deletedNotes}
           onNoteClick={(note) => onNoteClick(note, { saveOnExit: true, isDeletedNote: true })}
           onContextMenu={(e, note) => {}}
-          loadNoteContent={loadNoteContent}
+          loadNoteContent={(note) => {}}
         ></NoteList>
       {/if}
     </div>
@@ -830,7 +829,6 @@
     </svelte:fragment>
 
     <div slot="secondary">
-      <!-- <div class="header" style="padding: 6px 10px 8px 12px; margin: 2px 2px 0 0;"> -->
       <div class="header header-right">
         <div class:hidden={showingRecentlyDeleted && viewingDeletedFile} class="normal-toolbar">
           <!-- normal toolbar -->
@@ -919,9 +917,8 @@
           class:hidden={searchString && matchingNotes.length == 0}
         ></div>
       </div>
-      <div></div>
-    </div></Splitter
-  >
+    </div>
+  </Splitter>
 
   <!-- fixed elements -->
   <FindAndReplace bind:this={searchInNoteElement} {editor} />

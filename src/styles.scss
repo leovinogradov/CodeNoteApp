@@ -16,8 +16,10 @@
   --note-search-color-rgb: 255, 204, 3; // rgb values for above color
 
   // Hover bg colors
+  // --hover-color: color-mix(in srgb, var(--background-color) 96%, black);
+  // --hover-secondary: color-mix(in srgb, var(--background-color) 92%, black);
   --hover-color: color-mix(in srgb, var(--background-color) 96%, black);
-  --hover-secondary: color-mix(in srgb, var(--background-color) 92%, black);
+  --hover-secondary: color-mix(in srgb, var(--background-secondary) 95%, black);
 
   // Borders
   --border-color: rgba(0, 0, 0, 0.1);
@@ -131,7 +133,7 @@
   --background-secondary: #1b1c1e;
 
   --hover-color: color-mix(in srgb, var(--background-color) 96%, white);
-  --hover-secondary: color-mix(in srgb, var(--background-color) 92%, white);
+  --hover-secondary: var(--hover-color);
 
   --border-color: rgba(255, 255, 255, 0.08); // #181818;
   --splitter-color: var(--border-color);
@@ -149,14 +151,6 @@
 
   ::selection {
     background-color: #606060;
-  }
-
-  // Experimenting -- something doesnt feel right
-  button.regular {
-    // background-color: color-mix(in srgb, var(--background-secondary) 90%, black);
-    // transition-property: background-color, color;
-    // transition-duration: 0.1s;
-    // transition-timing-function: ease-in-out;
   }
   
   #text-editor {
@@ -249,6 +243,9 @@ button.regular {
   transition-property: background-color, color;
   transition-duration: 0.15s;
   transition-timing-function: ease-in-out;
+  &:hover {
+    background-color: var(--hover-secondary);
+  }
 }
 
 .header {
