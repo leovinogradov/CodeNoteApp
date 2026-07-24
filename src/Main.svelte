@@ -322,7 +322,7 @@
     console.log("onNoteClick(): exitResult:", exitResult);
 
     if (exitResult && exitResult.deleted && exitResult.filename) {
-      notes = notes.filter((note) => note.filename != exitResult.filename);
+      removeNoteFromLists(exitResult.filename);
     }
 
     // @ts-ignore
@@ -343,7 +343,7 @@
     console.log("Opened new note:", exitResult, newNote);
 
     if (exitResult && exitResult.deleted && exitResult.filename) {
-      notes = notes.filter((note) => note.filename != exitResult.filename);
+      removeNoteFromLists(exitResult.filename);
     }
 
     if (!newNote) return;
@@ -391,6 +391,11 @@
   }
 
   /** Clicking button to delete note */
+  function removeNoteFromLists(filename: string) {
+    notes = notes.filter((note) => note.filename != filename);
+    matchingNotes = matchingNotes.filter((note) => note.filename != filename);
+  }
+
   async function onDeleteNoteClick() {
     const filename = editor.fileManager?.filename;
     if (!filename || isDeleting) return;
@@ -416,8 +421,7 @@
       type: "noteDeleted",
       filename,
     });
-    notes.splice(index, 1);
-    notes = notes;
+    removeNoteFromLists(filename);
     if (notes.length > 0) {
       // Other notes exist; open top one
       await onNoteClick(notes[0], { saveOnExit: false, isDeletedNote: false });
