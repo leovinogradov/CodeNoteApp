@@ -36,9 +36,11 @@ A lightweight app inspired by Apple Notes made for jotting down notes about code
 
 ### Local development
 
-Install Rust, pnpm
+Prerequisite: install Rust, pnpm
 
 `pnpm install`
+
+`cd src-tauri && cargo build`
 
 `pnpm tauri dev`
 
