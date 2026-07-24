@@ -8,13 +8,6 @@ use crate::note_handling::read_file;
 // use read_notes::read_file;
 
 #[derive(Serialize, Deserialize)]
-struct Person {
-    name: String,
-    age: u8,
-    phones: Vec<String>,
-}
-
-#[derive(Serialize, Deserialize)]
 struct QuillDelta {
     insert: String,
 }
@@ -92,14 +85,12 @@ pub fn search(
             // No match for search string in rest of content
             // Just get the first line of rest_of_content as the second_line
             // Note: this might be possible with a simple for loop?
-            let search_for_second_line_re = RegexBuilder::new("[A-z -_]+\n")
-                .build()
-                .unwrap();
+            let search_for_second_line_re = RegexBuilder::new("[A-z -_]+\n").build().unwrap();
             match search_for_second_line_re.find(rest_of_content) {
                 Some(m) => {
                     second_line = String::from(m.as_str());
                     second_line.pop(); // remove the last /n character
-                    // second_line_matches = true;
+                                       // second_line_matches = true;
                 }
                 None => {
                     second_line = (&rest_of_content).to_string();
