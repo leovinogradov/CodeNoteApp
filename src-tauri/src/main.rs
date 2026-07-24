@@ -21,6 +21,17 @@ pub struct DbusState(Mutex<Option<dbus::blocking::SyncConnection>>);
 
 mod open_in_filesystem;
 
+/// Avoid a WebKitGTK DMA-BUF renderer crash on Linux systems with affected
+/// Mesa/NVIDIA Wayland graphics stacks. This must run before Tauri creates a
+/// webview. Preserve an explicit user setting so the workaround can be opted
+/// out of without rebuilding.
+#[cfg(target_os = "linux")]
+fn configure_webkit_renderer() {
+    if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+        std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+    }
+}
+
 #[derive(serde::Serialize)]
 struct NotesResponse {
     data: Vec<FileSummaryResponse>,
@@ -112,6 +123,9 @@ async fn remove_old_deleted_notes(window: tauri::Window) -> Result<bool, String>
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 fn main() {
+    #[cfg(target_os = "linux")]
+    configure_webkit_renderer();
+
     #[allow(unused)]
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())

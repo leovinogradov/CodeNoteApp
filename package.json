@@ -11,10 +11,10 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.5",
-    "@tauri-apps/plugin-fs": "^2.3",
-    "@tauri-apps/plugin-os": "^2.2",
-    "@tauri-apps/plugin-shell": "^2.2",
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-fs": "^2.5.1",
+    "@tauri-apps/plugin-os": "^2.3.2",
+    "@tauri-apps/plugin-shell": "^2.3.5",
     "lucide-svelte": "^0.544.0",
     "parchment": "^3.0.0",
     "quill": "^2.0.2",
@@ -22,10 +22,11 @@
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^5.0.3",
-    "@tauri-apps/cli": "^2.5",
+    "@tauri-apps/cli": "^2.11.4",
     "@tsconfig/svelte": "^5.0.4",
     "sass": "^1.70.0",
     "svelte": "^5.22.6",
+    "svelte-check": "^4.7.3",
     "svelte-preprocess": "^6.0.3",
     "tslib": "^2.6.0",
     "typescript": "^5.3.3",

@@ -205,10 +205,8 @@ export class Editor {
 
 	deleteNote() {
 		if (!this.fileManager) return;
-		const filename = this.fileManager.filename;
 		const hardDelete = this.isEmpty();
-		this.fileManager.delete(hardDelete);
-		return filename;
+		return this.fileManager.delete(hardDelete);
 	}
 
 	/** Is editor empty? */
@@ -304,5 +302,4 @@ export class Editor {
 	// 	this._clean()
 	// }
 }
-
 
