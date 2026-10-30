@@ -150,7 +150,9 @@
   color-scheme: dark;
 
   ::selection {
-    background-color: #606060;
+    // Keep selected text readable using the platform's selection palette.
+    background-color: Highlight;
+    color: HighlightText;
   }
   
   #text-editor {
